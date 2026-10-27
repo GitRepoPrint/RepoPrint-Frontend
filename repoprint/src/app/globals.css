@@ -191,8 +191,8 @@
 .pending-score{font-size:10px;color:#b0a0db}
 .repo-updated{color:#898e9e;font-size:10px}.row-arrow{color:#8e839f}
 .repo-empty{padding:40px;text-align:center;color:#8a8f9e;font-size:12px}
-.repository-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;padding:12px 20px;background:#171b24;border:1px solid #343844;border-radius:10px;color:#9099aa;font-size:11px}
-.repository-bottom>div,.repository-bottom button{display:flex;align-items:center;gap:7px}
+.repository-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:45px;padding:0 20px;background:#1d202a;color:#9099aa;font-size:11px}
+.repository-bottom button{display:flex;align-items:center;gap:7px}
 .repository-bottom button{border:0;background:none;color:#b39ef3;font-size:11px;font-weight:700}
 .associate-modal label{display:block;margin:23px 0 9px;color:#aaa2bc;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px}
 .associate-input{height:46px;display:flex;align-items:center;gap:11px;padding:0 13px;border:1px solid #59516e;border-radius:7px;background:#252532;color:#b4a3dd}
@@ -222,12 +222,12 @@
 .theme-light .score-indicator.healthy{color:#28845c}.theme-light .score-indicator.attention{color:#ad6937}
 .theme-light .mini-progress{background:#e7e5ed}
 .theme-light .pending-score,.theme-light .repository-bottom button{color:#6c50ba}
-.theme-light .repository-bottom{background:#fff;border-color:#dfe2eb;color:#767d89}
+.theme-light .repository-bottom{background:#f8f8fc;color:#767d89}
 .theme-light .associate-modal label{color:#6d6087}
 .theme-light .associate-input{background:#faf9ff;border-color:#cfc4e8;color:#735ab6}
 .theme-light .associate-input input{color:#292a3e}
 @media(max-width:850px){.repository-list-columns,.repository-row{grid-template-columns:minmax(220px,2fr) minmax(100px,.7fr) 20px}.repository-list-columns>span:nth-child(3),.repo-updated{display:none}.repositories-main{padding:35px 22px}.stat-icon{grid-row:auto;margin-bottom:8px}}
-@media(max-width:620px){.repositories-main{padding:34px 16px}.repositories-intro{align-items:start;flex-direction:column}.repositories-intro h1{font-size:34px}.stat-icon{grid-row:span 3;margin-bottom:0}.repository-list-heading{align-items:start;flex-direction:column;gap:16px}.repository-search{width:100%}.repository-list-columns{display:none}.repository-row{grid-template-columns:1fr 20px;gap:7px;padding:15px}.repo-identity{grid-column:1}.repo-score{grid-column:1;margin-left:49px}.repo-score{margin-top:2px}.row-arrow{grid-column:2;grid-row:1/4}.repository-bottom{align-items:start;gap:14px;flex-direction:column}.workspace-label,.account-provider{display:none}.login-card{padding:32px 23px}.login-card h1{font-size:31px}}
+@media(max-width:620px){.repositories-main{padding:34px 16px}.repositories-intro{align-items:start;flex-direction:column}.repositories-intro h1{font-size:34px}.stat-icon{grid-row:span 3;margin-bottom:0}.repository-list-heading{align-items:start;flex-direction:column;gap:16px}.repository-search{width:100%}.repository-list-columns{display:none}.repository-row{grid-template-columns:1fr 20px;gap:7px;padding:15px}.repo-identity{grid-column:1}.repo-score{grid-column:1;margin-left:49px}.repo-score{margin-top:2px}.row-arrow{grid-column:2;grid-row:1/4}.repository-bottom{padding:0 15px}.workspace-label,.account-provider{display:none}.login-card{padding:32px 23px}.login-card h1{font-size:31px}}
 
 .login-card{padding-top:32px;padding-bottom:26px}
 .login-symbol{margin-bottom:19px}
@@ -1108,37 +1108,48 @@
 .theme-light .brand .logo-dark{display:none}
 .theme-light .brand .logo-light{display:block}
 
-/* Cartão de saúde dos repositórios: healthy + needs attention + radar tipo sonar */
-.repository-health{display:flex;align-items:center;gap:36px;margin-top:34px;padding:22px 26px;background:#171b24;border:1px solid #303542;border-radius:10px}
-.sonar{flex:none;width:190px;height:190px;color:#91dbb5}
-.sonar-disc{fill:#12151c}
-.sonar-zone{fill:#91dbb51f}
-.sonar-ring{fill:none;stroke:#303542;stroke-width:1}
-.sonar-ring.dashed{stroke:#91dbb5;stroke-opacity:.55;stroke-dasharray:3 3}
-.sonar-sweep{transform-origin:100px 100px;animation:sonar-sweep 6s linear infinite}
-.sonar-sweep line{stroke:currentColor;stroke-width:1.5;stroke-opacity:.85}
-.sonar-blip circle{stroke:#12151c;stroke-width:1.5}
-.sonar-blip.healthy circle{fill:#91dbb5}
-.sonar-blip.attention circle{fill:#eeb78b}
-.sonar-core{fill:currentColor}
-@keyframes sonar-sweep{to{transform:rotate(360deg)}}
-@media(prefers-reduced-motion:reduce){.sonar-sweep{animation:none}}
-.repository-health-stats{flex:1;min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 24px}
+/* Cartão de saúde dos repositórios: healthy + needs attention + lupa do mascote */
+.repository-health{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:1fr auto;align-items:center;column-gap:36px;row-gap:14px;margin-top:34px;padding:22px 26px;background:#171b24;border:1px solid #303542;border-radius:10px}
+@media(prefers-reduced-motion:reduce){}
+.repository-health-stats{grid-column:1;grid-row:1;min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 24px}
 .repository-health-stats>div{display:grid;grid-template-columns:38px 1fr;column-gap:11px;align-items:start}
 .repository-health-stats .stat-label{align-self:center;color:#9999ab;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:1px}
 .repository-health-stats strong{font-family:'Space Grotesk',sans-serif;font-size:31px;line-height:1.2;margin-top:7px}
 .repository-health-stats small{font-size:10px;color:#838999;margin-top:2px}
-.repository-health-pending{grid-column:1/-1;margin:0;color:#838999;font-size:10px}
 .theme-light .repository-health{background:#fff;border-color:#dfe2eb;box-shadow:0 10px 32px #3239560b}
-.theme-light .sonar{color:#368962}
-.theme-light .sonar-disc{fill:#f8f8fc}
-.theme-light .sonar-zone{fill:#36896222}
-.theme-light .sonar-ring{stroke:#dfe2eb}
-.theme-light .sonar-ring.dashed{stroke:#368962}
-.theme-light .sonar-blip circle{stroke:#fff}
-.theme-light .sonar-blip.healthy circle{fill:#368962}
-.theme-light .sonar-blip.attention circle{fill:#d98a3d}
 .theme-light .repository-health-stats strong{color:#25283a}
-.theme-light .repository-health-stats .stat-label,.theme-light .repository-health-stats small,.theme-light .repository-health-pending{color:#737b8a}
-@media(max-width:850px){.repository-health{gap:24px;padding:20px}.repository-health-stats{grid-template-columns:1fr}}
-@media(max-width:620px){.repository-health{flex-direction:column;margin-top:24px}.repository-health-stats strong{font-size:24px;margin-top:0}}
+.theme-light .repository-health-stats .stat-label,.theme-light .repository-health-stats small{color:#737b8a}
+@media(max-width:850px){.repository-health{column-gap:24px;padding:20px}.repository-health-stats{grid-template-columns:1fr}}
+@media(max-width:620px){.repository-health{grid-template-columns:minmax(0,1fr);margin-top:24px}.repository-health-stats strong{font-size:24px;margin-top:0}}
+/* Lupa do mascote (preto/branco): traço = cor do texto, formas = estado do repositório */
+.lupa{position:relative;display:block;overflow:visible;width:200px;height:200px}
+.lupa-wrap{position:relative;grid-column:2;grid-row:1/3;width:200px;height:200px;--lupa-ink:#f4f4f8;--lupa-lens:#12151c;--lupa-good:#91dbb5;--lupa-warn:#f0b88a;--lupa-pend:#9aa1b3;--lupa-dot:#3a4050}
+.theme-light .lupa-wrap{--lupa-ink:#14161f;--lupa-lens:#f6f7fb;--lupa-good:#1f8f5f;--lupa-warn:#c4620d;--lupa-pend:#7a8194;--lupa-dot:#c9ccd8}
+.lupa-legend{--lupa-good:#91dbb5;--lupa-warn:#f0b88a;--lupa-pend:#9aa1b3}
+.theme-light .lupa-legend{--lupa-good:#1f8f5f;--lupa-warn:#c4620d;--lupa-pend:#7a8194}
+.lupa-handle{stroke:var(--lupa-ink);stroke-width:16;stroke-linecap:round}
+.lupa-handle-shine{stroke:var(--lupa-lens);stroke-width:3;stroke-linecap:round;opacity:.55}
+.lupa-lens{fill:var(--lupa-lens)}
+.lupa-rim{fill:none;stroke:var(--lupa-ink);stroke-width:10}
+.lupa-glint{fill:none;stroke:var(--lupa-ink);stroke-width:4;stroke-linecap:round;opacity:.28}
+.lupa-healthy{fill:var(--lupa-good)}
+.lupa-attention{fill:var(--lupa-warn);stroke:var(--lupa-warn);stroke-width:2;stroke-linejoin:round}
+.lupa-orbit{fill:none;stroke:var(--lupa-warn);stroke-width:1.8;stroke-dasharray:3 3}
+.lupa-pending{fill:var(--lupa-pend);fill-opacity:.3;stroke:var(--lupa-pend);stroke-width:2;stroke-dasharray:3.5 3}
+.lupa-legend{grid-column:1;grid-row:2;align-self:end;display:flex;flex-wrap:wrap;gap:4px 14px;margin:0;padding:0;list-style:none;color:#838999;font-size:10px}
+.lupa-legend li{display:flex;align-items:center;gap:5px}
+.lupa-legend svg{width:12px;height:12px}
+.theme-light .lupa-legend{color:#737b8a}
+/* Animações da lupa: entrada, flutuar, órbita, pending tracejado e cintilar; zoom raro (ver repository-health.tsx) */
+.lupa-particles{position:absolute;left:-17.2px;top:-17.2px;width:203.4px;height:203.4px;pointer-events:none}
+.lupa-pop{transform-origin:0 0;animation:lupa-pop .4s cubic-bezier(.3,1.6,.5,1) both;animation-delay:var(--in,0s)}
+.lupa .lupa-orbit{transform-origin:0 0;animation:lupa-orbit 3.2s linear infinite}
+.lupa .lupa-pending{animation:lupa-march .55s linear infinite}
+.lupa-body{transform-origin:110px 110px}
+.lupa-body.is-zooming{animation:lupa-zoom 2.8s ease-in-out}
+@keyframes lupa-pop{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes lupa-orbit{to{transform:rotate(360deg)}}
+@keyframes lupa-march{to{stroke-dashoffset:-13}}
+@keyframes lupa-zoom{0%{transform:none}18%{transform:translate(-26px,-10px) rotate(-10deg)}36%{transform:translate(-14px,4px) rotate(6deg)}62%{transform:translate(-6px,0) scale(1.45) rotate(-3deg)}80%{transform:translate(-6px,0) scale(1.45) rotate(2deg)}100%{transform:none}}
+@media(prefers-reduced-motion:reduce){.lupa-wrap *{animation:none!important}}
+@media(max-width:620px){.repository-health-stats{grid-row:1}.lupa-wrap{grid-column:1;grid-row:2;justify-self:center}.lupa-legend{grid-row:3}}

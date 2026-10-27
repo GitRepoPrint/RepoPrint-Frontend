@@ -91,11 +91,10 @@ export function RepositoriesView() {
           {filtered.length
             ? filtered.map((item) => <RepositoryRow key={item.name} item={item} onOpen={open} />)
             : <div className="repo-empty">No repositories match your search.</div>}
-        </div>
-
-        <div className="repository-bottom">
-          <span>Showing {filtered.length} of {repositories.length} {repositories.length === 1 ? "repository" : "repositories"}</span>
-          <button type="button" onClick={() => setModalOpen(true)}>Add another repository <Icon name="plus" size={14} /></button>
+          <div className="repository-bottom">
+            <span>Showing {filtered.length} of {repositories.length} {repositories.length === 1 ? "repository" : "repositories"}</span>
+            <button type="button" onClick={() => setModalOpen(true)}>Add another repository <Icon name="plus" size={14} /></button>
+          </div>
         </div>
       </main>
 
