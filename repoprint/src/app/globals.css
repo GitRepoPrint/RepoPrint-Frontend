@@ -165,13 +165,8 @@
 .repositories-intro h1 span{color:#ac91f8}
 .repositories-intro p{font-size:13px;color:#9297a6;margin:0;line-height:1.5}
 .repositories-intro>.button{height:43px;padding:0 18px}
-.repository-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;margin-top:34px}
-.repository-stats>div{min-height:145px;padding:20px 22px;background:#171b24;border:1px solid #303542;border-radius:10px;display:grid;grid-template-columns:38px 1fr;column-gap:11px;align-items:start}
 .stat-icon{width:35px;height:35px;border-radius:8px;display:grid;place-items:center;grid-row:span 3}
-.stat-icon.violet{color:#bca9ff;background:#393152}.stat-icon.green-icon{color:#91dbb5;background:#284337}.stat-icon.orange-icon{color:#eeb78b;background:#47362e}
-.repository-stats>div>span:nth-child(2){align-self:center;color:#9999ab;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:1px}
-.repository-stats strong{font-family:'Space Grotesk',sans-serif;font-size:31px;line-height:1.2;margin-top:7px}
-.repository-stats small{font-size:10px;color:#838999;margin-top:2px}
+.stat-icon.green-icon{color:#91dbb5;background:#284337}.stat-icon.orange-icon{color:#eeb78b;background:#47362e}
 .repository-list-heading{display:flex;align-items:end;justify-content:space-between;margin:39px 0 15px}
 .repository-list-heading h2{font-family:'Space Grotesk',sans-serif;font-size:21px;letter-spacing:-.5px;margin:7px 0 0;display:flex;align-items:center;gap:11px}
 .repository-list-heading h2 span{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0;color:#ab9bd3;border:1px solid #524765;background:#2a2538;border-radius:5px;padding:4px 7px}
@@ -196,7 +191,7 @@
 .pending-score{font-size:10px;color:#b0a0db}
 .repo-updated{color:#898e9e;font-size:10px}.row-arrow{color:#8e839f}
 .repo-empty{padding:40px;text-align:center;color:#8a8f9e;font-size:12px}
-.repository-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:19px;color:#777e8e;font-size:10px}
+.repository-bottom{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;padding:12px 20px;background:#171b24;border:1px solid #343844;border-radius:10px;color:#9099aa;font-size:11px}
 .repository-bottom>div,.repository-bottom button{display:flex;align-items:center;gap:7px}
 .repository-bottom button{border:0;background:none;color:#b39ef3;font-size:11px;font-weight:700}
 .associate-modal label{display:block;margin:23px 0 9px;color:#aaa2bc;font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1px}
@@ -214,11 +209,8 @@
 .theme-light .login-providers button{background:#fff;border-color:#d8dce6;color:#313244}
 .theme-light .login-providers button:hover{background:#f8f4ff;border-color:#a78cdb}
 .theme-light .login-disclaimer{border-color:#e7e7ee;color:#777e8c}
-.theme-light .login-side-note,.theme-light .workspace-label,.theme-light .account-provider{color:#6d7183}
-.theme-light .repository-stats>div,.theme-light .repository-list{background:#fff;border-color:#dfe2eb;box-shadow:0 10px 32px #3239560b}
-.theme-light .repository-stats strong{color:#25283a}
-.theme-light .repository-stats>div>span:nth-child(2),.theme-light .repository-stats small{color:#737b8a}
-.theme-light .stat-icon.violet{color:#7756c8;background:#ede6ff}.theme-light .stat-icon.green-icon{color:#368962;background:#e4f6ec}.theme-light .stat-icon.orange-icon{color:#b97a3c;background:#fff0e3}
+.theme-light .login-side-note,.theme-light .workspace-label,.theme-light .account-provider{color:#6d7183}.theme-light .repository-list{background:#fff;border-color:#dfe2eb;box-shadow:0 10px 32px #3239560b}
+.theme-light .stat-icon.green-icon{color:#368962;background:#e4f6ec}.theme-light .stat-icon.orange-icon{color:#b97a3c;background:#fff0e3}
 .theme-light .repository-list-heading h2 span{color:#7054b3;background:#f3efff;border-color:#dcd1f4}
 .theme-light .repository-search{background:#fff;border-color:#d8dce6;color:#757b8b}
 .theme-light .repository-search input{color:#282a3a}
@@ -230,12 +222,12 @@
 .theme-light .score-indicator.healthy{color:#28845c}.theme-light .score-indicator.attention{color:#ad6937}
 .theme-light .mini-progress{background:#e7e5ed}
 .theme-light .pending-score,.theme-light .repository-bottom button{color:#6c50ba}
-.theme-light .repository-bottom{color:#767d89}
+.theme-light .repository-bottom{background:#fff;border-color:#dfe2eb;color:#767d89}
 .theme-light .associate-modal label{color:#6d6087}
 .theme-light .associate-input{background:#faf9ff;border-color:#cfc4e8;color:#735ab6}
 .theme-light .associate-input input{color:#292a3e}
-@media(max-width:850px){.repository-list-columns,.repository-row{grid-template-columns:minmax(220px,2fr) minmax(100px,.7fr) 20px}.repository-list-columns>span:nth-child(3),.repo-updated{display:none}.repositories-main{padding:35px 22px}.repository-stats>div{padding:17px 13px;grid-template-columns:1fr}.stat-icon{grid-row:auto;margin-bottom:8px}.repository-stats>div>span:nth-child(2){min-height:24px}}
-@media(max-width:620px){.repositories-main{padding:34px 16px}.repositories-intro{align-items:start;flex-direction:column}.repositories-intro h1{font-size:34px}.repository-stats{grid-template-columns:1fr;gap:9px;margin-top:24px}.repository-stats>div{min-height:95px;grid-template-columns:39px 1fr}.stat-icon{grid-row:span 3;margin-bottom:0}.repository-stats strong{font-size:24px;margin-top:0}.repository-list-heading{align-items:start;flex-direction:column;gap:16px}.repository-search{width:100%}.repository-list-columns{display:none}.repository-row{grid-template-columns:1fr 20px;gap:7px;padding:15px}.repo-identity{grid-column:1}.repo-score{grid-column:1;margin-left:49px}.repo-score{margin-top:2px}.row-arrow{grid-column:2;grid-row:1/4}.repository-bottom{align-items:start;gap:14px;flex-direction:column}.workspace-label,.account-provider{display:none}.login-card{padding:32px 23px}.login-card h1{font-size:31px}}
+@media(max-width:850px){.repository-list-columns,.repository-row{grid-template-columns:minmax(220px,2fr) minmax(100px,.7fr) 20px}.repository-list-columns>span:nth-child(3),.repo-updated{display:none}.repositories-main{padding:35px 22px}.stat-icon{grid-row:auto;margin-bottom:8px}}
+@media(max-width:620px){.repositories-main{padding:34px 16px}.repositories-intro{align-items:start;flex-direction:column}.repositories-intro h1{font-size:34px}.stat-icon{grid-row:span 3;margin-bottom:0}.repository-list-heading{align-items:start;flex-direction:column;gap:16px}.repository-search{width:100%}.repository-list-columns{display:none}.repository-row{grid-template-columns:1fr 20px;gap:7px;padding:15px}.repo-identity{grid-column:1}.repo-score{grid-column:1;margin-left:49px}.repo-score{margin-top:2px}.row-arrow{grid-column:2;grid-row:1/4}.repository-bottom{align-items:start;gap:14px;flex-direction:column}.workspace-label,.account-provider{display:none}.login-card{padding:32px 23px}.login-card h1{font-size:31px}}
 
 .login-card{padding-top:32px;padding-bottom:26px}
 .login-symbol{margin-bottom:19px}
@@ -255,7 +247,6 @@
 .theme-light .site-login-form input{background:#fff;border-color:#d8dce6;color:#282a3a}
 .theme-light .site-login-form input::placeholder{color:#979baa}
 @media(max-width:620px){.login-separator{font-size:8px;gap:6px}.login-card{padding-top:28px;padding-bottom:24px}}
-.repository-bottom>button{display:none}
 
 .analysis-spinner{width:15px;height:15px;border:2px solid #302646;border-top-color:transparent;border-radius:50%;display:inline-block;animation:analysis-spin .75s linear infinite;flex:none}
 .analysis-spinner.large{width:25px;height:25px;border-color:#544576;border-top-color:#b7a2ff}
@@ -1116,3 +1107,38 @@
 .brand .logo-light{display:none}
 .theme-light .brand .logo-dark{display:none}
 .theme-light .brand .logo-light{display:block}
+
+/* Cartão de saúde dos repositórios: healthy + needs attention + radar tipo sonar */
+.repository-health{display:flex;align-items:center;gap:36px;margin-top:34px;padding:22px 26px;background:#171b24;border:1px solid #303542;border-radius:10px}
+.sonar{flex:none;width:190px;height:190px;color:#91dbb5}
+.sonar-disc{fill:#12151c}
+.sonar-zone{fill:#91dbb51f}
+.sonar-ring{fill:none;stroke:#303542;stroke-width:1}
+.sonar-ring.dashed{stroke:#91dbb5;stroke-opacity:.55;stroke-dasharray:3 3}
+.sonar-sweep{transform-origin:100px 100px;animation:sonar-sweep 6s linear infinite}
+.sonar-sweep line{stroke:currentColor;stroke-width:1.5;stroke-opacity:.85}
+.sonar-blip circle{stroke:#12151c;stroke-width:1.5}
+.sonar-blip.healthy circle{fill:#91dbb5}
+.sonar-blip.attention circle{fill:#eeb78b}
+.sonar-core{fill:currentColor}
+@keyframes sonar-sweep{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.sonar-sweep{animation:none}}
+.repository-health-stats{flex:1;min-width:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px 24px}
+.repository-health-stats>div{display:grid;grid-template-columns:38px 1fr;column-gap:11px;align-items:start}
+.repository-health-stats .stat-label{align-self:center;color:#9999ab;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:1px}
+.repository-health-stats strong{font-family:'Space Grotesk',sans-serif;font-size:31px;line-height:1.2;margin-top:7px}
+.repository-health-stats small{font-size:10px;color:#838999;margin-top:2px}
+.repository-health-pending{grid-column:1/-1;margin:0;color:#838999;font-size:10px}
+.theme-light .repository-health{background:#fff;border-color:#dfe2eb;box-shadow:0 10px 32px #3239560b}
+.theme-light .sonar{color:#368962}
+.theme-light .sonar-disc{fill:#f8f8fc}
+.theme-light .sonar-zone{fill:#36896222}
+.theme-light .sonar-ring{stroke:#dfe2eb}
+.theme-light .sonar-ring.dashed{stroke:#368962}
+.theme-light .sonar-blip circle{stroke:#fff}
+.theme-light .sonar-blip.healthy circle{fill:#368962}
+.theme-light .sonar-blip.attention circle{fill:#d98a3d}
+.theme-light .repository-health-stats strong{color:#25283a}
+.theme-light .repository-health-stats .stat-label,.theme-light .repository-health-stats small,.theme-light .repository-health-pending{color:#737b8a}
+@media(max-width:850px){.repository-health{gap:24px;padding:20px}.repository-health-stats{grid-template-columns:1fr}}
+@media(max-width:620px){.repository-health{flex-direction:column;margin-top:24px}.repository-health-stats strong{font-size:24px;margin-top:0}}

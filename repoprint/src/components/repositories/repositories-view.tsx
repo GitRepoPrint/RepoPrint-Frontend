@@ -3,14 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 import { AssociateModal } from "@/components/repositories/associate-modal";
+import { HEALTHY_SCORE, RepositoryHealth } from "@/components/repositories/repository-health";
 import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
 import { useRepositories } from "@/hooks/use-repositories";
 import { newRepository, parseRepositoryUrl, repoSlug } from "@/lib/api/repositories";
 import type { Repository } from "@/lib/api/types";
-
-const HEALTHY_SCORE = 80;
-const pad = (n: number) => String(n).padStart(2, "0");
 
 function RepositoryRow({ item, onOpen }: { item: Repository; onOpen: (item: Repository) => void }) {
   return (
@@ -48,8 +46,6 @@ export function RepositoriesView() {
   // Enquanto a lista não é lida no cliente, não se mostram números que depois mudariam.
   if (!repositories) return <main className="repositories-main" aria-busy="true" />;
 
-  const healthy = repositories.filter((r) => r.score !== null && r.score >= HEALTHY_SCORE).length;
-  const attention = repositories.filter((r) => r.score !== null && r.score < HEALTHY_SCORE).length;
   const query = search.toLowerCase();
   const filtered = repositories.filter((r) => `${r.name} ${r.description}`.toLowerCase().includes(query));
 
@@ -80,20 +76,7 @@ export function RepositoriesView() {
           </button>
         </div>
 
-        <div className="repository-stats">
-          <div>
-            <span className="stat-icon violet"><Icon name="layers" size={19} /></span>
-            <span>ASSOCIATED REPOSITORIES</span><strong>{pad(repositories.length)}</strong><small>Projects in your workspace</small>
-          </div>
-          <div>
-            <span className="stat-icon green-icon"><Icon name="shield" size={19} /></span>
-            <span>HEALTHY PROJECTS</span><strong>{pad(healthy)}</strong><small>Security score of {HEALTHY_SCORE} or higher</small>
-          </div>
-          <div>
-            <span className="stat-icon orange-icon"><Icon name="warning" size={19} /></span>
-            <span>NEEDS ATTENTION</span><strong>{pad(attention)}</strong><small>Opportunity to improve</small>
-          </div>
-        </div>
+        <RepositoryHealth repositories={repositories} />
 
         <div className="repository-list-heading">
           <div><h2>Repository overview <span>{repositories.length}</span></h2></div>
@@ -111,6 +94,7 @@ export function RepositoriesView() {
         </div>
 
         <div className="repository-bottom">
+          <span>Showing {filtered.length} of {repositories.length} {repositories.length === 1 ? "repository" : "repositories"}</span>
           <button type="button" onClick={() => setModalOpen(true)}>Add another repository <Icon name="plus" size={14} /></button>
         </div>
       </main>
