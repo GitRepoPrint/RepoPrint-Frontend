@@ -16,3 +16,28 @@ export const gdprArticles = (finding: Finding) =>
 
 /** Nome curto usado no modal de falso positivo. */
 export const findingLabel = (finding: Finding) => `${finding.category}: ${finding.file}`;
+
+export const STRIDE_CATEGORIES = [
+  "Spoofing",
+  "Tampering",
+  "Repudiation",
+  "Information Disclosure",
+  "Denial of Service",
+  "Elevation of Privilege",
+] as const;
+
+export const LINDDUN_CATEGORIES = [
+  "Linkability",
+  "Identifiability",
+  "Non-repudiation",
+  "Detectability",
+  "Disclosure of Information",
+  "Unawareness",
+  "Non-compliance",
+] as const;
+
+export const countByCategory = (findings: Finding[], categories: readonly string[]) =>
+  categories.map((category) => ({
+    category,
+    count: findings.filter((f) => f.category === category).length,
+  }));
