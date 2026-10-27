@@ -6,7 +6,7 @@ import { DfdPreview } from "@/components/dfd/dfd-preview";
 import { Icon } from "@/components/ui/icon";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { printReport } from "@/lib/print";
-import { byFramework, LINDDUN_CATEGORIES, SEVERITY_LABEL, STRIDE_CATEGORIES } from "@/lib/findings";
+import { balancedRows, byFramework, LINDDUN_CATEGORIES, prioritize, SEVERITY_LABEL, STRIDE_CATEGORIES } from "@/lib/findings";
 import type { Finding, InstantReport as Report } from "@/lib/api/types";
 import { FindingModal } from "./finding-modal";
 import { FrameworkCard } from "./framework-card";
@@ -102,8 +102,12 @@ export function InstantReport({ report }: { report: Report }) {
           <span className="findings-count">{String(findings.length).padStart(2, "0")} FINDINGS</span>
         </div>
         <div className="finding-cards">
-          {findings.map((finding) => (
-            <FindingCard key={finding.id} finding={finding} onOpen={() => setSelected(finding)} />
+          {balancedRows(prioritize(findings)).map((row) => (
+            <div key={row[0].id} className="finding-row">
+              {row.map((finding) => (
+                <FindingCard key={finding.id} finding={finding} onOpen={() => setSelected(finding)} />
+              ))}
+            </div>
           ))}
         </div>
       </section>

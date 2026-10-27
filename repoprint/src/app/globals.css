@@ -1078,8 +1078,9 @@
 .framework-card-more summary::-webkit-details-marker{display:none}
 .framework-card-more summary svg{transition:transform .15s ease}
 .framework-card-more[open] summary svg{transform:rotate(180deg)}
-.finding-cards{--finding-cols:4;display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:6px}
-@media(max-width:900px){.finding-cards{--finding-cols:2}}
+.finding-cards{--finding-cols:5;display:flex;flex-direction:column;gap:14px;margin-top:6px}
+.finding-row{display:flex;justify-content:center;gap:14px}
+@media(max-width:900px){.finding-cards{--finding-cols:2;flex-direction:row;flex-wrap:wrap;justify-content:center}.finding-row{display:contents}}
 @media(max-width:560px){.finding-cards{--finding-cols:1}}
 .finding-card{box-sizing:border-box;width:calc((100% - (var(--finding-cols) - 1) * 14px) / var(--finding-cols));display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:14px;border:1px solid #e4e4e7;border-radius:10px;background:#fff;box-shadow:0 1px 2px rgba(9,9,11,.05)}
 .finding-card-category{color:#52525b;font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.3px}

@@ -41,3 +41,15 @@ export const countByCategory = (findings: Finding[], categories: readonly string
     category,
     count: findings.filter((f) => f.category === category).length,
   }));
+
+export function balancedRows<T>(items: T[], max = 5): T[][] {
+  const rowCount = Math.ceil(items.length / max);
+  const rows: T[][] = [];
+  let start = 0;
+  for (let i = 0; i < rowCount; i++) {
+    const size = Math.floor(items.length / rowCount) + (i < items.length % rowCount ? 1 : 0);
+    rows.push(items.slice(start, start + size));
+    start += size;
+  }
+  return rows;
+}
