@@ -1,9 +1,12 @@
+import { ScoreBreakdown, ScoreScale } from "@/components/score/score-parts";
 import { Icon } from "@/components/ui/icon";
+import { securityScore } from "@/lib/score";
 import type { RepositoryAnalysis } from "@/lib/api/types";
 
 export function TeamTab({ analysis }: { analysis: RepositoryAnalysis }) {
   const { team, hygiene, commit } = analysis;
   const { dependencies, quality, secrets, branches, license } = hygiene;
+  const score = securityScore(analysis.findings);
   // Barra verde = dependências em dia; o resto (âmbar) tem atualização disponível.
   const upToDate = ((dependencies.total - dependencies.updates) / dependencies.total) * 100;
 
@@ -55,7 +58,12 @@ export function TeamTab({ analysis }: { analysis: RepositoryAnalysis }) {
         <article className="team-panel hygiene-panel">
           <div className="team-panel-heading">
             <div><span className="team-section-kicker">TECHNICAL POSTURE &amp; AUDIT</span><h3>Structural Hygiene &amp; Security Baseline</h3></div>
-            <span className="grade-pill">Grade: {hygiene.grade}</span>
+            <span className={`score-pill ${score.band.id}`}>Security score {score.total}/100 · {score.band.label}</span>
+          </div>
+
+          <div className="score-block">
+            <ScoreScale score={score} />
+            <ScoreBreakdown score={score} />
           </div>
 
           <article className="baseline-card secrets-baseline-card">

@@ -15,8 +15,6 @@ type FrameworkCardProps = {
 
 const SEVERITIES: Severity[] = ["high", "medium", "low"];
 
-// Cartão por framework: nº de findings + tags de severidade sempre visíveis;
-// o gráfico por categoria só aparece ao abrir o dropdown.
 export function FrameworkCard({ label, icon, iconTone, tone, detail, categories, findings }: FrameworkCardProps) {
   const rows = countByCategory(findings, categories);
   const max = Math.max(1, ...rows.map((row) => row.count));
@@ -42,7 +40,7 @@ export function FrameworkCard({ label, icon, iconTone, tone, detail, categories,
       <details className="framework-card-more">
         <summary aria-label={`${label}: show breakdown by category`}>
           <span className="report-kpi-detail">{detail}</span>
-          <Icon name="chevron" size={15} />
+          <span className="disclosure-pill"><span className="disclosure-icon"><Icon name="chevron" size={16} /></span></span>
         </summary>
         <ul className="category-chart-list">
           {rows.map(({ category, count }) => (

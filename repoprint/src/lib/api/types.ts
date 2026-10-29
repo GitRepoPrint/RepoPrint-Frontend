@@ -10,6 +10,11 @@ export interface Exposure {
   probability: Severity;
 }
 
+export interface Effort {
+  level: Severity;
+  estimate: string;
+}
+
 export interface Finding {
   id: string;
   framework: Framework;
@@ -22,6 +27,7 @@ export interface Finding {
   impact: string;            // frase curta (cartões da análise instantânea)
   impactDetail: string;      // frase completa (tabelas do dashboard e do relatório)
   exposure: Exposure;
+  effort: Effort;
   topic: string;             // tema da mitigação: "Sessions", "Webhooks"...
   mitigation: string;        // texto estático (sem SLM)
   regulatoryTags: string[];  // "NIS 2 Art. 21", "GDPR Arts. 25, 32"...
@@ -33,7 +39,7 @@ export interface Finding {
 export interface InstantSummary {
   stride: { findings: number; high: number; medium: number; detail: string };
   privacy: { highRisks: number; labels: string; detail: string };
-  git: { grade: string; prMergeHours: number; commitsPerMonth: number; codeOwnersCoverage: number };
+  git: { prMergeHours: number; commitsPerMonth: number; codeOwnersCoverage: number };
 }
 
 export interface InstantReport {
@@ -119,7 +125,6 @@ export interface TeamStats {
 }
 
 export interface Hygiene {
-  grade: string;
   languages: { name: string; percent: number }[];
   secrets: { exposed: number; scannedDepthPercent: number };
   branches: { defaultBranch: string; protected: boolean; rules: string[]; active: { name: string; state: string }[] };

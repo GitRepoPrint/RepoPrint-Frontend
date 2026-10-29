@@ -1,3 +1,4 @@
+import { effortText } from "@/components/score/effort";
 import { byFramework, gdprArticles, prioritize, SEVERITY_LABEL } from "@/lib/findings";
 import type { Finding } from "@/lib/api/types";
 
@@ -8,15 +9,15 @@ export function ExposureTable({ findings }: { findings: Finding[] }) {
   return (
     <table className="formal-table">
       <thead>
-        <tr><th>Component / File</th><th>Risk</th><th>Impact</th><th>Probability</th></tr>
+        <tr><th>Component</th><th>Risk</th><th>Impact</th><th>Fix effort</th></tr>
       </thead>
       <tbody>
         {findings.map((f) => (
           <tr key={f.id}>
-            <td>{f.component} · <code>{f.file}</code></td>
+            <td>{f.component}</td>
             <td>{f.title}</td>
             <td>{SEVERITY_LABEL[f.exposure.impact]} · {f.exposure.impactLabel}</td>
-            <td>{SEVERITY_LABEL[f.exposure.probability]}</td>
+            <td>{effortText(f.effort)}</td>
           </tr>
         ))}
       </tbody>

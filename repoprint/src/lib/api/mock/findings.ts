@@ -16,6 +16,7 @@ export const findings: Finding[] = [
     impact: "High unauthorized access",
     impactDetail: "Session impersonation and unauthorized account access",
     exposure: { impact: "high", impactLabel: "unauthorized access", probability: "medium" },
+    effort: { level: "medium", estimate: "1-2 days" },
     topic: "Sessions",
     mitigation:
       "Enforce short-lived, signed JWTs; validate issuer, audience and expiry; require TLS for service-to-service traffic.",
@@ -34,6 +35,7 @@ export const findings: Finding[] = [
     impact: "Forged or replayed payment events",
     impactDetail: "Forged or replayed payment events",
     exposure: { impact: "high", impactLabel: "payment integrity", probability: "medium" },
+    effort: { level: "low", estimate: "~4 hours" },
     topic: "Webhooks",
     mitigation:
       "Verify HMAC signatures and timestamps before processing; reject stale or duplicate event IDs and add replay-protection tests to CI.",
@@ -52,6 +54,7 @@ export const findings: Finding[] = [
     impact: "Privacy breach through over-exposed personal attributes",
     impactDetail: "Over-exposed personal attributes can be leaked in a data breach",
     exposure: { impact: "medium", impactLabel: "privacy breach", probability: "low" },
+    effort: { level: "high", estimate: "1-2 weeks" },
     topic: "Personal Data",
     mitigation:
       "Minimize stored user attributes, document retention periods, and verify encryption and access controls for the user data store.",
@@ -70,6 +73,7 @@ export const findings: Finding[] = [
     impact: "Exposure of correlatable personal and transaction data",
     impactDetail: "Exposure of correlatable personal and transaction data",
     exposure: { impact: "high", impactLabel: "user profiling", probability: "high" },
+    effort: { level: "medium", estimate: "2-3 days" },
     topic: "Telemetry",
     mitigation:
       "Replace raw identifiers with scoped pseudonyms, redact before log ingestion, apply retention limits and restrict log access.",
@@ -88,6 +92,7 @@ export const findings: Finding[] = [
     impact: "User presence and behavior inferable from telemetry events",
     impactDetail: "User presence and behavior can be inferred from telemetry events",
     exposure: { impact: "high", impactLabel: "behavior inference", probability: "medium" },
+    effort: { level: "medium", estimate: "2-3 days" },
     topic: "Event streams",
     mitigation:
       "Drop user-level event streams that are not needed, aggregate or sample telemetry, and restrict access to raw event logs.",

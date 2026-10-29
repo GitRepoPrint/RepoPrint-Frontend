@@ -63,7 +63,6 @@ export const mockAnalysis: Omit<RepositoryAnalysis, "repository"> = {
     ],
   },
   hygiene: {
-    grade: "A-",
     languages: [
       { name: "TypeScript", percent: 68 },
       { name: "Go", percent: 22 },

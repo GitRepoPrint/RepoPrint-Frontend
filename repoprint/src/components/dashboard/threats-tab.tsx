@@ -1,3 +1,4 @@
+import { EffortLabel } from "@/components/score/effort";
 import { byFramework, gdprArticles, prioritize, SEVERITY_LABEL } from "@/lib/findings";
 import type { Finding, RepositoryAnalysis } from "@/lib/api/types";
 
@@ -33,14 +34,14 @@ export function ThreatsTab({ analysis, reasons, onTriage }: ThreatsTabProps) {
         <div className="threat-report-summary"><p>{analysis.executiveSummary}</p></div>
         <div className="threat-report-table-wrap">
           <table className="formal-table">
-            <thead><tr><th>Component / File</th><th>Risk</th><th>Impact</th><th>Probability</th></tr></thead>
+            <thead><tr><th>Component</th><th>Risk</th><th>Impact</th><th>Fix effort</th></tr></thead>
             <tbody>
               {findings.map((f) => (
                 <tr key={f.id}>
-                  <td><code>{f.file}</code> <span className="threat-report-context">({f.component})</span></td>
+                  <td>{f.component}</td>
                   <td>{f.title}</td>
                   <td><span className={`threat-report-severity ${f.exposure.impact}`}>{SEVERITY_LABEL[f.exposure.impact]}</span> {f.exposure.impactLabel}</td>
-                  <td><span className={`threat-report-severity ${f.exposure.probability}`}>{SEVERITY_LABEL[f.exposure.probability]}</span></td>
+                  <td><EffortLabel effort={f.effort} /></td>
                 </tr>
               ))}
             </tbody>

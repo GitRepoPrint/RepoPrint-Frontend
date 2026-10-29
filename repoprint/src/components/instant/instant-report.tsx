@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, RefObject } from "react";
 import { useRouter } from "next/navigation";
 import { DfdPreview } from "@/components/dfd/dfd-preview";
+import { HygieneGrade } from "@/components/score/score-parts";
 import { Icon } from "@/components/ui/icon";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { printReport } from "@/lib/print";
@@ -11,15 +13,37 @@ import type { Finding, InstantReport as Report } from "@/lib/api/types";
 import { FindingModal } from "./finding-modal";
 import { FrameworkCard } from "./framework-card";
 
+const MAX_CARDS_PER_ROW = 5;
+const MIN_CARD_WIDTH = 200;
+const CARD_GAP = 14;
+
+function useCardsPerRow(ref: RefObject<HTMLElement | null>) {
+  const [columns, setColumns] = useState(MAX_CARDS_PER_ROW);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const update = () => {
+      const fit = Math.floor((element.clientWidth + CARD_GAP) / (MIN_CARD_WIDTH + CARD_GAP));
+      setColumns(Math.max(1, Math.min(MAX_CARDS_PER_ROW, fit)));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref]);
+
+  return columns;
+}
+
 function FindingCard({ finding: f, onOpen }: { finding: Finding; onOpen: () => void }) {
   return (
     <article className="finding-card">
       <span className={`finding-severity-badge ${f.severity}`}>{SEVERITY_LABEL[f.severity]}</span>
       <span className="finding-card-category">{f.framework} · {f.category.toUpperCase()}</span>
       <strong className="finding-card-title">{f.title}</strong>
-      <code className="finding-card-file">{f.file}</code>
       <button type="button" className="finding-details-button" onClick={onOpen}>
-        Details <Icon name="arrowRight" size={13} />
+        Details <Icon name="arrowRight" size={14} />
       </button>
     </article>
   );
@@ -29,6 +53,8 @@ export function InstantReport({ report }: { report: Report }) {
   const router = useRouter();
   const { authenticated } = useAuth();
   const [selected, setSelected] = useState<Finding | null>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const columns = useCardsPerRow(cardsRef);
   const { summary, findings } = report;
   const stride = byFramework(findings, "STRIDE");
   const linddun = byFramework(findings, "LINDDUN");
@@ -37,12 +63,12 @@ export function InstantReport({ report }: { report: Report }) {
     <section className="fingerprint-report" aria-labelledby="fingerprint-title">
       <div className="report-heading">
         <div className="report-title-group">
-          <h2 id="fingerprint-title" className="text-[#f4f4f5]! [.theme-light_&]:text-[#282a3b]!">Repository Fingerprint</h2>
+          <h2 id="fingerprint-title">Repository Fingerprint</h2>
           <div className="report-repo">
-            <Icon name="github" size={17} />
-            <strong className="text-[#f0eef8]! [.theme-light_&]:text-[#303246]!">{report.repository}</strong>
-            <span className="report-mono text-[#a1a1aa]! [.theme-light_&]:text-[#6f7381]!">SHA <b className="text-[#e4e4e7]! [.theme-light_&]:text-[#42385e]!">{report.commit}</b></span>
-            <span className="report-branch"><Icon name="branch" size={13} /> {report.branch}</span>
+            <Icon name="github" size={18} />
+            <strong>{report.repository}</strong>
+            <span className="report-mono">SHA <b>{report.commit}</b></span>
+            <span className="report-branch"><Icon name="branch" size={14} /> {report.branch}</span>
           </div>
         </div>
         <div className="report-actions">
@@ -71,14 +97,9 @@ export function InstantReport({ report }: { report: Report }) {
           categories={LINDDUN_CATEGORIES}
           findings={linddun}
         />
-        <article className="report-kpi git-kpi">
-          <div className="report-kpi-label"><span className="report-kpi-icon blue"><Icon name="branch" size={17} /></span> GIT INTELLIGENCE &amp; HYGIENE</div>
-          <div className="report-kpi-value">{summary.git.grade} <small>Grade</small></div>
-          <div className="report-kpi-foot">
-            PR merge <strong>{summary.git.prMergeHours}h</strong><span>·</span>
-            <strong>{summary.git.commitsPerMonth}</strong> commits / month
-          </div>
-          <p className="report-kpi-detail">{summary.git.codeOwnersCoverage}% Code Owners coverage</p>
+        <article className="report-kpi framework-card">
+          <div className="report-kpi-label"><span className="report-kpi-icon blue"><Icon name="branch" size={18} /></span> GIT INTELLIGENCE &amp; HYGIENE</div>
+          <HygieneGrade git={summary.git} />
         </article>
       </div>
 
@@ -101,8 +122,8 @@ export function InstantReport({ report }: { report: Report }) {
           </div>
           <span className="findings-count">{String(findings.length).padStart(2, "0")} FINDINGS</span>
         </div>
-        <div className="finding-cards">
-          {balancedRows(prioritize(findings)).map((row) => (
+        <div className="finding-cards" ref={cardsRef} style={{ "--finding-cols": columns } as CSSProperties}>
+          {balancedRows(prioritize(findings), columns).map((row) => (
             <div key={row[0].id} className="finding-row">
               {row.map((finding) => (
                 <FindingCard key={finding.id} finding={finding} onOpen={() => setSelected(finding)} />

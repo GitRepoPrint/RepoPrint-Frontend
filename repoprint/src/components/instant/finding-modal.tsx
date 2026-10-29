@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { effortText } from "@/components/score/effort";
 import { Icon } from "@/components/ui/icon";
 import { SEVERITY_LABEL } from "@/lib/findings";
 import type { Finding } from "@/lib/api/types";
@@ -28,7 +29,7 @@ export function FindingModal({ finding: f, onClose }: Props) {
           <div><dt>FILE</dt><dd><code>{f.file}</code></dd></div>
           <div><dt>LOCATION</dt><dd>{f.location}</dd></div>
           <div><dt>IMPACT</dt><dd>{f.exposure.impactLabel} · {SEVERITY_LABEL[f.exposure.impact]}</dd></div>
-          <div><dt>PROBABILITY</dt><dd>{SEVERITY_LABEL[f.exposure.probability]}</dd></div>
+          <div><dt>FIX EFFORT</dt><dd>{effortText(f.effort)}</dd></div>
         </dl>
 
         <span className="finding-modal-title">REGULATORY REFERENCES</span>
