@@ -10,7 +10,7 @@ type Props = { analysis: RepositoryAnalysis; branch: string };
 export function DashboardReportDocument({ analysis, branch }: Props) {
   const { findings, team, hygiene } = analysis;
   const date = formatReportDate(analysis.analyzedAt);
-  const { branches, secrets, dependencies, quality } = hygiene;
+  const { branches, quality } = hygiene;
 
   return (
     <main className="report-document hidden! print:block!" aria-labelledby="formal-report-title">
@@ -49,25 +49,14 @@ export function DashboardReportDocument({ analysis, branch }: Props) {
               <th>Branches</th>
               <td>
                 <code>{branches.defaultBranch}</code> (default{branches.protected ? ", protected" : ""})
-                {branches.active.map((b) => <span key={b.name}> · <code>{b.name}</code> ({b.state})</span>)}
+                {branches.protectedBranches.map((name) => <span key={name}> · <code>{name}</code> (protected)</span>)}
+                <span> · {branches.total - 1 - branches.protectedBranches.length} other branches not protected</span>
               </td>
             </tr>
             <tr><th>Languages</th><td>{hygiene.languages.map((l) => `${l.name} ${l.percent}%`).join(" · ")}</td></tr>
             <tr>
-              <th>Dependencies</th>
-              <td>{dependencies.total} production dependencies · {dependencies.updates} updates available · lockfile present</td>
-            </tr>
-            <tr>
               <th>Tests / CI</th>
               <td>{quality.coverage}% test coverage · CI checks {quality.ci.passing ? "passing" : "failing"} on the latest analyzed commit</td>
-            </tr>
-            <tr>
-              <th>Secret history scan</th>
-              <td>
-                {secrets.exposed === 0
-                  ? "No exposed credentials detected in the inspected commit history"
-                  : `${secrets.exposed} exposed credentials detected in the inspected commit history`}
-              </td>
             </tr>
           </tbody>
         </table>

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, RefObject } from "react";
 import { useRouter } from "next/navigation";
 import { DfdPreview } from "@/components/dfd/dfd-preview";
-import { HygieneGrade } from "@/components/score/score-parts";
+import { HygieneGradeCard } from "@/components/score/score-parts";
 import { Icon } from "@/components/ui/icon";
 import { useAuth } from "@/lib/auth/auth-provider";
 import { printReport } from "@/lib/print";
@@ -97,10 +97,7 @@ export function InstantReport({ report }: { report: Report }) {
           categories={LINDDUN_CATEGORIES}
           findings={linddun}
         />
-        <article className="report-kpi framework-card">
-          <div className="report-kpi-label"><span className="report-kpi-icon blue"><Icon name="branch" size={18} /></span> GIT INTELLIGENCE &amp; HYGIENE</div>
-          <HygieneGrade git={summary.git} />
-        </article>
+        <HygieneGradeCard git={summary.git} />
       </div>
 
       <section className="report-panel architecture-panel dfd-area">

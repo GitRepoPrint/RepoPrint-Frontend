@@ -121,14 +121,15 @@ export interface TeamStats {
   prMergeStatus: string;
   codeOwnersCoverage: number;
   codeOwnersStatus: string;
+  weeklyCommits: number[];
+  recentPrs: { number: number; hours: number }[];
+  punchCard: number[][];
   contributors: Contributor[];
 }
 
 export interface Hygiene {
   languages: { name: string; percent: number }[];
-  secrets: { exposed: number; scannedDepthPercent: number };
-  branches: { defaultBranch: string; protected: boolean; rules: string[]; active: { name: string; state: string }[] };
-  dependencies: { total: number; updates: number; highVulnerabilities: number; lockfile: string };
+  branches: { defaultBranch: string; protected: boolean; rules: string[]; protectedBranches: string[]; total: number };
   quality: { coverage: number; ci: { provider: string; passing: boolean; lastRun: string } };
   license: { name: string; osiApproved: boolean; commercialUseCompliant: boolean };
 }
