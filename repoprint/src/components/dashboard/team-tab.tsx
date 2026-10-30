@@ -44,7 +44,6 @@ export function TeamTab({ analysis }: { analysis: RepositoryAnalysis }) {
     <section className="dashboard-section team-page" aria-labelledby="team-page-title">
       <header className="team-page-header">
         <h2 id="team-page-title">Team Dynamics &amp; Repository Hygiene</h2>
-        <p>How the team works on this repository and how well the repository is maintained.</p>
       </header>
 
       <section className="team-box" aria-labelledby="team-activity-title">

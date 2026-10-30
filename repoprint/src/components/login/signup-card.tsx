@@ -12,8 +12,8 @@ import { validateSignUp } from "@/lib/auth/validation";
 import type { SignUpErrors, SignUpField, SignUpValues } from "@/lib/auth/validation";
 import { AuthSwitchLink } from "./auth-switch-link";
 
-const ERROR_CLASS = "-mt-3 mb-3 text-xs text-red-500";
-const CHECK_TEXT = "text-xs leading-relaxed text-[#999bab] [.theme-light_&]:text-[#6f7586]";
+const ERROR_CLASS = "-mt-3 mb-3 text-sm text-red-500";
+const CHECK_TEXT = "text-sm leading-relaxed text-[#999bab] [.theme-light_&]:text-[#6f7586]";
 const CHECK_LINK = "font-semibold underline underline-offset-2 text-[#b5a0ff] [.theme-light_&]:text-[#7559c9]";
 
 const INITIAL: SignUpValues = {
@@ -91,14 +91,14 @@ export function SignUpCard() {
               <input type="checkbox" className="mt-0.5 size-4 shrink-0 accent-[#7559c9]" checked={values.acceptTerms} onChange={onCheck("acceptTerms")} aria-invalid={Boolean(errors.acceptTerms)} />
               <span>I agree to the <Link href="/terms" target="_blank" rel="noopener" className={CHECK_LINK}>Terms of Service</Link>.</span>
             </label>
-            {errors.acceptTerms && <p role="alert" className="ml-[26px] mt-1 text-xs text-red-500">{errors.acceptTerms}</p>}
+            {errors.acceptTerms && <p role="alert" className="ml-[26px] mt-1 text-sm text-red-500">{errors.acceptTerms}</p>}
           </div>
           <div>
             <label className={`flex items-start gap-2.5 ${CHECK_TEXT}`}>
               <input type="checkbox" className="mt-0.5 size-4 shrink-0 accent-[#7559c9]" checked={values.acceptPrivacy} onChange={onCheck("acceptPrivacy")} aria-invalid={Boolean(errors.acceptPrivacy)} />
               <span>I have read the <Link href="/privacy" target="_blank" rel="noopener" className={CHECK_LINK}>Privacy Policy</Link> and consent to the processing of my personal data under the GDPR.</span>
             </label>
-            {errors.acceptPrivacy && <p role="alert" className="ml-[26px] mt-1 text-xs text-red-500">{errors.acceptPrivacy}</p>}
+            {errors.acceptPrivacy && <p role="alert" className="ml-[26px] mt-1 text-sm text-red-500">{errors.acceptPrivacy}</p>}
           </div>
           <label className={`flex items-start gap-2.5 ${CHECK_TEXT}`}>
             <input type="checkbox" className="mt-0.5 size-4 shrink-0 accent-[#7559c9]" checked={updates} onChange={(event) => setUpdates(event.target.checked)} />
@@ -106,7 +106,7 @@ export function SignUpCard() {
           </label>
         </div>
 
-        <button type="submit" className="button button-primary h-[45px]! w-full text-xs!">
+        <button type="submit" className="button button-primary h-[45px]! w-full text-sm!">
           Create account <Icon name="arrowRight" size={17} />
         </button>
       </form>

@@ -11,7 +11,7 @@ import { validateCredentials } from "@/lib/auth/validation";
 import { AuthSwitchLink } from "./auth-switch-link";
 import type { CredentialErrors } from "@/lib/auth/validation";
 
-const ERROR_CLASS = "-mt-3 mb-3 text-xs text-red-500";
+const ERROR_CLASS = "-mt-3 mb-3 text-sm text-red-500";
 
 export function LoginCard() {
   const router = useRouter();

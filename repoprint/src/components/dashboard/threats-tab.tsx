@@ -10,7 +10,7 @@ type ThreatsTabProps = {
 
 const Section = ({ number, title, children }: { number: string; title: string; children: React.ReactNode }) => (
   <section className="formal-report-section">
-    <div className="formal-section-title"><span>{number}</span><h2>{title}</h2></div>
+    <div className="formal-section-title"><span>{number}</span><h3>{title}</h3></div>
     {children}
   </section>
 );
@@ -30,6 +30,10 @@ export function ThreatsTab({ analysis, reasons, onTriage }: ThreatsTabProps) {
 
   return (
     <div className="threat-report-view">
+      <header className="tab-page-header">
+        <h2>Threat Modeling &amp; Architectural Posture</h2>
+      </header>
+
       <Section number="01" title="Executive Summary & Risk Overview">
         <div className="threat-report-summary"><p>{analysis.executiveSummary}</p></div>
         <div className="threat-report-table-wrap">

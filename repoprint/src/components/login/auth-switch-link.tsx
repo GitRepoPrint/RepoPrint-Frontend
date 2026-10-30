@@ -13,7 +13,7 @@ type AuthSwitchLinkProps = {
 function Content({ href, prompt, label }: { href: string; prompt: string; label: string }) {
   // Dentro de um <div> para não herdar a regra `.login-card>p` do CSS do mockup.
   return (
-    <div className="mt-6 text-xs text-[#898b9b] [.theme-light_&]:text-[#777e8c]">
+    <div className="mt-6 text-sm text-[#898b9b] [.theme-light_&]:text-[#777e8c]">
       {prompt}{" "}
       <Link href={href} className="font-semibold text-[#b5a0ff] hover:underline [.theme-light_&]:text-[#7559c9]">
         {label}
