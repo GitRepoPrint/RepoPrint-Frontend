@@ -20,7 +20,7 @@ export interface Finding {
   framework: Framework;
   category: string;          // "Spoofing", "Linkability"
   severity: Severity;
-  component: string;         // "API Gateway"
+  component: string;         // título do nó do DFD: "Auth Gateway"
   file: string;              // "auth/session.ts"
   location: string;          // "client to API"
   title: string;
@@ -88,20 +88,11 @@ export interface DfdEdge {
   label: string;
 }
 
-export interface DfdThreatMarker {
-  id: string;
-  label: string;             // ficheiro afetado
-  x: number;
-  y: number;
-  level: "critical" | "warning";
-}
-
 export interface DfdModel {
   boundary: { x: number; y: number; width: number; height: number; label: string };
   nodes: DfdNodeData[];
   flows: string[];           // atributo "d" de cada ligação (pré-visualização do dashboard)
   edges: DfdEdge[];          // as mesmas ligações como grafo (canvas completo)
-  markers: DfdThreatMarker[];
 }
 
 export interface Contributor {

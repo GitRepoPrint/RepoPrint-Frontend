@@ -41,11 +41,7 @@ export function TeamTab({ analysis }: { analysis: RepositoryAnalysis }) {
   const otherBranches = branches.total - 1 - branches.protectedBranches.length;
 
   return (
-    <section className="dashboard-section team-page" aria-labelledby="team-page-title">
-      <header className="team-page-header">
-        <h2 id="team-page-title">Team Dynamics &amp; Repository Hygiene</h2>
-      </header>
-
+    <section className="dashboard-section team-page" aria-label="Team Dynamics and Repository Hygiene">
       <section className="team-box" aria-labelledby="team-activity-title">
         <header className="team-box-header">
           <div>

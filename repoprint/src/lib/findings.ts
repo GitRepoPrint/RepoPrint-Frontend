@@ -1,4 +1,4 @@
-import type { Finding, Framework, Severity } from "@/lib/api/types";
+import type { DfdModel, DfdNodeData, Finding, Framework, Severity } from "@/lib/api/types";
 
 export const SEVERITY_LABEL: Record<Severity, string> = { high: "High", medium: "Medium", low: "Low" };
 const SEVERITY_ORDER: Record<Severity, number> = { high: 0, medium: 1, low: 2 };
@@ -9,6 +9,23 @@ export const byFramework = (findings: Finding[], framework: Framework) =>
 /** Mais graves primeiro; mantém a ordem original entre findings com a mesma severidade. */
 export const prioritize = (findings: Finding[]) =>
   [...findings].sort((a, b) => SEVERITY_ORDER[a.severity] - SEVERITY_ORDER[b.severity]);
+
+export interface NodeRisk {
+  node: DfdNodeData;
+  findings: Finding[];
+  severity: Severity | null;
+}
+
+/** Findings de cada nó do DFD; componentes com mais risco primeiro. */
+export function risksByNode(model: DfdModel, findings: Finding[]): NodeRisk[] {
+  const byId = new Map(findings.map((f) => [f.id, f]));
+  const risks = model.nodes.map((node) => {
+    const list = prioritize(node.findingIds.flatMap((id) => byId.get(id) ?? []));
+    return { node, findings: list, severity: list[0]?.severity ?? null };
+  });
+  const rank = (risk: NodeRisk) => (risk.severity ? SEVERITY_ORDER[risk.severity] : 3);
+  return risks.sort((a, b) => rank(a) - rank(b) || b.findings.length - a.findings.length);
+}
 
 /** "GDPR Art. 5(1)(c)" -> "Art. 5(1)(c)"; só os artigos do RGPD. */
 export const gdprArticles = (finding: Finding) =>

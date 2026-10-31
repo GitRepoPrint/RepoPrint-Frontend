@@ -43,10 +43,6 @@ export const mockAnalysis: Omit<RepositoryAnalysis, "repository"> = {
       { id: "e-payments-telemetry", source: "payments", target: "telemetry", sourceHandle: "r", targetHandle: "l", label: "EVENTS" },
       { id: "e-telemetry-event-logs", source: "telemetry", target: "event-logs", sourceHandle: "b", targetHandle: "t", label: "TELEMETRY" },
     ],
-    markers: [
-      { id: "m-session", label: "auth/session.ts", x: 205, y: 80, level: "critical" },
-      { id: "m-tracker", label: "telemetry/tracker.go", x: 643, y: 80, level: "warning" },
-    ],
   },
   team: {
     commits30d: 47,
