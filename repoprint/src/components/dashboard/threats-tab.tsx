@@ -108,7 +108,6 @@ function FindingCard({ finding: f, reason, onTriage }: { finding: Finding; reaso
 export function ThreatsTab({ analysis, risks, nodeId, reasons, onTriage, onSelectNode, onShowInDiagram }: ThreatsTabProps) {
   const { findings, dfd } = analysis;
   const atRisk = risks.filter((risk) => risk.findings.length);
-  const clean = risks.filter((risk) => !risk.findings.length);
   const current = atRisk.find((risk) => risk.node.id === nodeId) ?? atRisk[0];
   const [guideOpen, setGuideOpen] = useState(false);
   const counts = countBySeverity(findings);
@@ -157,12 +156,6 @@ export function ThreatsTab({ analysis, risks, nodeId, reasons, onTriage, onSelec
                   <small>{KIND_LABEL[node.kind]} · {[...new Set(list.map((f) => f.file))].join(", ")}</small>
                 </button>
               ))}
-              {clean.length > 0 && (
-                <div className="threat-component clean">
-                  <span className="threat-component-name">{clean.length} without findings</span>
-                  <small>{clean.map((risk) => risk.node.title).join(", ")}</small>
-                </div>
-              )}
             </nav>
 
             <section className="threat-pane" aria-labelledby="threat-pane-title">

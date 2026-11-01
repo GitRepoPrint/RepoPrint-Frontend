@@ -339,11 +339,6 @@ button.threat-component:hover {
   outline-offset: 2px;
 }
 
-.threat-component.clean {
-  background: transparent;
-  border-style: dashed;
-}
-
 .threat-component-name {
   display: flex;
   align-items: center;
