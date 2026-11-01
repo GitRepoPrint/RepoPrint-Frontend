@@ -19,6 +19,7 @@ export default async function RepositoryDashboardPage({ params }: PageProps) {
   if (!name) notFound();
 
   const analysis = await getRepositoryAnalysis(name);
+  if (!analysis) notFound();
 
   // Suspense: o DashboardView lê ?tab= com useSearchParams. Não acrescenta nenhum elemento ao DOM,
   // por isso o <main> e o relatório continuam a ser filhos diretos do .app-shell (o CSS de impressão depende disso).

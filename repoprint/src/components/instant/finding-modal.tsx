@@ -1,19 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
 import { effortText } from "@/components/score/effort";
 import { Icon } from "@/components/ui/icon";
+import { useEscapeKey } from "@/hooks/use-escape-key";
 import { SEVERITY_LABEL } from "@/lib/findings";
 import type { Finding } from "@/lib/api/types";
 
 type Props = { finding: Finding; onClose: () => void };
 
 export function FindingModal({ finding: f, onClose }: Props) {
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useEscapeKey(onClose);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>

@@ -4,7 +4,9 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { InstantReportDocument } from "@/components/report/instant-report-document";
 import { useToast } from "@/components/ui/toast";
-import { analyzeInstant, DEFAULT_REPOSITORY, parseGithubRepository } from "@/lib/api/instant";
+import { errorMessage } from "@/lib/api/errors";
+import { analyzeInstant, DEFAULT_REPOSITORY } from "@/lib/api/instant";
+import { parseGithubRepository } from "@/lib/api/repositories";
 import type { InstantReport as Report } from "@/lib/api/types";
 import { InstantForm } from "./instant-form";
 import { InstantReport } from "./instant-report";
@@ -26,8 +28,17 @@ export function InstantAnalyzer({ children }: { children: ReactNode }) {
       notify("Enter a valid public GitHub repository URL.");
       return; // como no mockup: o estado atual mantém-se
     }
+    const previous = state;
     setState({ status: "loading" });
-    setState({ status: "done", report: await analyzeInstant(repository) });
+    try {
+      setState({ status: "done", report: await analyzeInstant(repository) });
+    } catch (error) {
+      // Rede em baixo, timeout ou resposta de erro do backend: não fica preso em "loading".
+      // Volta ao que estava antes (o relatório anterior, se existia) e avisa o utilizador.
+      console.error("Instant analysis failed", error);
+      setState(previous);
+      notify(errorMessage(error, "The analysis failed. Please try again."));
+    }
   }
 
   return (

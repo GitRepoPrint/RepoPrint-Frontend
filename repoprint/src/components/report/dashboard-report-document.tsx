@@ -1,4 +1,4 @@
-import { FormalDfd } from "@/components/dfd/formal-dfd";
+import { StaticDfd } from "@/components/dfd/static-dfd";
 import { formatReportDate } from "@/lib/format";
 import type { RepositoryAnalysis } from "@/lib/api/types";
 import { ReportFooter, ReportHeader, ReportSection } from "./report-parts";
@@ -31,7 +31,7 @@ export function DashboardReportDocument({ analysis, branch }: Props) {
 
       <ReportSection number="04" title="Inferred Architecture & Data Flow Diagram (DFD)" className="formal-dfd-section">
         <p>Primary payment and identity flows inferred from repository structure and analysis findings.</p>
-        <FormalDfd />
+        <StaticDfd variant="formal" />
       </ReportSection>
 
       <ReportSection number="05" title="Team Cadence & Structural Hygiene">

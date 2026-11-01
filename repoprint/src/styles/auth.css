@@ -1,0 +1,234 @@
+/* Login e registo */
+
+.login-main {
+  min-height: calc(100vh - 72px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  padding: 50px 20px;
+  background-image: radial-gradient(#343446 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.login-glow {
+  position: absolute;
+  width: 660px;
+  height: 620px;
+  left: calc(50% - 330px);
+  top: calc(50% - 310px);
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    #4b327e52 0,
+    #211b3540 44%,
+    transparent 75%
+  );
+}
+
+.login-card {
+  position: relative;
+  width: min(100%, 468px);
+  padding: 39px 43px 34px;
+  background: #191c26;
+  border: 1px solid #494056;
+  border-radius: 16px;
+  box-shadow: 0 27px 100px #0008;
+  text-align: center;
+}
+
+.login-logo {
+  display: block;
+  width: 60px;
+  height: auto;
+  margin: 0 auto 24px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 22px rgba(124, 99, 184, 0.35));
+}
+
+.login-card h1 {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 36px;
+  letter-spacing: -1.6px;
+  line-height: 1.14;
+  margin: 13px 0 14px;
+}
+
+.login-card h1 span {
+  color: #b5a0ff;
+}
+
+.login-card > p {
+  max-width: 340px;
+  margin: 0 auto;
+  color: #999bab;
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.login-providers {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login-providers button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  height: 51px;
+  padding: 0 17px;
+  text-align: left;
+  color: #f0edf8;
+  background: #252834;
+  border: 1px solid #454657;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  transition:
+    border-color 0.2s,
+    background 0.2s,
+    transform 0.2s;
+}
+
+.login-providers button:hover {
+  border-color: #9b82e4;
+  background: #302d41;
+  transform: translateY(-1px);
+}
+
+.login-providers button > svg:last-child {
+  margin-left: auto;
+  color: #a99abd;
+}
+
+.theme-light .login-main {
+  background-image: radial-gradient(#dcddea 1px, transparent 1px);
+}
+
+.theme-light .login-glow {
+  background: radial-gradient(
+    circle,
+    #dbd0faad 0,
+    #f0ebfb55 44%,
+    transparent 75%
+  );
+}
+
+.theme-light .login-card {
+  background: #fff;
+  border-color: #d9d2e8;
+  box-shadow: 0 27px 80px #6b5b951f;
+}
+
+.theme-light .login-logo {
+  filter: drop-shadow(0 8px 18px rgba(114, 88, 204, 0.22));
+}
+
+.theme-light .login-card h1 span {
+  color: #7559c9;
+}
+
+.theme-light .login-providers button {
+  background: #fff;
+  border-color: #d8dce6;
+  color: #313244;
+}
+
+.theme-light .login-providers button:hover {
+  background: #f8f4ff;
+  border-color: #a78cdb;
+}
+
+.login-card {
+  padding-top: 32px;
+  padding-bottom: 26px;
+}
+
+.login-providers {
+  margin-top: 23px;
+}
+
+.login-separator {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  color: #8e8a9f;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  letter-spacing: 0.45px;
+  white-space: nowrap;
+  margin: 24px 0 20px;
+}
+
+.login-separator span {
+  flex: 1;
+  height: 1px;
+  background: #3b3b49;
+}
+
+.site-login-form {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.site-login-form label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #cac5d7;
+  margin-bottom: 8px;
+}
+
+.site-login-form input {
+  width: 100%;
+  height: 45px;
+  background: #252834;
+  border: 1px solid #454657;
+  border-radius: 7px;
+  color: #f0edf8;
+  padding: 0 13px;
+  font-size: 14px;
+  outline: none;
+  margin-bottom: 17px;
+}
+
+.site-login-form input::placeholder {
+  color: #757989;
+}
+
+.site-login-form input:focus {
+  border-color: #a38bf0;
+  box-shadow: 0 0 0 3px #a38bf025;
+}
+
+.site-login-form .button {
+  height: 45px;
+  margin-top: 3px;
+  font-size: 14px;
+}
+
+.theme-light .login-separator {
+  color: #77718b;
+}
+
+.theme-light .login-separator span {
+  background: #e2e1eb;
+}
+
+.theme-light .site-login-form label {
+  color: #4b485e;
+}
+
+.theme-light .site-login-form input {
+  background: #fff;
+  border-color: #d8dce6;
+  color: #282a3a;
+}
+
+.theme-light .site-login-form input::placeholder {
+  color: #979baa;
+}

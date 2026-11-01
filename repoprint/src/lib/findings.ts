@@ -1,7 +1,15 @@
 import type { DfdModel, DfdNodeData, Finding, Framework, Severity } from "@/lib/api/types";
 
 export const SEVERITY_LABEL: Record<Severity, string> = { high: "High", medium: "Medium", low: "Low" };
+/** Da mais grave para a menos grave. */
+export const SEVERITIES: Severity[] = ["high", "medium", "low"];
 const SEVERITY_ORDER: Record<Severity, number> = { high: 0, medium: 1, low: 2 };
+
+/** Quantos findings há de cada severidade (só as que têm pelo menos um), da mais grave para a menos grave. */
+export const countBySeverity = (findings: Finding[]) =>
+  SEVERITIES
+    .map((severity) => ({ severity, count: findings.filter((f) => f.severity === severity).length }))
+    .filter(({ count }) => count > 0);
 
 export const byFramework = (findings: Finding[], framework: Framework) =>
   findings.filter((f) => f.framework === framework);

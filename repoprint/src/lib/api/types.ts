@@ -77,8 +77,6 @@ export interface DfdNodeData {
   findingIds: string[];      // findings que afetam este componente
 }
 
-export type DfdHandleId = "l" | "r" | "t" | "b";
-
 export interface DfdEdge {
   id: string;
   source: string;

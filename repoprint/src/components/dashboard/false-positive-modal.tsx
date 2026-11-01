@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { FormEvent } from "react";
 import { Icon } from "@/components/ui/icon";
+import { useEscapeKey } from "@/hooks/use-escape-key";
 import { findingLabel } from "@/lib/findings";
 import type { Finding } from "@/lib/api/types";
 
@@ -18,11 +19,7 @@ const MIN_REASON_LENGTH = 12;
 export function FalsePositiveModal({ finding, initialReason, onClose, onSave }: Props) {
   const [reason, setReason] = useState(initialReason);
 
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useEscapeKey(onClose);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();

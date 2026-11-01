@@ -7,7 +7,7 @@ import { HEALTHY_SCORE, RepositoryHealth } from "@/components/repositories/repos
 import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
 import { useRepositories } from "@/hooks/use-repositories";
-import { newRepository, parseRepositoryUrl, repoSlug } from "@/lib/api/repositories";
+import { newRepository, parseGithubRepository, repoSlug } from "@/lib/api/repositories";
 import type { Repository } from "@/lib/api/types";
 
 function RepositoryRow({ item, onOpen }: { item: Repository; onOpen: (item: Repository) => void }) {
@@ -55,7 +55,7 @@ export function RepositoriesView() {
   }
 
   function associate(url: string): boolean {
-    const name = parseRepositoryUrl(url);
+    const name = parseGithubRepository(url);
     if (!name) { notify("Enter a valid GitHub repository URL."); return false; }
     if (repositories!.some((r) => r.name.toLowerCase() === name.toLowerCase())) {
       notify("This repository is already associated.");

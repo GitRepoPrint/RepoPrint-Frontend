@@ -1,7 +1,7 @@
 import { Icon } from "@/components/ui/icon";
 import type { IconName } from "@/components/ui/icon";
-import { countByCategory, SEVERITY_LABEL } from "@/lib/findings";
-import type { Finding, Severity } from "@/lib/api/types";
+import { countByCategory, countBySeverity, SEVERITY_LABEL } from "@/lib/findings";
+import type { Finding } from "@/lib/api/types";
 
 type FrameworkCardProps = {
   label: string;
@@ -13,14 +13,10 @@ type FrameworkCardProps = {
   findings: Finding[];
 };
 
-const SEVERITIES: Severity[] = ["high", "medium", "low"];
-
 export function FrameworkCard({ label, icon, iconTone, tone, detail, categories, findings }: FrameworkCardProps) {
   const rows = countByCategory(findings, categories);
   const max = Math.max(1, ...rows.map((row) => row.count));
-  const bySeverity = SEVERITIES
-    .map((severity) => ({ severity, count: findings.filter((f) => f.severity === severity).length }))
-    .filter(({ count }) => count > 0);
+  const bySeverity = countBySeverity(findings);
 
   return (
     <section className="report-panel framework-card">

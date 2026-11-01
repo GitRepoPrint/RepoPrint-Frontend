@@ -7,6 +7,9 @@ import type { DfdEdge, DfdModel, DfdNodeKind } from "@/lib/api/types";
 export const NODE_WIDTH = 170;
 export const NODE_HEIGHT = 104;
 export const GRID = 20;
+/** Limites de zoom do canvas (usados pelo React Flow e pelos botões +/- da toolbar). */
+export const MIN_ZOOM = 0.5;
+export const MAX_ZOOM = 1.5;
 export const EDGE_COLOR = "#8176b1";
 
 // A pré-visualização do dashboard usa um viewBox de 1000x320; no canvas os nós têm 170px de largura,

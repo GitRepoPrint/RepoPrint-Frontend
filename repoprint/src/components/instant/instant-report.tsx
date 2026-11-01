@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { CSSProperties, RefObject } from "react";
 import { useRouter } from "next/navigation";
-import { DfdPreview } from "@/components/dfd/dfd-preview";
+import { StaticDfd } from "@/components/dfd/static-dfd";
 import { HygieneGradeCard } from "@/components/score/score-parts";
 import { Icon } from "@/components/ui/icon";
 import { useAuth } from "@/lib/auth/auth-provider";
+import { fileBaseName } from "@/lib/download";
 import { printReport } from "@/lib/print";
 import { balancedRows, byFramework, LINDDUN_CATEGORIES, prioritize, SEVERITY_LABEL, STRIDE_CATEGORIES } from "@/lib/findings";
 import type { Finding, InstantReport as Report } from "@/lib/api/types";
@@ -72,7 +73,7 @@ export function InstantReport({ report }: { report: Report }) {
           </div>
         </div>
         <div className="report-actions">
-          <button type="button" className="button button-outline" onClick={() => printReport(`${report.repository.replace("/", "-")}-audit-report`)}>
+          <button type="button" className="button button-outline" onClick={() => printReport(`${fileBaseName(report.repository)}-audit-report`)}>
             <Icon name="download" size={16} /> Download Report
           </button>
         </div>
@@ -108,7 +109,7 @@ export function InstantReport({ report }: { report: Report }) {
           </div>
           <span className="schema-preview">DFD · PREVIEW</span>
         </div>
-        <DfdPreview />
+        <StaticDfd variant="preview" />
       </section>
 
       <section className="report-panel threats-panel findings-area">

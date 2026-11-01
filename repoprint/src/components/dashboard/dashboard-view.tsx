@@ -6,6 +6,7 @@ import { DashboardReportDocument } from "@/components/report/dashboard-report-do
 import { useToast } from "@/components/ui/toast";
 import { repoSlug } from "@/lib/api/repositories";
 import { risksByNode } from "@/lib/findings";
+import { fileBaseName } from "@/lib/download";
 import { printReport } from "@/lib/print";
 import type { Finding, RepositoryAnalysis } from "@/lib/api/types";
 import { DashboardHeader } from "./dashboard-header";
@@ -74,7 +75,7 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
           onScanChange={setScanId}
           onBack={() => router.push("/repositories")}
           onScan={() => router.push(canvasUrl)}
-          onExport={() => printReport(`${analysis.repository.replace("/", "-")}-audit-report`)}
+          onExport={() => printReport(`${fileBaseName(analysis.repository)}-audit-report`)}
         />
 
         <nav className="dashboard-tabs" role="tablist" aria-label="Dashboard analysis sections">

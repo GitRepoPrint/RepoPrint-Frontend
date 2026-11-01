@@ -2,13 +2,11 @@
 
 import { useReactFlow, useStore } from "@xyflow/react";
 import { Icon } from "@/components/ui/icon";
+import { MAX_ZOOM, MIN_ZOOM } from "@/lib/dfd/graph";
 
 // `.toolbar-right button` (mockup) tem mais especificidade que `.button-primary` e deixava o botão sem cor própria.
 const PRIMARY_FIX =
   "bg-[#a691ff]! border-[#b9aaff]! text-[#151023]! [.theme-light_&]:bg-[#7259d6]! [.theme-light_&]:border-[#7259d6]! [.theme-light_&]:text-white!";
-
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 1.5;
 
 type CanvasToolbarProps = {
   repository: string;

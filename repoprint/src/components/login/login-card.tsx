@@ -6,12 +6,11 @@ import type { FormEvent } from "react";
 import { Icon } from "@/components/ui/icon";
 import { ThemedLogo } from "@/components/ui/themed-logo";
 import { useAuth } from "@/lib/auth/auth-provider";
-import { resolveNextPath } from "@/lib/auth/redirect";
+import { nextPathFromLocation } from "@/lib/auth/redirect";
 import { validateCredentials } from "@/lib/auth/validation";
-import { AuthSwitchLink } from "./auth-switch-link";
 import type { CredentialErrors } from "@/lib/auth/validation";
-
-const ERROR_CLASS = "-mt-3 mb-3 text-sm text-red-500";
+import { AuthSwitchLink } from "./auth-switch-link";
+import { FIELD_ERROR_CLASS } from "./form-styles";
 
 export function LoginCard() {
   const router = useRouter();
@@ -20,15 +19,10 @@ export function LoginCard() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<CredentialErrors>({});
 
-  // Lido só no momento do clique (no cliente): o cartão fica no HTML inicial, sem <Suspense>.
-  function destination() {
-    const next = new URLSearchParams(window.location.search).get("next");
-    return resolveNextPath(next, window.location.origin);
-  }
-
+  // O ?next= só é lido no momento do clique (no cliente): o cartão fica no HTML inicial, sem <Suspense>.
   function continueWithGitHub() {
     signIn("GitHub");
-    router.push(destination());
+    router.push(nextPathFromLocation());
   }
 
   function handleSubmit(event: FormEvent) {
@@ -38,7 +32,7 @@ export function LoginCard() {
     if (found.email || found.password) return;
     signIn("RepoPrint");
     setPassword("");
-    router.push(destination());
+    router.push(nextPathFromLocation());
   }
 
   return (
@@ -64,7 +58,7 @@ export function LoginCard() {
           aria-invalid={Boolean(errors.email)}
           aria-describedby={errors.email ? "account-email-error" : undefined}
         />
-        {errors.email && <p id="account-email-error" role="alert" className={ERROR_CLASS}>{errors.email}</p>}
+        {errors.email && <p id="account-email-error" role="alert" className={FIELD_ERROR_CLASS}>{errors.email}</p>}
         <label htmlFor="account-password">Password</label>
         <input
           id="account-password"
@@ -76,7 +70,7 @@ export function LoginCard() {
           aria-invalid={Boolean(errors.password)}
           aria-describedby={errors.password ? "account-password-error" : undefined}
         />
-        {errors.password && <p id="account-password-error" role="alert" className={ERROR_CLASS}>{errors.password}</p>}
+        {errors.password && <p id="account-password-error" role="alert" className={FIELD_ERROR_CLASS}>{errors.password}</p>}
         <button type="submit" className="button button-primary">Sign In <Icon name="arrowRight" size={17} /></button>
       </form>
       <AuthSwitchLink to="/signup" prompt="New to RepoPrint?" label="Create an account" />

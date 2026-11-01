@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { KIND_LABEL } from "@/components/dfd/dfd-scene";
 import { Icon } from "@/components/ui/icon";
-import { byFramework, SEVERITY_LABEL } from "@/lib/findings";
+import { useEscapeKey } from "@/hooks/use-escape-key";
+import { byFramework, countBySeverity, SEVERITY_LABEL } from "@/lib/findings";
 import type { NodeRisk } from "@/lib/findings";
 import type { Finding, RepositoryAnalysis, Severity } from "@/lib/api/types";
 
@@ -16,8 +17,6 @@ type ThreatsTabProps = {
   onSelectNode: (id: string) => void;
   onShowInDiagram: (id: string) => void;
 };
-
-const SEVERITIES: Severity[] = ["high", "medium", "low"];
 
 const PROBABILITY_MEANING: Record<Severity, string> = { high: "likely", medium: "possible", low: "unlikely" };
 
@@ -38,11 +37,7 @@ function SeverityChip({ level }: { level: Severity }) {
 }
 
 function RatingGuideModal({ onClose }: { onClose: () => void }) {
-  useEffect(() => {
-    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onClose(); };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  useEscapeKey(onClose);
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -55,7 +50,7 @@ function RatingGuideModal({ onClose }: { onClose: () => void }) {
             <thead><tr><th scope="col">Level</th><th scope="col">Impact</th><th scope="col">Probability</th></tr></thead>
             <tbody>
               {RATING_ROWS.map(({ level, impact, probability }) => (
-                <tr key={level}><th scope="row"><SeverityChip level={level} /></th><td data-label="Impact">{impact}</td><td data-label="Probability">{probability}</td></tr>
+                <tr key={level}><th scope="row"><SeverityChip level={level} /></th><td>{impact}</td><td>{probability}</td></tr>
               ))}
             </tbody>
           </table>
@@ -65,7 +60,7 @@ function RatingGuideModal({ onClose }: { onClose: () => void }) {
           <table className="rating-table" aria-labelledby="rating-signals">
             <thead><tr><th scope="col">Signal</th><th scope="col">Counts when</th></tr></thead>
             <tbody>
-              {PROBABILITY_SIGNALS.map(({ name, text }) => <tr key={name}><th scope="row">{name}</th><td data-label="Counts when">{text}</td></tr>)}
+              {PROBABILITY_SIGNALS.map(({ name, text }) => <tr key={name}><th scope="row">{name}</th><td>{text}</td></tr>)}
             </tbody>
           </table>
         </div>
@@ -116,7 +111,7 @@ export function ThreatsTab({ analysis, risks, nodeId, reasons, onTriage, onSelec
   const clean = risks.filter((risk) => !risk.findings.length);
   const current = atRisk.find((risk) => risk.node.id === nodeId) ?? atRisk[0];
   const [guideOpen, setGuideOpen] = useState(false);
-  const counts = SEVERITIES.map((level) => ({ level, count: findings.filter((f) => f.severity === level).length })).filter((c) => c.count);
+  const counts = countBySeverity(findings);
 
   return (
     <div className="threat-report-view">
@@ -130,7 +125,7 @@ export function ThreatsTab({ analysis, risks, nodeId, reasons, onTriage, onSelec
               </button>
             </div>
             <div className="threat-stat-values">
-              {counts.map(({ level, count }) => <span key={level} className={level}><strong>{count}</strong>{SEVERITY_LABEL[level]}</span>)}
+              {counts.map(({ severity, count }) => <span key={severity} className={severity}><strong>{count}</strong>{SEVERITY_LABEL[severity]}</span>)}
             </div>
           </div>
           <div className="threat-stat">

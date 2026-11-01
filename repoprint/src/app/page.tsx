@@ -7,7 +7,7 @@ export default function Landing() {
   return (
     <InstantAnalyzer>
       <h1>From Code to <span>Threats,</span><br />Instantly<span className="hero-period">.</span></h1>
-      <p className="hero-subtitle">Semi-automated Data Flow Diagrams and Git profiling<br className="desktop-break" /> from any public repository URL.</p>
+      <p className="hero-subtitle">Semi-automated Data Flow Diagrams and Git profiling<br /> from any public repository URL.</p>
     </InstantAnalyzer>
   );
 }

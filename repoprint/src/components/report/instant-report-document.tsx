@@ -1,4 +1,4 @@
-import { FormalDfd } from "@/components/dfd/formal-dfd";
+import { StaticDfd } from "@/components/dfd/static-dfd";
 import { formatReportDate } from "@/lib/format";
 import { hygieneGrade } from "@/lib/score";
 import type { InstantReport } from "@/lib/api/types";
@@ -48,7 +48,7 @@ export function InstantReportDocument({ report }: { report: InstantReport }) {
 
       <ReportSection number="04" title="Inferred Architecture & Data Flow Diagram (DFD)" className="formal-dfd-section">
         <p>Primary payment and identity flows inferred from repository structure and analysis findings.</p>
-        <FormalDfd />
+        <StaticDfd variant="formal" />
       </ReportSection>
 
       <ReportSection number="05" title="Recommended Mitigations" className="formal-mitigations">

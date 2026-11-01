@@ -1,21 +1,18 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { ThemeToggle } from "@/components/theme";
+import { Icon } from "@/components/ui/icon";
+import { ThemedLogo } from "@/components/ui/themed-logo";
 import { useAuth } from "@/lib/auth/auth-provider";
-import lightLogo from "@/assets/logos/logo_final.png";
-import darkLogo from "@/assets/logos/logo_final_branco.png";
 
 function Logo({ href }: { href: string }) {
-  // Os dois logos estão no DOM; o CSS (.logo-light / .logo-dark) mostra o certo conforme o tema.
-  // Assim não há JavaScript nem "piscar" no primeiro render.
+  // priority: o logo está sempre visível no topo, por isso é carregado logo (não "lazy").
   return (
     <Link className="brand" href={href} aria-label="RepoPrint home">
-      <Image className="logo-dark" src={darkLogo} alt="RepoPrint" priority />
-      <Image className="logo-light" src={lightLogo} alt="RepoPrint" priority />
+      <ThemedLogo priority />
     </Link>
   );
 }
@@ -50,7 +47,7 @@ export default function Navbar() {
           {profileMenuOpen && <div className="profile-menu" role="menu">
             <button type="button" role="menuitem" onClick={handleSignOut}>Sign out</button>
           </div>}
-        </div> : <button className="button button-outline login-button" type="button" onClick={() => router.push("/login")}>Sign In <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 12h14m-7-7 7 7-7 7" /></svg></button>)}
+        </div> : <button className="button button-outline login-button" type="button" onClick={() => router.push("/login")}>Sign In <Icon name="arrowRight" size={15} /></button>)}
       </div>
     </div>
   </header>;
