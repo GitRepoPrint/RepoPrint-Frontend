@@ -1,129 +1,147 @@
+import type { ReactNode } from "react";
+import { HygieneChart } from "@/components/dashboard/hygiene-chart";
 import { Icon } from "@/components/ui/icon";
+import { hygieneGrade } from "@/lib/score";
 import type { RepositoryAnalysis } from "@/lib/api/types";
 
+type Tone = "good" | "warn" | "neutral";
+
+function Chip({ tone, children }: { tone: Tone; children: ReactNode }) {
+  return <span className={`team-chip ${tone}`}>{children}</span>;
+}
+
+function Stat({ label, value, status }: { label: string; value: string; status: ReactNode }) {
+  return (
+    <div className="team-stat">
+      <span className="team-stat-label">{label}</span>
+      <strong>{value}</strong>
+      {status}
+    </div>
+  );
+}
+
+function Check({ title, status, children, tall }: { title: string; status?: ReactNode; children: ReactNode; tall?: boolean }) {
+  return (
+    <article className={tall ? "hygiene-check tall" : "hygiene-check"}>
+      <header className="hygiene-check-header">
+        <h4>{title}</h4>
+        {status}
+      </header>
+      {children}
+    </article>
+  );
+}
+
 export function TeamTab({ analysis }: { analysis: RepositoryAnalysis }) {
-  const { team, hygiene, commit } = analysis;
-  const { dependencies, quality, secrets, branches, license } = hygiene;
-  // Barra verde = dependências em dia; o resto (âmbar) tem atualização disponível.
-  const upToDate = ((dependencies.total - dependencies.updates) / dependencies.total) * 100;
+  const { team, hygiene } = analysis;
+  const { quality, branches, license } = hygiene;
+  const activity = { prMergeHours: team.prMergeHours, commitsPerMonth: team.commits30d, codeOwnersCoverage: team.codeOwnersCoverage };
+  const grade = hygieneGrade(activity);
+  const commitsPerWeek = Math.round(team.commits30d / (30 / 7));
+  const otherBranches = branches.total - 1 - branches.protectedBranches.length;
 
   return (
-    <section className="dashboard-section team-hygiene-section">
-      <div className="section-header">
-        <div><h2>Team Dynamics &amp; Repository Hygiene</h2></div>
-        <p>Analysis of contributor cadence, pull request reviews, structural hygiene, CI/tests, and repository secrets.</p>
-      </div>
-      <div className="team-dynamics-grid">
-        <article className="team-panel dynamics-panel">
-          <div className="team-panel-heading">
-            <div><span className="team-section-kicker">GOVERNANCE &amp; HUMAN ACTIVITY</span><h3>Team Cadence &amp; Review Dynamics</h3></div>
-            <span className="team-count-pill">{team.contributors.length} Active Contributors</span>
+    <section className="dashboard-section team-page" aria-label="Team Dynamics and Repository Hygiene">
+      <section className="team-box" aria-labelledby="team-activity-title">
+        <header className="team-box-header">
+          <div>
+            <h3 id="team-activity-title">Team activity</h3>
+            <p>Commits, pull request reviews and code ownership in the last 30 days.</p>
           </div>
-          <div className="team-kpi-grid">
-            <article className="team-kpi"><div className="team-kpi-label">30-Day Commits</div><strong>{team.commits30d}</strong><span className="team-status-badge neutral">{team.commitsStatus}</span></article>
-            <article className="team-kpi"><div className="team-kpi-label">Avg PR Merge Time</div><strong>{team.prMergeHours}h</strong><span className="team-status-badge neutral">{team.prMergeStatus}</span></article>
-            <article className="team-kpi"><div className="team-kpi-label">Code Owners Coverage</div><strong>{team.codeOwnersCoverage}%</strong><span className="team-status-badge green">{team.codeOwnersStatus}</span></article>
+          <Chip tone="neutral">{team.contributors.length} active contributors</Chip>
+        </header>
+
+        <div className="team-stats">
+          <Stat label="Average commits per week" value={String(commitsPerWeek)} status={<Chip tone="neutral">{team.commitsStatus}</Chip>} />
+          <Stat label="Average PR merge time" value={`${team.prMergeHours}h`} status={<Chip tone="neutral">{team.prMergeStatus}</Chip>} />
+          <Stat label="Code Owners coverage" value={`${team.codeOwnersCoverage}%`} status={<Chip tone="good">{team.codeOwnersStatus}</Chip>} />
+        </div>
+
+        <div className="team-table-wrap">
+          <table className="team-table">
+            <thead>
+              <tr><th scope="col">Contributor</th><th scope="col">Commits</th><th scope="col">Review participation</th><th scope="col">Code ownership</th></tr>
+            </thead>
+            <tbody>
+              {team.contributors.map((person) => (
+                <tr key={person.initials}>
+                  <td>
+                    <div className="team-person">
+                      <span className={`avatar ${person.color}`}>{person.initials}</span>
+                      <div><strong>{person.name}</strong><small>{person.role}</small></div>
+                    </div>
+                  </td>
+                  <td>{person.commits}</td>
+                  <td>
+                    <div className="team-review">
+                      <span className="team-review-bar" aria-hidden="true"><span style={{ width: `${person.reviewParticipation}%` }} /></span>
+                      <strong>{person.reviewParticipation}%</strong>
+                    </div>
+                  </td>
+                  <td>{person.ownership}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section className="team-box" aria-labelledby="repo-hygiene-title">
+        <header className="team-box-header">
+          <div>
+            <h3 id="repo-hygiene-title">Repository hygiene</h3>
+            <p>Branch rules, tests and license found through the GitHub API.</p>
           </div>
-          <section className="commit-flow-card" aria-labelledby="commit-flow-title">
-            <div className="team-subsection-heading">
-              <div><h4 id="commit-flow-title">Commit Distribution &amp; PR Flow</h4><p>Last 30 days · repository activity snapshot</p></div>
-              <span className="team-status-badge neutral">{team.commits30d} commits</span>
-            </div>
-            <div className="commit-flow-metrics">
-              <div><span>Commit volume</span><strong>{team.commits30d} <small>commits</small></strong></div>
-              <div><span>Average PR merge</span><strong>{team.prMergeHours} <small>hours</small></strong></div>
-              <div className="weekly-data-note">Weekly totals are not available in this analysis snapshot.</div>
-            </div>
-          </section>
-          <div className="contributors-table-wrap">
-            <table className="contributors-table">
-              <thead><tr><th>Contributor</th><th>Total commits</th><th>PR Review Participation</th><th>Code Ownership</th></tr></thead>
-              <tbody>
-                {team.contributors.map((person) => (
-                  <tr key={person.initials}>
-                    <td><div className="person-cell"><span className={`avatar ${person.color}`}>{person.initials}</span><div><strong>{person.name}</strong><small>{person.role}</small></div></div></td>
-                    <td>{person.commits}</td>
-                    <td><div className="review-cell"><div className="review-meter"><span style={{ width: `${person.reviewParticipation}%` }} /></div><small>{person.reviewParticipation}%</small></div></td>
-                    <td className="ownership-cell">{person.ownership}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        </header>
+
+        <div className="hygiene-overview">
+          <HygieneChart team={team} />
+          <div className="hygiene-grade" role="img" aria-label={`Git hygiene grade ${grade.total} out of 100`}>
+            <strong>{grade.total}</strong>
+            <span>/ 100</span>
+            <small>Git hygiene grade</small>
           </div>
-        </article>
+        </div>
 
-        <article className="team-panel hygiene-panel">
-          <div className="team-panel-heading">
-            <div><span className="team-section-kicker">TECHNICAL POSTURE &amp; AUDIT</span><h3>Structural Hygiene &amp; Security Baseline</h3></div>
-            <span className="grade-pill">Grade: {hygiene.grade}</span>
-          </div>
-
-          <article className="baseline-card secrets-baseline-card">
-            <div className="baseline-card-heading">
-              <span className="baseline-icon"><Icon name="shield" size={19} /></span>
-              <span className={`hygiene-badge ${secrets.exposed === 0 ? "green" : "amber"}`}>{secrets.exposed === 0 ? "CLEAN" : "ACTION NEEDED"}</span>
-            </div>
-            <h4>{secrets.exposed} Exposed Secrets Detected</h4>
-            <p>Scanned depth: {secrets.scannedDepthPercent}% of commit history (entropy, keys, credentials)</p>
-          </article>
-
-          <article className="baseline-card branch-hygiene-card">
-            <div className="baseline-card-heading"><h4>Branch Governance &amp; Strategy</h4></div>
-            <div className="protected-branch">
-              <code>{branches.defaultBranch}</code>
-              {branches.protected && <span className="hygiene-badge green">Protected</span>}
-            </div>
-            <ul className="governance-list">{branches.rules.map((rule) => <li key={rule}>{rule}</li>)}</ul>
-            <div className="active-branches">
-              <span className="baseline-label">ACTIVE BRANCHES</span>
-              {branches.active.map((b) => <span key={b.name}><code>{b.name}</code><small>{b.state}</small></span>)}
-            </div>
-          </article>
-
-          <article className="baseline-card dependency-baseline-card">
-            <div className="baseline-card-heading">
-              <h4>Dependencies &amp; Supply Chain</h4>
-              <span className="dependency-total">{dependencies.total} <small>production dependencies</small></span>
-            </div>
-            <p className="lockfile-status"><Icon name="check" size={14} /> Lockfile Present <span>({dependencies.lockfile} verified)</span></p>
-            <div className="hygiene-badges">
-              <span className={`hygiene-badge ${dependencies.highVulnerabilities === 0 ? "green" : "amber"}`}>{dependencies.highVulnerabilities} High Vulnerabilities</span>
-              <span className="hygiene-badge amber">{dependencies.updates} Updates Available</span>
-            </div>
-            <div className="dependency-progress" role="img" aria-label={`${dependencies.updates} of ${dependencies.total} production dependencies have updates available`}>
-              <span style={{ width: `${upToDate}%` }} /><i />
-            </div>
-            <small className="hygiene-muted">{dependencies.updates} of {dependencies.total} dependencies have updates available</small>
-          </article>
-
-          <article className="baseline-card quality-hygiene-card">
-            <div className="baseline-card-heading"><h4>Continuous Integration &amp; Testing Baseline</h4></div>
-            <div className="baseline-quality-row">
-              <div><span className="baseline-label">TEST COVERAGE</span><strong className="coverage-value">{quality.coverage}% Coverage</strong></div>
-              <span className={`hygiene-badge ${quality.ci.passing ? "green" : "amber"}`}>{quality.ci.passing ? "Passing" : "Failing"}</span>
-            </div>
-            <div className="coverage-progress" role="img" aria-label={`Test coverage: ${quality.coverage} percent`}><span style={{ width: `${quality.coverage}%` }} /></div>
-            <div className="ci-baseline-row">
-              <span className="ci-pulse-dot" />
+        <div className="hygiene-checks">
+          <Check tall title="Branch protection" status={branches.protected ? <Chip tone="good">Protected</Chip> : <Chip tone="warn">Not protected</Chip>}>
+            <dl className="branch-info">
+              <div><dt>Default branch</dt><dd><code>{branches.defaultBranch}</code></dd></div>
               <div>
-                <strong>{quality.ci.provider} {quality.ci.passing ? "Passing" : "Failing"}</strong>
-                <small>Last analyzed commit <code>{commit}</code> · Last run {quality.ci.lastRun}</small>
+                <dt>Rules</dt>
+                <dd>
+                  <ul className="branch-rules">
+                    {branches.rules.map((rule) => <li key={rule}><Icon name="check" size={16} />{rule}</li>)}
+                  </ul>
+                </dd>
               </div>
-            </div>
-          </article>
+              {branches.protectedBranches.length > 0 && (
+                <div>
+                  <dt>Also protected</dt>
+                  <dd>
+                    <ul className="branch-chips">
+                      {branches.protectedBranches.map((name) => <li key={name}><code>{name}</code></li>)}
+                    </ul>
+                  </dd>
+                </div>
+              )}
+              <div><dt>Not protected</dt><dd>{otherBranches} other branches</dd></div>
+            </dl>
+          </Check>
 
-          <article className="baseline-card license-hygiene-card">
-            <div className="baseline-card-heading">
-              <h4>Licensing &amp; Legal Hygiene</h4>
-              {license.osiApproved && <span className="hygiene-badge neutral">OSI-Approved</span>}
+          <Check title="Tests and CI" status={<Chip tone={quality.ci.passing ? "good" : "warn"}>{quality.ci.passing ? "Passing" : "Failing"}</Chip>}>
+            <p className="hygiene-check-value">{quality.coverage}% test coverage</p>
+            <div className="hygiene-bar" role="img" aria-label={`Test coverage: ${quality.coverage} percent`}>
+              <span style={{ width: `${quality.coverage}%` }} />
             </div>
-            <div className="license-badges"><strong>{license.name}</strong></div>
-            {license.commercialUseCompliant && (
-              <div className="license-compliant"><Icon name="check" size={15} /><span>Legally Compliant for Commercial Distribution</span></div>
-            )}
-          </article>
-        </article>
-      </div>
+          </Check>
+
+          <Check title="License" status={license.osiApproved && <Chip tone="neutral">OSI approved</Chip>}>
+            <p className="hygiene-check-value">{license.name}</p>
+            {license.commercialUseCompliant && <p className="hygiene-ok"><Icon name="check" size={16} /> Allows commercial use</p>}
+          </Check>
+        </div>
+      </section>
     </section>
   );
 }

@@ -3,16 +3,17 @@ import type { Repository } from "./types";
 
 const STORAGE_KEY = "repoprint-repositories"; // mesma chave do mockup
 
-// Regra do modal "Associate repository" (igual ao mockup): só https://github.com/org/repo
-const REPOSITORY_URL = /^https?:\/\/github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/i;
+// Aceita "https://github.com/org/repo", "github.com/org/repo", ".git" no fim e links para páginas
+// dentro do repositório ("/tree/main", "?tab=readme"...). Usado na análise instantânea e no modal "Associate repository".
+const GITHUB_REPO = /^(?:https?:\/\/)?(?:www\.)?github\.com\/([\w.-]+)\/([\w.-]+?)(?:\.git)?(?:[/?#].*)?$/i;
 
-/** "https://github.com/org/repo" -> "org/repo"; null se o URL não for válido. */
-export function parseRepositoryUrl(input: string): string | null {
-  const match = input.trim().match(REPOSITORY_URL);
+/** "https://github.com/org/repo/tree/main" -> "org/repo"; null se não for um URL GitHub válido. */
+export function parseGithubRepository(input: string): string | null {
+  const match = input.trim().match(GITHUB_REPO);
   if (!match) return null;
   const [, owner, repo] = match;
   // O slug usa "--" como separador (ver repoSlug): os donos do GitHub nunca o contêm, por isso recusa-se aqui.
-  if (owner.includes("--") || repo === "." || repo === ".." || owner === "." || owner === "..") return null;
+  if (owner.includes("--") || [owner, repo].some((part) => part === "." || part === "..")) return null;
   return `${owner}/${repo}`;
 }
 

@@ -5,7 +5,7 @@ import { Background, BackgroundVariant, MiniMap, ReactFlow, ReactFlowProvider, u
 import type { Connection } from "@xyflow/react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { DragEvent } from "react";
 import { useToast } from "@/components/ui/toast";
 import { loadDiagram, saveDiagram } from "@/lib/api/diagram";
@@ -13,8 +13,9 @@ import { repoSlug } from "@/lib/api/repositories";
 import type { DfdNodeKind, RepositoryAnalysis } from "@/lib/api/types";
 import { buildDiagramSvg } from "@/lib/dfd/export-svg";
 import {
-  GRID, NODE_HEIGHT, NODE_WIDTH, createNode, diagramFromModel, serializeDiagram, toDiagram, toFlowEdge, toFlowEdges, toFlowNodes,
+  GRID, MAX_ZOOM, MIN_ZOOM, NODE_HEIGHT, NODE_WIDTH, createNode, diagramFromModel, serializeDiagram, toDiagram, toFlowEdge, toFlowEdges, toFlowNodes,
 } from "@/lib/dfd/graph";
+import { downloadFile, fileBaseName } from "@/lib/download";
 import type { DfdFlowEdge, DfdFlowNode } from "@/lib/dfd/graph";
 import { autoLayout } from "@/lib/dfd/layout";
 import { CanvasToolbar } from "./canvas-toolbar";
@@ -57,26 +58,14 @@ function CanvasWorkspace({ analysis, branch }: CanvasViewProps) {
   const { resolvedTheme } = useTheme();
   const { screenToFlowPosition, fitView } = useReactFlow();
   const canvasRef = useRef<HTMLDivElement>(null);
-  const loadedRef = useRef(false);
 
-  const initial = useMemo(() => diagramFromModel(analysis.dfd), [analysis.dfd]);
-  // useNodesState só usa o valor inicial na primeira vez; depois o estado é do React Flow.
+  // Este componente só corre no browser (ver canvas-loader.tsx), por isso o diagrama guardado no localStorage
+  // pode ser lido logo no estado inicial; se não houver nenhum, usa o da análise.
+  // useNodesState/useEdgesState só usam o valor inicial na primeira vez; depois o estado é do React Flow.
+  const [initial] = useState(() => loadDiagram(analysis.repository) ?? diagramFromModel(analysis.dfd));
   const [nodes, setNodes, onNodesChange] = useNodesState<DfdFlowNode>(useMemo(() => toFlowNodes(initial), [initial]));
   const [edges, setEdges, onEdgesChange] = useEdgesState<DfdFlowEdge>(useMemo(() => toFlowEdges(initial), [initial]));
   const [savedSerial, setSavedSerial] = useState(() => serializeDiagram(initial));
-
-  // O servidor renderiza o diagrama da análise; no cliente, se houver um guardado, substitui-o.
-  // (Ler o localStorage durante o render daria HTML diferente entre servidor e cliente.)
-  useEffect(() => {
-    if (loadedRef.current) return;
-    loadedRef.current = true;
-    const stored = loadDiagram(analysis.repository);
-    if (!stored) return;
-    setNodes(toFlowNodes(stored));
-    setEdges(toFlowEdges(stored));
-    setSavedSerial(serializeDiagram(stored));
-    requestAnimationFrame(() => fitView(FIT));
-  }, [analysis.repository, fitView, setNodes, setEdges]);
 
   const diagram = useMemo(() => toDiagram(nodes, edges), [nodes, edges]);
   const dirty = serializeDiagram(diagram) !== savedSerial;
@@ -144,12 +133,7 @@ function CanvasWorkspace({ analysis, branch }: CanvasViewProps) {
 
   function exportSvg() {
     const svg = buildDiagramSvg(analysis.repository, diagram, resolvedTheme === "light" ? "light" : "dark");
-    const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${analysis.repository.replace("/", "-")}-dfd.svg`;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadFile(new Blob([svg], { type: "image/svg+xml" }), `${fileBaseName(analysis.repository)}-dfd.svg`);
     notify("SVG diagram exported.");
   }
 
@@ -182,8 +166,8 @@ function CanvasWorkspace({ analysis, branch }: CanvasViewProps) {
               onDragOver={onDragOver}
               snapToGrid
               snapGrid={[GRID, GRID]}
-              minZoom={0.5}
-              maxZoom={1.5}
+              minZoom={MIN_ZOOM}
+              maxZoom={MAX_ZOOM}
               fitView
               fitViewOptions={FIT}
               deleteKeyCode={["Backspace", "Delete"]}

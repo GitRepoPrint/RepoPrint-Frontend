@@ -10,18 +10,24 @@ export interface Exposure {
   probability: Severity;
 }
 
+export interface Effort {
+  level: Severity;
+  estimate: string;
+}
+
 export interface Finding {
   id: string;
   framework: Framework;
   category: string;          // "Spoofing", "Linkability"
   severity: Severity;
-  component: string;         // "API Gateway"
+  component: string;         // título do nó do DFD: "Auth Gateway"
   file: string;              // "auth/session.ts"
   location: string;          // "client to API"
   title: string;
   impact: string;            // frase curta (cartões da análise instantânea)
   impactDetail: string;      // frase completa (tabelas do dashboard e do relatório)
   exposure: Exposure;
+  effort: Effort;
   topic: string;             // tema da mitigação: "Sessions", "Webhooks"...
   mitigation: string;        // texto estático (sem SLM)
   regulatoryTags: string[];  // "NIS 2 Art. 21", "GDPR Arts. 25, 32"...
@@ -33,7 +39,7 @@ export interface Finding {
 export interface InstantSummary {
   stride: { findings: number; high: number; medium: number; detail: string };
   privacy: { highRisks: number; labels: string; detail: string };
-  git: { grade: string; prMergeHours: number; commitsPerMonth: number; codeOwnersCoverage: number };
+  git: { prMergeHours: number; commitsPerMonth: number; codeOwnersCoverage: number };
 }
 
 export interface InstantReport {
@@ -71,8 +77,6 @@ export interface DfdNodeData {
   findingIds: string[];      // findings que afetam este componente
 }
 
-export type DfdHandleId = "l" | "r" | "t" | "b";
-
 export interface DfdEdge {
   id: string;
   source: string;
@@ -82,20 +86,11 @@ export interface DfdEdge {
   label: string;
 }
 
-export interface DfdThreatMarker {
-  id: string;
-  label: string;             // ficheiro afetado
-  x: number;
-  y: number;
-  level: "critical" | "warning";
-}
-
 export interface DfdModel {
   boundary: { x: number; y: number; width: number; height: number; label: string };
   nodes: DfdNodeData[];
   flows: string[];           // atributo "d" de cada ligação (pré-visualização do dashboard)
   edges: DfdEdge[];          // as mesmas ligações como grafo (canvas completo)
-  markers: DfdThreatMarker[];
 }
 
 export interface Contributor {
@@ -115,15 +110,15 @@ export interface TeamStats {
   prMergeStatus: string;
   codeOwnersCoverage: number;
   codeOwnersStatus: string;
+  weeklyCommits: number[];
+  recentPrs: { number: number; hours: number }[];
+  punchCard: number[][];
   contributors: Contributor[];
 }
 
 export interface Hygiene {
-  grade: string;
   languages: { name: string; percent: number }[];
-  secrets: { exposed: number; scannedDepthPercent: number };
-  branches: { defaultBranch: string; protected: boolean; rules: string[]; active: { name: string; state: string }[] };
-  dependencies: { total: number; updates: number; highVulnerabilities: number; lockfile: string };
+  branches: { defaultBranch: string; protected: boolean; rules: string[]; protectedBranches: string[]; total: number };
   quality: { coverage: number; ci: { provider: string; passing: boolean; lastRun: string } };
   license: { name: string; osiApproved: boolean; commercialUseCompliant: boolean };
 }

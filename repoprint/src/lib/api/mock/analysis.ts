@@ -43,10 +43,6 @@ export const mockAnalysis: Omit<RepositoryAnalysis, "repository"> = {
       { id: "e-payments-telemetry", source: "payments", target: "telemetry", sourceHandle: "r", targetHandle: "l", label: "EVENTS" },
       { id: "e-telemetry-event-logs", source: "telemetry", target: "event-logs", sourceHandle: "b", targetHandle: "t", label: "TELEMETRY" },
     ],
-    markers: [
-      { id: "m-session", label: "auth/session.ts", x: 205, y: 80, level: "critical" },
-      { id: "m-tracker", label: "telemetry/tracker.go", x: 643, y: 80, level: "warning" },
-    ],
   },
   team: {
     commits30d: 47,
@@ -55,6 +51,28 @@ export const mockAnalysis: Omit<RepositoryAnalysis, "repository"> = {
     prMergeStatus: "Fast turnaround",
     codeOwnersCoverage: 92,
     codeOwnersStatus: "Enforced",
+    weeklyCommits: [8, 12, 9, 14, 11, 7, 13, 10, 12, 11, 13, 11],
+    recentPrs: [
+      { number: 431, hours: 2.1 },
+      { number: 434, hours: 5.5 },
+      { number: 438, hours: 3.2 },
+      { number: 441, hours: 9.8 },
+      { number: 445, hours: 1.4 },
+      { number: 447, hours: 4 },
+      { number: 452, hours: 6.3 },
+      { number: 455, hours: 2.7 },
+      { number: 459, hours: 3.9 },
+      { number: 462, hours: 3.1 },
+    ],
+    punchCard: Array.from({ length: 7 }, (_, day) =>
+      Array.from({ length: 24 }, (_, hour) => {
+        const weekday = day >= 1 && day <= 5;
+        const peak = Math.max(0, 6 - Math.abs(hour - (hour < 13 ? 11 : 16)) * 2);
+        const boost = day === 2 || day === 3 ? 2 : 0;
+        if (weekday) return hour >= 8 && hour <= 20 ? peak + boost + ((day * 3 + hour) % 3) : 0;
+        return day === 6 && hour >= 10 && hour <= 16 ? (hour + 1) % 3 : 0;
+      }),
+    ),
     contributors: [
       { initials: "MC", name: "Marta Costa", role: "Maintainer", commits: 142, reviewParticipation: 94, ownership: "Core / Payments", color: "lavender" },
       { initials: "JL", name: "João Lima", role: "Backend", commits: 98, reviewParticipation: 88, ownership: "Auth / API Gateway", color: "peach" },
@@ -63,23 +81,18 @@ export const mockAnalysis: Omit<RepositoryAnalysis, "repository"> = {
     ],
   },
   hygiene: {
-    grade: "A-",
     languages: [
       { name: "TypeScript", percent: 68 },
       { name: "Go", percent: 22 },
       { name: "SQL", percent: 10 },
     ],
-    secrets: { exposed: 0, scannedDepthPercent: 100 },
     branches: {
       defaultBranch: "main",
       protected: true,
       rules: ["Require pull request reviews before merging (1 approval)", "Enforce status checks"],
-      active: [
-        { name: "develop", state: "active" },
-        { name: "release/v2", state: "maintenance" },
-      ],
+      protectedBranches: ["release/v2"],
+      total: 14,
     },
-    dependencies: { total: 38, updates: 7, highVulnerabilities: 0, lockfile: "pnpm-lock.yaml" },
     quality: { coverage: 86, ci: { provider: "GitHub Actions", passing: true, lastRun: "12m ago" } },
     license: { name: "MIT License", osiApproved: true, commercialUseCompliant: true },
   },

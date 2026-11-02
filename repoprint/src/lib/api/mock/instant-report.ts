@@ -21,7 +21,7 @@ export const mockInstantReport: Omit<InstantReport, "repository" | "analyzedAt">
       labels: "Linkability · Detectability",
       detail: "Personal identifiers in telemetry and transaction logs",
     },
-    git: { grade: "A-", prMergeHours: 4.2, commitsPerMonth: 47, codeOwnersCoverage: 92 },
+    git: { prMergeHours: 4.2, commitsPerMonth: 47, codeOwnersCoverage: 92 },
   },
   findings,
 };

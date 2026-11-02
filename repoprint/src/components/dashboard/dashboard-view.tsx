@@ -1,10 +1,12 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DashboardReportDocument } from "@/components/report/dashboard-report-document";
 import { useToast } from "@/components/ui/toast";
 import { repoSlug } from "@/lib/api/repositories";
+import { risksByNode } from "@/lib/findings";
+import { fileBaseName } from "@/lib/download";
 import { printReport } from "@/lib/print";
 import type { Finding, RepositoryAnalysis } from "@/lib/api/types";
 import { DashboardHeader } from "./dashboard-header";
@@ -37,12 +39,19 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [triaged, setTriaged] = useState<Finding | null>(null);
   const closeTriage = useCallback(() => setTriaged(null), []);
+  const risks = useMemo(() => risksByNode(analysis.dfd, analysis.findings), [analysis]);
+  const [nodeId, setNodeId] = useState(risks[0]?.node.id ?? "");
 
   const base = `/repositories/${repoSlug(analysis.repository)}`;
   const canvasUrl = `${base}/dfd?branch=${encodeURIComponent(branch)}`;
 
   function selectTab(next: Tab) {
     router.replace(`${pathname}?tab=${next}`, { scroll: false });
+  }
+
+  function openNode(next: Tab, id: string) {
+    setNodeId(id);
+    selectTab(next);
   }
 
   function saveReason(reason: string) {
@@ -66,7 +75,7 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
           onScanChange={setScanId}
           onBack={() => router.push("/repositories")}
           onScan={() => router.push(canvasUrl)}
-          onExport={() => printReport(`${analysis.repository.replace("/", "-")}-audit-report`)}
+          onExport={() => printReport(`${fileBaseName(analysis.repository)}-audit-report`)}
         />
 
         <nav className="dashboard-tabs" role="tablist" aria-label="Dashboard analysis sections">
@@ -88,8 +97,27 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
 
         <div className="dashboard-tab-content">
           <div id={`${tab}-panel`} className="dashboard-tab-panel" role="tabpanel" aria-labelledby={`${tab}-tab`}>
-            {tab === "threats" && <ThreatsTab analysis={analysis} reasons={reasons} onTriage={setTriaged} />}
-            {tab === "dfd" && <DfdTab model={analysis.dfd} onEdit={() => router.push(canvasUrl)} />}
+            {tab === "threats" && (
+              <ThreatsTab
+                analysis={analysis}
+                risks={risks}
+                nodeId={nodeId}
+                reasons={reasons}
+                onTriage={setTriaged}
+                onSelectNode={setNodeId}
+                onShowInDiagram={(id) => openNode("dfd", id)}
+              />
+            )}
+            {tab === "dfd" && (
+              <DfdTab
+                model={analysis.dfd}
+                risks={risks}
+                nodeId={nodeId}
+                onSelectNode={setNodeId}
+                onOpenThreats={(id) => openNode("threats", id)}
+                onEdit={() => router.push(canvasUrl)}
+              />
+            )}
             {tab === "team" && <TeamTab analysis={analysis} />}
           </div>
         </div>

@@ -1,5 +1,6 @@
-import { FormalDfd } from "@/components/dfd/formal-dfd";
+import { StaticDfd } from "@/components/dfd/static-dfd";
 import { formatReportDate } from "@/lib/format";
+import { hygieneGrade } from "@/lib/score";
 import type { InstantReport } from "@/lib/api/types";
 import { ReportFooter, ReportHeader, ReportSection } from "./report-parts";
 import { LinddunTable, PrintMitigations, StrideTable } from "./report-tables";
@@ -9,6 +10,7 @@ export function InstantReportDocument({ report }: { report: InstantReport }) {
   const { summary, findings } = report;
   const date = formatReportDate(report.analyzedAt);
   const highCount = findings.filter((f) => f.severity === "high").length;
+  const grade = hygieneGrade(summary.git);
 
   return (
     <main className="report-document hidden! print:block!" aria-labelledby="formal-report-title">
@@ -30,9 +32,7 @@ export function InstantReportDocument({ report }: { report: InstantReport }) {
             </tr>
             <tr>
               <th>Git intelligence &amp; hygiene</th>
-              <td>
-                Grade {summary.git.grade} · average PR merge time {summary.git.prMergeHours}h · {summary.git.commitsPerMonth} commits / month · {summary.git.codeOwnersCoverage}% Code Owners coverage
-              </td>
+              <td>Grade {grade.total}/100 · average PR merge time {summary.git.prMergeHours}h · {summary.git.commitsPerMonth} commits / month · {summary.git.codeOwnersCoverage}% Code Owners coverage</td>
             </tr>
           </tbody>
         </table>
@@ -48,7 +48,7 @@ export function InstantReportDocument({ report }: { report: InstantReport }) {
 
       <ReportSection number="04" title="Inferred Architecture & Data Flow Diagram (DFD)" className="formal-dfd-section">
         <p>Primary payment and identity flows inferred from repository structure and analysis findings.</p>
-        <FormalDfd />
+        <StaticDfd variant="formal" />
       </ReportSection>
 
       <ReportSection number="05" title="Recommended Mitigations" className="formal-mitigations">

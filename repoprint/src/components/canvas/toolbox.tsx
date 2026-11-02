@@ -3,12 +3,15 @@
 import type { DragEvent } from "react";
 import { Icon } from "@/components/ui/icon";
 import type { DfdNodeKind } from "@/lib/api/types";
+import { KIND_LABEL } from "@/lib/dfd/graph";
+import { NODE_ICON } from "./dfd-node";
 
-const TOOLS = [
-  { kind: "external", icon: "code", label: "External Entity", description: "People & external systems" },
-  { kind: "process", icon: "layers", label: "Process Node", description: "Services & operations" },
-  { kind: "store", icon: "database", label: "Data Store", description: "Persistent storage" },
-] as const;
+// Nome e ícone vêm das mesmas constantes usadas pelos nós e pelo inspector.
+const TOOLS: { kind: DfdNodeKind; description: string }[] = [
+  { kind: "external", description: "People & external systems" },
+  { kind: "process", description: "Services & operations" },
+  { kind: "store", description: "Persistent storage" },
+];
 
 type ToolboxProps = { onAdd: (kind: DfdNodeKind) => void; onConnectorHint: () => void };
 
@@ -30,8 +33,8 @@ export function Toolbox({ onAdd, onConnectorHint }: ToolboxProps) {
       <div className="tool-list">
         {TOOLS.map((tool) => (
           <button key={tool.kind} type="button" className="tool-item" draggable onDragStart={(event) => startDrag(event, tool.kind)} onClick={() => onAdd(tool.kind)}>
-            <span className={`tool-icon ${tool.kind}`}><Icon name={tool.icon} size={18} /></span>
-            <span><strong>{tool.label}</strong><small>{tool.description}</small></span>
+            <span className={`tool-icon ${tool.kind}`}><Icon name={NODE_ICON[tool.kind]} size={18} /></span>
+            <span><strong>{KIND_LABEL[tool.kind]}</strong><small>{tool.description}</small></span>
             <Icon name="plus" size={15} className="tool-plus" />
           </button>
         ))}
