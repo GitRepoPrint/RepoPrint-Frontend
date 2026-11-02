@@ -1,0 +1,552 @@
+/* Dashboard, tab DFD: pré-visualização interativa do diagrama e painel do componente */
+
+.dfd-preview-section {
+  margin-top: 26px;
+  padding: 20px;
+  background: #121214;
+  border: 1px solid #27272a;
+  border-radius: 12px;
+}
+
+.dfd-edit-button {
+  height: 36px;
+  flex: none;
+  padding: 0 13px;
+  border: 1px solid #7046be;
+  border-radius: 8px;
+  background: #7046be;
+  color: #fff;
+  font-size: 13px;
+}
+
+.dfd-edit-button:hover {
+  border-color: #8056cf;
+  background: #8056cf;
+}
+
+.dfd-preview-viewport {
+  position: relative;
+  height: 340px;
+  overflow: auto;
+  border: 1px solid #1f1f23;
+  border-radius: 8px;
+  background-color: #0a0a0c;
+  background-image: radial-gradient(#29292f 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+.dfd-preview-scene {
+  width: 100%;
+  min-width: 820px;
+  height: 100%;
+  transform-origin: center center;
+  transition: transform 0.2s ease;
+}
+
+.dfd-preview-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.dfd-trust-boundary {
+  fill: rgba(105, 34, 42, 0.06);
+  stroke: #9b3d49;
+  stroke-width: 1.5;
+  stroke-dasharray: 8 6;
+}
+
+.dfd-boundary-label {
+  fill: #e58a92;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.7px;
+}
+
+.dfd-flow-link {
+  fill: none;
+  stroke: #85859a;
+  stroke-width: 1.6;
+}
+
+.dfd-node {
+  cursor: pointer;
+  outline: none;
+}
+
+.dfd-node-external rect {
+  fill: #171b24;
+  stroke: #8a7bb1;
+  stroke-width: 1.5;
+}
+
+.dfd-node-process circle {
+  fill: #1b1a27;
+  stroke: #9780db;
+  stroke-width: 1.5;
+}
+
+.dfd-node-store path {
+  fill: #17201e;
+  stroke: #6fa98a;
+  stroke-width: 1.5;
+}
+
+.dfd-node-store ellipse {
+  fill: #1d2923;
+  stroke: #6fa98a;
+  stroke-width: 1.5;
+}
+
+.dfd-node-title {
+  fill: #f4f4f5;
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.dfd-node-type {
+  fill: #a1a1aa;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.3px;
+}
+
+.dfd-node:hover rect,
+.dfd-node:hover circle,
+.dfd-node:hover path,
+.dfd-node:hover ellipse,
+.dfd-node.selected rect,
+.dfd-node.selected circle,
+.dfd-node.selected path,
+.dfd-node.selected ellipse {
+  stroke: #c2adff;
+  stroke-width: 2.5;
+}
+
+.dfd-node:focus-visible rect,
+.dfd-node:focus-visible circle,
+.dfd-node:focus-visible path,
+.dfd-node:focus-visible ellipse {
+  stroke: #d2c4ff;
+  stroke-width: 3;
+}
+
+.dfd-preview-toolbar {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px;
+  border: 1px solid #32323a;
+  border-radius: 9px;
+  background: rgba(18, 18, 20, 0.94);
+  box-shadow: 0 8px 24px #0008;
+  backdrop-filter: blur(8px);
+}
+
+.dfd-preview-toolbar button {
+  height: 29px;
+  min-width: 29px;
+  display: grid;
+  place-items: center;
+  padding: 0 7px;
+  border: 1px solid #393940;
+  border-radius: 6px;
+  background: #1b1b20;
+  color: #e4e4e7;
+}
+
+.dfd-preview-toolbar button:hover {
+  background: #29252f;
+  border-color: #665287;
+}
+
+.dfd-preview-toolbar .dfd-reset-button {
+  display: block;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.dfd-preview-zoom {
+  min-width: 37px;
+  color: #a1a1aa;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  text-align: center;
+}
+
+.dfd-toolbar-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 3px;
+  background: #3b3b42;
+}
+
+.dfd-live-sync {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 7px;
+  color: #a7e1b8;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.dfd-live-sync span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #6dd795;
+  box-shadow: 0 0 8px #6dd79580;
+}
+
+.theme-light .dfd-preview-section {
+  background: #fff;
+  border-color: #e4e4e7;
+  box-shadow: 0 8px 24px rgba(24, 24, 27, 0.05);
+}
+
+.theme-light .dfd-preview-viewport {
+  border-color: #e4e4e7;
+  background-color: #fafafa;
+  background-image: radial-gradient(#e4e4e7 1px, transparent 1px);
+}
+
+.theme-light .dfd-preview-toolbar {
+  border-color: #e4e4e7;
+  background: rgba(255, 255, 255, 0.96);
+  color: #3f3f46;
+  box-shadow: 0 1px 3px rgba(24, 24, 27, 0.12);
+  backdrop-filter: blur(8px);
+}
+
+.theme-light .dfd-preview-toolbar button {
+  border-color: #e4e4e7;
+  background: #fff;
+  color: #3f3f46;
+}
+
+.theme-light .dfd-preview-toolbar button:hover {
+  border-color: #c7d2fe;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.theme-light .dfd-preview-zoom {
+  color: #52525b;
+}
+
+.theme-light .dfd-toolbar-divider {
+  background: #d4d4d8;
+}
+
+.theme-light .dfd-live-sync {
+  color: #047857;
+}
+
+.theme-light .dfd-node-external rect {
+  fill: #f4f4f5;
+  stroke: #d4d4d8;
+  stroke-width: 1.8;
+}
+
+.theme-light .dfd-node-process circle {
+  fill: #fff;
+  stroke: #6366f1;
+  stroke-width: 2;
+}
+
+.theme-light .dfd-node-store path {
+  fill: #f4f4f5;
+  stroke: #a1a1aa;
+  stroke-width: 1.8;
+}
+
+.theme-light .dfd-node-store ellipse {
+  fill: #fff;
+  stroke: #a1a1aa;
+  stroke-width: 1.8;
+}
+
+.theme-light .dfd-node-title {
+  fill: #18181b;
+}
+
+.theme-light .dfd-node-type {
+  fill: #52525b;
+}
+
+.theme-light .dfd-node:hover rect,
+.theme-light .dfd-node:hover circle,
+.theme-light .dfd-node:hover path,
+.theme-light .dfd-node:hover ellipse,
+.theme-light .dfd-node.selected rect,
+.theme-light .dfd-node.selected circle,
+.theme-light .dfd-node.selected path,
+.theme-light .dfd-node.selected ellipse {
+  stroke: #4f46e5;
+  stroke-width: 2.5;
+}
+
+.theme-light .dfd-boundary-label {
+  fill: #9f1239;
+}
+
+.theme-light .dfd-flow-link {
+  stroke: #71717a;
+}
+
+.app-shell .dfd-tab-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.app-shell .dfd-edit-button {
+  height: 44px;
+  flex: none;
+  padding: 0 18px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.app-shell .dfd-preview-section {
+  margin: 0;
+  padding: 28px;
+  border: 1px solid var(--c-border);
+  border-radius: 16px;
+  background: var(--c-surface);
+  box-shadow: none;
+}
+
+.dfd-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.dfd-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.dfd-preview-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.app-shell .dfd-preview-toolbar {
+  position: static;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.dfd-risk-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--c-text-2);
+  font-size: 13px;
+}
+
+.dfd-risk-key li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dfd-risk-key i {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--c-border-strong);
+  border-radius: 50%;
+}
+
+.dfd-risk-key i.risk-high {
+  border-color: var(--c-danger);
+  background: var(--c-danger-soft);
+}
+
+.dfd-risk-key i.risk-medium {
+  border-color: var(--c-warn);
+  background: var(--c-warn-soft);
+}
+
+.dfd-risk-key i.risk-low {
+  border-color: var(--c-info);
+  background: var(--c-info-soft);
+}
+
+.app-shell .dfd-node.risk-high > :is(circle, rect, path, ellipse) {
+  stroke: var(--c-danger);
+  stroke-width: 2.5;
+}
+
+.app-shell .dfd-node.risk-medium > :is(circle, rect, path, ellipse) {
+  stroke: var(--c-warn);
+  stroke-width: 2.5;
+}
+
+.app-shell .dfd-node.risk-low > :is(circle, rect, path, ellipse) {
+  stroke: var(--c-info);
+  stroke-width: 2.5;
+}
+
+.app-shell .dfd-node.selected > :is(circle, rect, path, ellipse) {
+  stroke-width: 4;
+  filter: drop-shadow(0 0 6px var(--c-accent));
+}
+
+.app-shell .dfd-node.risk-none.selected > :is(circle, rect, path, ellipse) {
+  stroke: var(--c-accent);
+}
+
+.app-shell .dfd-node .dfd-node-badge circle {
+  stroke-width: 2;
+  fill: var(--c-surface);
+  stroke: var(--c-border-strong);
+}
+
+.app-shell .dfd-node.risk-high .dfd-node-badge circle {
+  fill: var(--c-danger-soft);
+  stroke: var(--c-danger);
+}
+
+.app-shell .dfd-node.risk-medium .dfd-node-badge circle {
+  fill: var(--c-warn-soft);
+  stroke: var(--c-warn);
+}
+
+.app-shell .dfd-node.risk-low .dfd-node-badge circle {
+  fill: var(--c-info-soft);
+  stroke: var(--c-info);
+}
+
+.dfd-node-badge text {
+  font:
+    700 12px "DM Sans",
+    sans-serif;
+  fill: var(--c-text);
+}
+
+.dfd-node-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px 24px;
+  align-items: start;
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-surface-2);
+}
+
+.dfd-node-panel-kicker {
+  color: var(--c-text-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dfd-node-panel h3 {
+  margin: 0;
+  color: var(--c-text);
+  font-size: 24px;
+  font-weight: var(--fw-bold);
+  line-height: 1.2;
+}
+
+.dfd-node-panel-meta {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.dfd-node-panel-head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+@media (min-width: 900px) {
+  .dfd-node-panel {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+}
+
+.dfd-node-findings {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dfd-node-findings li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-surface);
+}
+
+.dfd-node-finding-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.dfd-node-finding-top strong {
+  color: var(--c-text);
+  font-size: 15px;
+}
+
+.dfd-node-findings li > span {
+  color: var(--c-text-2);
+  font-size: 14px;
+}
+
+.dfd-node-empty {
+  margin: 0;
+  color: var(--c-text-2);
+  font-size: 15px;
+}
+
+.app-shell .dfd-node-open {
+  justify-content: center;
+  min-height: 44px;
+  margin-top: 4px;
+  font-size: 14px;
+}
+
+.dfd-node-panel code {
+  padding: 2px 7px;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 6px;
+  background: var(--c-surface-2);
+  color: var(--c-text);
+  font:
+    600 14px "IBM Plex Mono",
+    monospace;
+  overflow-wrap: anywhere;
+}

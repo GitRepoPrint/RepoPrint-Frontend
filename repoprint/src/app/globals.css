@@ -1,0 +1,17 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+/* Estilos da aplicação, por área. A ordem dos imports importa (a cascata segue esta ordem). */
+@import "../styles/base.css";
+@import "../styles/layout.css";
+@import "../styles/modals.css";
+@import "../styles/static-dfd.css";
+@import "../styles/landing.css";
+@import "../styles/auth.css";
+@import "../styles/repositories.css";
+@import "../styles/dashboard.css";
+@import "../styles/dashboard-threats.css";
+@import "../styles/dashboard-dfd.css";
+@import "../styles/dashboard-team.css";
+@import "../styles/canvas.css";
+@import "../styles/report.css";

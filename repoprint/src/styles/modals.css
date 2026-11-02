@@ -1,0 +1,87 @@
+/* Modais: estrutura comum (backdrop, cartão, botão de fechar, ações) */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: #05060acb;
+  display: grid;
+  place-items: center;
+  z-index: 30;
+  padding: 20px;
+}
+
+.modal-card {
+  position: relative;
+  width: min(100%, 440px);
+  border: 1px solid #62527f;
+  border-radius: 14px;
+  background: #1b1d28;
+  padding: 32px;
+  box-shadow: 0 30px 100px #0009;
+}
+
+.modal-close {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  border: 0;
+  background: none;
+  color: #a4a3b1;
+}
+
+.modal-icon {
+  width: 44px;
+  height: 44px;
+  background: #3a3154;
+  color: #beaaff;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 25px;
+}
+
+.modal-card h2 {
+  font-family: "Space Grotesk";
+  font-size: 25px;
+  line-height: 1.2;
+  margin: 12px 0;
+}
+
+.modal-card p {
+  color: #a9a9b8;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.theme-light .modal-card {
+  background: #fff;
+  border-color: #d4c8ee;
+}
+
+.theme-light .modal-card h2 {
+  color: #26233a;
+}
+
+.theme-light .modal-card p {
+  color: #62687a;
+}
+
+.associate-actions {
+  display: flex;
+  gap: 9px;
+  justify-content: flex-end;
+  margin-top: 23px;
+}
+
+.app-shell .modal-card.rating-guide {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: min(100%, 720px);
+  max-height: min(88vh, 760px);
+  overflow-y: auto;
+  border-color: var(--c-border-strong);
+  background: var(--c-surface);
+  color: var(--c-text);
+}
