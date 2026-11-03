@@ -409,6 +409,23 @@
   color: #7046be;
 }
 
+.theme-dark .dashboard-tabs {
+  border-bottom-color: #3f3f46;
+}
+
+.theme-dark .dashboard-tab {
+  color: var(--c-text-2);
+}
+
+.theme-dark .dashboard-tab:hover {
+  color: var(--c-text);
+}
+
+.theme-dark .dashboard-tab.active {
+  border-bottom-color: var(--c-accent);
+  color: var(--c-accent);
+}
+
 @media (max-width: 1000px) {
   .dashboard-controls {
     flex-wrap: wrap;
@@ -711,4 +728,11 @@
 
 .app-shell .dashboard-tab.active {
   font-weight: var(--fw-bold);
+}
+
+.dashboard-heading-primary,
+.dashboard-heading-actions,
+.dashboard-action-buttons {
+  flex-wrap: wrap;
+  max-width: 100%;
 }

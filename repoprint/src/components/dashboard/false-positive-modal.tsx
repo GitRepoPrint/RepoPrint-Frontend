@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Icon } from "@/components/ui/icon";
 import { useEscapeKey } from "@/hooks/use-escape-key";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { findingLabel } from "@/lib/findings";
 import type { Finding } from "@/lib/api/types";
 
@@ -20,6 +21,7 @@ export function FalsePositiveModal({ finding, initialReason, onClose, onSave }: 
   const [reason, setReason] = useState(initialReason);
 
   useEscapeKey(onClose);
+  const trapRef = useFocusTrap<HTMLFormElement>();
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -30,7 +32,7 @@ export function FalsePositiveModal({ finding, initialReason, onClose, onSave }: 
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <form className="modal-card false-positive-modal" role="dialog" aria-modal="true" aria-labelledby="false-positive-title" onSubmit={handleSubmit} onClick={(event) => event.stopPropagation()}>
+      <form ref={trapRef} className="modal-card false-positive-modal" role="dialog" aria-modal="true" aria-labelledby="false-positive-title" onSubmit={handleSubmit} onClick={(event) => event.stopPropagation()}>
         <button type="button" className="modal-close" onClick={onClose} aria-label="Close"><Icon name="close" size={20} /></button>
         <span className="modal-icon"><Icon name="warning" size={23} /></span>
         <span className="section-kicker">FINDING TRIAGE</span>
@@ -45,7 +47,9 @@ export function FalsePositiveModal({ finding, initialReason, onClose, onSave }: 
           placeholder="Explain why this finding is not exploitable or does not apply..."
           minLength={MIN_REASON_LENGTH}
           required
+          aria-describedby="false-positive-hint"
         />
+        <p id="false-positive-hint" className="false-positive-hint">Minimum {MIN_REASON_LENGTH} characters ({reason.trim().length} written)</p>
         <div className="associate-actions">
           <button type="button" className="button button-outline" onClick={onClose}>Cancel</button>
           <button type="submit" className="button button-primary">Save justification <Icon name="check" size={16} /></button>

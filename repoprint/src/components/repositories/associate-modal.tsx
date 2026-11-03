@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Icon } from "@/components/ui/icon";
 import { useEscapeKey } from "@/hooks/use-escape-key";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 
 type AssociateModalProps = {
   onClose: () => void;
@@ -15,6 +16,7 @@ export function AssociateModal({ onClose, onAssociate }: AssociateModalProps) {
   const [url, setUrl] = useState("");
 
   useEscapeKey(onClose);
+  const trapRef = useFocusTrap<HTMLFormElement>();
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -24,6 +26,7 @@ export function AssociateModal({ onClose, onAssociate }: AssociateModalProps) {
   return (
     <div className="modal-backdrop" onClick={onClose}>
       <form
+        ref={trapRef}
         className="modal-card associate-modal"
         role="dialog"
         aria-modal="true"

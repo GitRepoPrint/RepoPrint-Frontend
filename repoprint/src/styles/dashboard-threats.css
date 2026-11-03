@@ -696,3 +696,9 @@ button.threat-component:hover {
   white-space: nowrap;
   font-weight: var(--fw-bold);
 }
+
+@media (max-width: 700px) {
+  .threat-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

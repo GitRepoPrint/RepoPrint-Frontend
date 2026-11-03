@@ -56,7 +56,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #555c69;
+  color: #9aa1b0;
   font-size: 13px;
   border-top: 1px solid #222731;
 }
@@ -129,7 +129,7 @@
 
 .theme-light .landing-footer {
   border-color: #e0e2e9;
-  color: #7d8290;
+  color: #5b6170;
 }
 
 .theme-light .toast {

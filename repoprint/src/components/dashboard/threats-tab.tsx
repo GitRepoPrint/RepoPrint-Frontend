@@ -4,6 +4,7 @@ import { useState } from "react";
 import { KIND_LABEL } from "@/components/dfd/dfd-scene";
 import { Icon } from "@/components/ui/icon";
 import { useEscapeKey } from "@/hooks/use-escape-key";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { byFramework, countBySeverity, SEVERITY_LABEL } from "@/lib/findings";
 import type { NodeRisk } from "@/lib/findings";
 import type { Finding, RepositoryAnalysis, Severity } from "@/lib/api/types";
@@ -26,6 +27,13 @@ const RATING_ROWS: { level: Severity; impact: string; probability: string }[] = 
   { level: "low", impact: "A minor information leak with no direct harm.", probability: "Unlikely. 1 signal or none." },
 ];
 
+const TERMS = [
+  { name: "STRIDE", text: "Security threat model: Spoofing, Tampering, Repudiation, Information disclosure, Denial of service, Elevation of privilege." },
+  { name: "LINDDUN", text: "Privacy threat model: Linkability, Identifiability, Non-repudiation, Detectability, Disclosure of information, Unawareness, Non-compliance." },
+  { name: "Trust boundary", text: "The line between components you control and those you do not. Data that crosses it can be forged or read." },
+  { name: "Data flow diagram", text: "A map of external entities, processes, data stores and the data that moves between them." },
+];
+
 const PROBABILITY_SIGNALS = [
   { name: "Reach", text: "The component can be reached from outside the trust boundary in the diagram." },
   { name: "Activity", text: "The affected file changed often, or by many people, in the last 90 days." },
@@ -38,10 +46,11 @@ function SeverityChip({ level }: { level: Severity }) {
 
 function RatingGuideModal({ onClose }: { onClose: () => void }) {
   useEscapeKey(onClose);
+  const trapRef = useFocusTrap<HTMLDivElement>();
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card rating-guide" role="dialog" aria-modal="true" aria-labelledby="rating-guide-title" onClick={(event) => event.stopPropagation()}>
+      <div ref={trapRef} className="modal-card rating-guide" role="dialog" aria-modal="true" aria-labelledby="rating-guide-title" onClick={(event) => event.stopPropagation()}>
         <button type="button" className="modal-close" onClick={onClose} aria-label="Close" autoFocus><Icon name="close" size={20} /></button>
         <h2 id="rating-guide-title">How findings are rated</h2>
         <p>Impact is the damage if someone exploits the threat. Probability is how likely that is.</p>
@@ -61,6 +70,15 @@ function RatingGuideModal({ onClose }: { onClose: () => void }) {
             <thead><tr><th scope="col">Signal</th><th scope="col">Counts when</th></tr></thead>
             <tbody>
               {PROBABILITY_SIGNALS.map(({ name, text }) => <tr key={name}><th scope="row">{name}</th><td>{text}</td></tr>)}
+            </tbody>
+          </table>
+        </div>
+        <h3 id="rating-terms">Terms used</h3>
+        <div className="rating-table-wrap">
+          <table className="rating-table" aria-labelledby="rating-terms">
+            <thead><tr><th scope="col">Term</th><th scope="col">Meaning</th></tr></thead>
+            <tbody>
+              {TERMS.map(({ name, text }) => <tr key={name}><th scope="row">{name}</th><td>{text}</td></tr>)}
             </tbody>
           </table>
         </div>

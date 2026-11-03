@@ -85,3 +85,9 @@
   background: var(--c-surface);
   color: var(--c-text);
 }
+
+.false-positive-hint {
+  margin: 6px 0 0;
+  color: var(--c-text-2);
+  font-size: 13px;
+}

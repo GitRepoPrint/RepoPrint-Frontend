@@ -382,7 +382,7 @@
 
 .theme-light .repo-identity small,
 .theme-light .repo-updated {
-  color: #747b89;
+  color: #5d6372;
 }
 
 .theme-light .score-indicator.healthy {
@@ -390,7 +390,7 @@
 }
 
 .theme-light .score-indicator.attention {
-  color: #ad6937;
+  color: #94562a;
 }
 
 .theme-light .mini-progress {
@@ -707,4 +707,20 @@
   100% {
     transform: none;
   }
+}
+
+.repository-search input {
+  min-height: 32px;
+}
+
+.repository-bottom button {
+  min-height: 32px;
+}
+
+.repositories-intro {
+  flex-wrap: wrap;
+}
+
+.theme-light .repositories-intro h1 span {
+  color: #6d4fd0;
 }

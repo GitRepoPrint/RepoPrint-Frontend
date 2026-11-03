@@ -110,7 +110,7 @@
   justify-content: center;
   gap: 8px;
   font-size: 13px;
-  color: #777d8c;
+  color: #9298a8;
   margin-top: 15px;
 }
 
@@ -1362,4 +1362,8 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.search-box input {
+  min-height: 40px;
 }

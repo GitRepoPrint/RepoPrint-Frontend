@@ -19,6 +19,7 @@ import { downloadFile, fileBaseName } from "@/lib/download";
 import type { DfdFlowEdge, DfdFlowNode } from "@/lib/dfd/graph";
 import { autoLayout } from "@/lib/dfd/layout";
 import { CanvasToolbar } from "./canvas-toolbar";
+import { ConnectPanel } from "./connect-panel";
 import { DfdNode } from "./dfd-node";
 import { FlowEdge } from "./flow-edge";
 import { Inspector } from "./inspector";
@@ -70,6 +71,13 @@ function CanvasWorkspace({ analysis, branch }: CanvasViewProps) {
   const diagram = useMemo(() => toDiagram(nodes, edges), [nodes, edges]);
   const dirty = serializeDiagram(diagram) !== savedSerial;
   const selectedNode = nodes.find((n) => n.selected);
+  const [connectOpen, setConnectOpen] = useState(false);
+
+  const titleOf = useCallback((id: string) => nodes.find((n) => n.id === id)?.data.title ?? id, [nodes]);
+  const namedEdges = useMemo(
+    () => edges.map((e) => ({ ...e, ariaLabel: `Data flow from ${titleOf(e.source)} to ${titleOf(e.target)}: ${e.data?.label ?? ""}` })),
+    [edges, titleOf],
+  );
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -82,6 +90,21 @@ function CanvasWorkspace({ analysis, branch }: CanvasViewProps) {
     },
     [setEdges],
   );
+
+  function addFlow(source: string, target: string) {
+    if (edges.some((e) => e.source === source && e.target === target)) {
+      notify(`A data flow from ${titleOf(source)} to ${titleOf(target)} already exists.`);
+      return;
+    }
+    onConnect({ source, target, sourceHandle: null, targetHandle: null });
+    notify(`Data flow from ${titleOf(source)} to ${titleOf(target)} added.`);
+  }
+
+  function removeFlow(id: string) {
+    const edge = edges.find((e) => e.id === id);
+    setEdges((current) => current.filter((e) => e.id !== id));
+    if (edge) notify(`Data flow from ${titleOf(edge.source)} to ${titleOf(edge.target)} removed.`);
+  }
 
   const place = useCallback(
     (kind: DfdNodeKind, center: { x: number; y: number }) => {
@@ -149,13 +172,26 @@ function CanvasWorkspace({ analysis, branch }: CanvasViewProps) {
         onExport={exportSvg}
       />
       <div className="workspace">
-        <Toolbox onAdd={addNode} onConnectorHint={() => notify("Drag from a node's port to another node to connect them.")} />
+        <Toolbox
+          onAdd={addNode}
+          connectOpen={connectOpen}
+          onToggleConnect={() => setConnectOpen((open) => !open)}
+          connectPanel={
+            <ConnectPanel
+              id="connect-panel"
+              nodes={nodes.map((n) => ({ id: n.id, title: n.data.title }))}
+              flows={edges.map((e) => ({ id: e.id, from: titleOf(e.source), to: titleOf(e.target) }))}
+              onAdd={addFlow}
+              onRemove={removeFlow}
+            />
+          }
+        />
         <div className="diagram-canvas bg-none!" ref={canvasRef}>
           <div className="absolute inset-0">
             <ReactFlow
               className={THEME_VARS}
               nodes={nodes}
-              edges={edges}
+              edges={namedEdges}
               nodeTypes={nodeTypes}
               edgeTypes={edgeTypes}
               onNodesChange={onNodesChange}

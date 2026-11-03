@@ -41,7 +41,7 @@ function Bars({ values, labels, lineAt, limit, warnAbove, caption, unit }: {
               className={warnAbove !== undefined && value > warnAbove ? "chart-bar warn" : "chart-bar"}
               style={{ height: `${(value / top) * 100}%` }}
             >
-              <b>{value}</b>
+              <b>{warnAbove !== undefined && value > warnAbove ? `${value} !` : value}</b>
             </span>
           </span>
         ))}
@@ -165,7 +165,7 @@ export function HygieneChart({ team }: { team: TeamStats }) {
             lineAt={MERGE_TARGET_HOURS}
             limit={MERGE_TARGET_HOURS}
             warnAbove={MERGE_TARGET_HOURS}
-            caption={`Hours to merge. Line marks ${MERGE_TARGET_HOURS}h`}
+            caption={`Hours to merge. Line marks ${MERGE_TARGET_HOURS}h; ! marks pull requests over it`}
             unit="hours"
           />
         )}

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { KeyboardEvent } from "react";
 import { Icon } from "@/components/ui/icon";
+import { componentsInsideBoundary, describeFlows, nodeConnections } from "@/lib/dfd/flows";
 import type { DfdModel, DfdNodeData, DfdNodeKind, Severity } from "@/lib/api/types";
 
 export const KIND_LABEL: Record<DfdNodeKind, string> = { external: "external entity", process: "process", store: "data store" };
@@ -79,6 +80,7 @@ type DfdSceneProps = {
 export function DfdScene({ model, risk, selected, onSelect }: DfdSceneProps) {
   const [zoom, setZoom] = useState(100);
   const { boundary } = model;
+  const flows = describeFlows(model);
 
   function onKey(event: KeyboardEvent, id: string) {
     if (event.key === "Enter" || event.key === " ") {
@@ -91,24 +93,28 @@ export function DfdScene({ model, risk, selected, onSelect }: DfdSceneProps) {
     <div className="dfd-preview">
       <div className="dfd-preview-viewport">
         <div className="dfd-preview-scene" style={{ transform: `scale(${zoom / 100})` }}>
-          <svg className="dfd-preview-svg" viewBox="0 0 1000 320" role="img" aria-label="Interactive data flow diagram with external entities, backend processes, data stores and the findings on each component">
+          <svg className="dfd-preview-svg" viewBox="0 0 1000 320" role="group" aria-label="Data flow diagram. Each component and data flow can be read below; a table of all data flows follows the diagram.">
             <defs>
               <marker id="dfd-preview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#85859a" /></marker>
             </defs>
-            <rect className="dfd-trust-boundary" x={boundary.x} y={boundary.y} width={boundary.width} height={boundary.height} rx="13" />
-            <text className="dfd-boundary-label" x={boundary.x + 20} y={boundary.y + 22}>{boundary.label}</text>
-            {model.flows.map((d) => <path key={d} className="dfd-flow-link" d={d} markerEnd="url(#dfd-preview-arrow)" />)}
+            <rect className="dfd-trust-boundary" x={boundary.x} y={boundary.y} width={boundary.width} height={boundary.height} rx="13" role="img" aria-label={`Trust boundary: ${boundary.label}, contains ${componentsInsideBoundary(model)} components`} />
+            <text className="dfd-boundary-label" x={boundary.x + 20} y={boundary.y + 22} aria-hidden="true">{boundary.label}</text>
+            {model.flows.map((d, index) => (
+              <path key={d} className="dfd-flow-link" d={d} markerEnd="url(#dfd-preview-arrow)" role="img" aria-label={flows[index]?.sentence ?? "Data flow"} />
+            ))}
             {model.nodes.map((node) => {
               const { severity, count } = risk[node.id] ?? { severity: null, count: 0 };
               const badge = badgePosition(node);
               const label = count ? `${count} ${count === 1 ? "finding" : "findings"}, highest ${severity}` : "no findings";
+              const links = nodeConnections(model, node.id);
+              const linkText = [links.receivesFrom.length ? `receives data from ${links.receivesFrom.join(", ")}` : "", links.sendsTo.length ? `sends data to ${links.sendsTo.join(", ")}` : ""].filter(Boolean).join("; ");
               return (
                 <g
                   key={node.id}
                   className={`dfd-node dfd-node-${node.kind} risk-${severity ?? "none"}${selected === node.id ? " selected" : ""}`}
                   role="button"
                   tabIndex={0}
-                  aria-label={`Select ${node.title} ${KIND_LABEL[node.kind]}, ${label}`}
+                  aria-label={`Select ${node.title} ${KIND_LABEL[node.kind]}, ${label}${linkText ? `; ${linkText}` : ""}`}
                   aria-pressed={selected === node.id}
                   onClick={() => onSelect(node.id)}
                   onKeyDown={(event) => onKey(event, node.id)}
@@ -116,8 +122,8 @@ export function DfdScene({ model, risk, selected, onSelect }: DfdSceneProps) {
                   <NodeShape node={node} />
                   {count > 0 && (
                     <g className="dfd-node-badge" aria-hidden="true">
-                      <circle cx={badge.x} cy={badge.y} r="11" />
-                      <text x={badge.x} y={badge.y + 4} textAnchor="middle">{count}</text>
+                      <circle cx={badge.x} cy={badge.y} r="14" />
+                      <text x={badge.x} y={badge.y + 4} textAnchor="middle">{`${severity?.[0].toUpperCase() ?? ""}${count}`}</text>
                     </g>
                   )}
                 </g>
@@ -128,11 +134,12 @@ export function DfdScene({ model, risk, selected, onSelect }: DfdSceneProps) {
       </div>
       <div className="dfd-preview-footer">
         <ul className="dfd-risk-key" aria-label="Legend">
-          <li><i className="risk-high" />High</li>
-          <li><i className="risk-medium" />Medium</li>
-          <li><i className="risk-low" />Low</li>
+          <li><i className="risk-high" />High, solid outline</li>
+          <li><i className="risk-medium" />Medium, dashed</li>
+          <li><i className="risk-low" />Low, dotted</li>
           <li><i className="risk-none" />No findings</li>
-          <li>Number shows the findings on each component</li>
+          <li><i className="risk-boundary" />Trust boundary: separates your code from external systems</li>
+          <li>Badge: highest severity letter and number of findings (H2 = 2 findings, highest High)</li>
         </ul>
         <div className="dfd-preview-toolbar" aria-label="Diagram preview controls">
           <button type="button" title="Zoom out" aria-label="Zoom out" onClick={() => setZoom((v) => Math.max(70, v - 10))}><Icon name="minus" size={15} /></button>

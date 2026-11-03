@@ -865,3 +865,97 @@
     justify-content: flex-start;
   }
 }
+
+.connect-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 8px 0 4px;
+  padding: 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
+.connect-panel h3,
+.connect-panel h4 {
+  margin: 0;
+  color: var(--c-text);
+  font-size: 14px;
+  font-weight: var(--fw-bold);
+}
+
+.connect-panel form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.connect-panel label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--c-text-2);
+  font-size: 13px;
+  font-weight: var(--fw-bold);
+}
+
+.connect-panel select {
+  min-height: 36px;
+  padding: 0 8px;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 8px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: 500 14px 'DM Sans', sans-serif;
+}
+
+.connect-panel .button {
+  justify-content: center;
+  min-height: 38px;
+  font-size: 14px;
+}
+
+.connect-panel ul {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.connect-panel li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--c-text);
+  font-size: 13px;
+}
+
+.connect-panel li button {
+  flex: none;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--c-border-strong);
+  border-radius: 6px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.connect-panel select:focus-visible,
+.connect-panel li button:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.toolbox {
+  min-height: 0;
+  overflow-y: auto;
+}

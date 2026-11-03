@@ -3,6 +3,7 @@
 import { effortText } from "@/components/score/effort";
 import { Icon } from "@/components/ui/icon";
 import { useEscapeKey } from "@/hooks/use-escape-key";
+import { useFocusTrap } from "@/hooks/use-focus-trap";
 import { SEVERITY_LABEL } from "@/lib/findings";
 import type { Finding } from "@/lib/api/types";
 
@@ -10,10 +11,11 @@ type Props = { finding: Finding; onClose: () => void };
 
 export function FindingModal({ finding: f, onClose }: Props) {
   useEscapeKey(onClose);
+  const trapRef = useFocusTrap<HTMLDivElement>();
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal-card finding-modal" role="dialog" aria-modal="true" aria-labelledby="finding-modal-title" onClick={(event) => event.stopPropagation()}>
+      <div ref={trapRef} className="modal-card finding-modal" role="dialog" aria-modal="true" aria-labelledby="finding-modal-title" onClick={(event) => event.stopPropagation()}>
         <button type="button" className="modal-close" onClick={onClose} aria-label="Close"><Icon name="close" size={20} /></button>
         <span className="section-kicker">{f.framework} · {f.category.toUpperCase()} · {f.ref}</span>
         <h2 id="finding-modal-title">{f.title}</h2>
