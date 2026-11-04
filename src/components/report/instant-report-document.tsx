@@ -1,4 +1,5 @@
 import { StaticDfd } from "@/components/dfd/static-dfd";
+import { activityNotes } from "@/lib/activity-notes";
 import { formatHours, formatReportDate } from "@/lib/format";
 import { hygieneGrade } from "@/lib/score";
 import type { InstantReport } from "@/lib/api/types";
@@ -32,7 +33,7 @@ export function InstantReportDocument({ report }: { report: InstantReport }) {
             </tr>
             <tr>
               <th>Git intelligence &amp; hygiene</th>
-              <td>Grade {grade.total}/100 · average PR merge time {formatHours(summary.git.prMergeHours)} · {summary.git.commitsPerMonth} commits / month · {summary.git.codeOwnersCoverage}% Code Owners coverage</td>
+              <td>Grade {grade.total}/100 · median PR merge time {formatHours(summary.git.prMergeHours)} · {summary.git.commitsPerMonth} commits / month · {summary.git.codeOwnersCoverage}% Code Owners coverage</td>
             </tr>
           </tbody>
         </table>
@@ -54,6 +55,21 @@ export function InstantReportDocument({ report }: { report: InstantReport }) {
       <ReportSection number="05" title="Recommended Mitigations" className="formal-mitigations">
         <PrintMitigations findings={findings} />
       </ReportSection>
+
+      {report.activity && (
+        <ReportSection number="06" title="Git Data Methodology">
+          <table className="formal-table">
+            <tbody>
+              {activityNotes(report.activity, summary.git.commitsPerMonth, summary.git.prMergeHours).map((row) => (
+                <tr key={row.metric}>
+                  <th>{row.metric}</th>
+                  <td>{row.value} · {row.rule}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ReportSection>
+      )}
 
       <ReportFooter date={date} />
     </main>

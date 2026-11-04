@@ -15,8 +15,14 @@ const UNAVAILABLE_MESSAGE= "The analysis service did not respond. Please try aga
 
 interface ActivityResponse {
   default_branch: string;
-  avg_pr_merge_time: number | null;
-  raw_metrics: { commits_last_30d: number };
+  median_pr_merge_time: number | null;
+  active_contributors: number;
+  bots_excluded: number;
+  contributors_window: { complete: boolean; commits_read: number; since: string };
+  fetched_at: string;
+  refresh_available_at: string;
+  cached: boolean;
+  raw_metrics: { commits_last_30d: number; merged_prs_sampled: number };
 }
 
 async function fetchActivity(repository: string): Promise<ActivityResponse> {
@@ -29,10 +35,9 @@ async function fetchActivity(repository: string): Promise<ActivityResponse> {
 }
 
 export async function analyzeInstant(repository: string): Promise<InstantReport> {
-  const analyzedAt= new Date().toISOString();
   if (repository === DEFAULT_REPOSITORY) {
     await new Promise((resolve) => setTimeout(resolve, 1500));
-    return { ...mockInstantReport, repository, analyzedAt };
+    return { ...mockInstantReport, repository, analyzedAt: new Date().toISOString() };
   }
 
   const activity= await fetchActivity(repository);
@@ -41,14 +46,27 @@ export async function analyzeInstant(repository: string): Promise<InstantReport>
     ...mockInstantReport,
     repository,
     branch: activity.default_branch,
-    analyzedAt,
+    analyzedAt: activity.fetched_at,
     summary: {
       ...summary,
       git: {
         ...summary.git,
-        prMergeHours: activity.avg_pr_merge_time,
+        prMergeHours: activity.median_pr_merge_time,
         commitsPerMonth: activity.raw_metrics.commits_last_30d,
       },
+    },
+    activity: {
+      fetchedAt: activity.fetched_at,
+      refreshAvailableAt: activity.refresh_available_at,
+      cached: activity.cached,
+      activeContributors: activity.active_contributors,
+      botsExcluded: activity.bots_excluded,
+      contributorsWindow: {
+        complete: activity.contributors_window.complete,
+        commitsRead: activity.contributors_window.commits_read,
+        since: activity.contributors_window.since,
+      },
+      mergeSampleSize: activity.raw_metrics.merged_prs_sampled,
     },
   };
 }

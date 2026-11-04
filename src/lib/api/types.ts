@@ -42,6 +42,16 @@ export interface InstantSummary {
   git: { prMergeHours: number | null; commitsPerMonth: number; codeOwnersCoverage: number };
 }
 
+export interface ActivityInfo {
+  fetchedAt: string;
+  refreshAvailableAt: string;
+  cached: boolean;
+  activeContributors: number;
+  botsExcluded: number;
+  contributorsWindow: { complete: boolean; commitsRead: number; since: string };
+  mergeSampleSize: number;
+}
+
 export interface InstantReport {
   repository: string;        // "org/repo"
   commit: string;
@@ -49,6 +59,7 @@ export interface InstantReport {
   analyzedAt: string;        // ISO 8601
   summary: InstantSummary;
   findings: Finding[];
+  activity?: ActivityInfo;
 }
 
 // ---------- Repositórios ----------

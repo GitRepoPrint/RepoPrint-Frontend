@@ -4,6 +4,7 @@ import { useState } from "react";
 import type { ReactNode } from "react";
 import { InstantReportDocument } from "@/components/report/instant-report-document";
 import { useToast } from "@/components/ui/toast";
+import { cachedMessage } from "@/lib/activity-notes";
 import { errorMessage } from "@/lib/api/errors";
 import { analyzeInstant, DEFAULT_REPOSITORY } from "@/lib/api/instant";
 import { parseGithubRepository } from "@/lib/api/repositories";
@@ -31,7 +32,9 @@ export function InstantAnalyzer({ children }: { children: ReactNode }) {
     const previous = state;
     setState({ status: "loading" });
     try {
-      setState({ status: "done", report: await analyzeInstant(repository) });
+      const report= await analyzeInstant(repository);
+      setState({ status: "done", report });
+      if (report.activity?.cached) notify(cachedMessage(report.activity));
     } catch (error) {
       // Rede em baixo, timeout ou resposta de erro do backend: não fica preso em "loading".
       // Volta ao que estava antes (o relatório anterior, se existia) e avisa o utilizador.
