@@ -1363,3 +1363,44 @@
     transform: translateY(0);
   }
 }
+
+.fingerprint-report .data-notes-panel {
+  margin-top: 20px;
+}
+
+.data-notes {
+  margin: 0;
+}
+
+.data-notes > div {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) 1fr;
+  gap: 4px 20px;
+  padding: 12px 0;
+  border-top: 1px solid var(--c-border);
+}
+
+.data-notes dt {
+  color: var(--c-text);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-bold);
+}
+
+.data-notes dd {
+  margin: 0;
+  display: grid;
+  gap: 2px;
+  color: var(--c-text-2);
+  font-size: var(--fs-sm);
+}
+
+.data-notes dd strong {
+  color: var(--c-text);
+  font-size: var(--fs-md);
+}
+
+@media (max-width: 640px) {
+  .data-notes > div {
+    grid-template-columns: 1fr;
+  }
+}

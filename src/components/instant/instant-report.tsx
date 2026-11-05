@@ -11,6 +11,7 @@ import { fileBaseName } from "@/lib/download";
 import { printReport } from "@/lib/print";
 import { balancedRows, byFramework, LINDDUN_CATEGORIES, prioritize, SEVERITY_LABEL, STRIDE_CATEGORIES } from "@/lib/findings";
 import type { Finding, InstantReport as Report } from "@/lib/api/types";
+import { DataNotes } from "./data-notes";
 import { FindingModal } from "./finding-modal";
 import { FrameworkCard } from "./framework-card";
 
@@ -100,6 +101,10 @@ export function InstantReport({ report }: { report: Report }) {
         />
         <HygieneGradeCard git={summary.git} />
       </div>
+
+      {report.activity && (
+        <DataNotes activity={report.activity} commitsPerMonth={summary.git.commitsPerMonth} mergeHours={summary.git.prMergeHours} />
+      )}
 
       <section className="report-panel architecture-panel dfd-area">
         <div className="report-panel-heading">
