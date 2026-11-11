@@ -39,7 +39,7 @@ export function DashboardReportDocument({ analysis, branch }: Props) {
           <tbody>
             <tr>
               <th>Repository activity</th>
-              <td>{team.commits30d} commits in the last 30 days · average merge time {team.prMergeHours}h · Code Owners coverage {team.codeOwnersCoverage}%</td>
+              <td>{team.commits30d} commits in the last 30 days · median merge time {team.prMergeHours}h · Code Owners coverage {team.codeOwnersCoverage}%</td>
             </tr>
             <tr>
               <th>Contributors</th>
