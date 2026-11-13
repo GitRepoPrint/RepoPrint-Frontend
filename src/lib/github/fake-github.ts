@@ -15,6 +15,7 @@ export interface FakeSettings {
   empty: boolean;
   missing: boolean;
   limited: boolean;
+  renamed: boolean;
 }
 
 export function commit(login: string | null, when: Date, options: { bot?: boolean; email?: string }= {}) {
@@ -69,7 +70,12 @@ function respond(url: URL, settings: FakeSettings): Response {
   if (settings.missing) return new Response(null, { status: 404 });
   if (url.pathname.endsWith("/commits")) return commitsResponse(url, settings);
   if (url.pathname.endsWith("/pulls")) return pullsResponse(url, settings);
-  return Response.json({ default_branch: "main", open_issues_count: settings.openIssuesCount, stargazers_count: 7 });
+  const info= Response.json({ default_branch: "main", open_issues_count: settings.openIssuesCount, stargazers_count: 7 });
+  if (settings.renamed && url.pathname.startsWith("/repos/")) {
+    Object.defineProperty(info, "redirected", { value: true });
+    Object.defineProperty(info, "url", { value: "https://api.github.com/repositories/123" });
+  }
+  return info;
 }
 
 export function fakeGithub(overrides: Partial<FakeSettings>= {}) {
@@ -85,6 +91,7 @@ export function fakeGithub(overrides: Partial<FakeSettings>= {}) {
     empty: false,
     missing: false,
     limited: false,
+    renamed: false,
     ...overrides,
   };
   const calls: { url: URL; headers: Record<string, string> }[]= [];

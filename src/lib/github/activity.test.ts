@@ -108,6 +108,25 @@ describe("fetchGithubActivity", () => {
     expect(busy.calls).toHaveLength(11);
   });
 
+  it("goes straight to the new address of a renamed repository", async () => {
+    const { fetcher, calls }= fakeGithub({ sample: recentSample(), renamed: true });
+
+    const data= await fetchGithubActivity("old", "name", { fetcher });
+
+    const afterFirstStep= calls.slice(2);
+    expect(afterFirstStep).toHaveLength(5);
+    for (const call of afterFirstStep) expect(call.url.pathname).toMatch(/^\/repositories\/123\//);
+    expect(data.totalCommits).toBe(1200);
+  });
+
+  it("keeps using the repository name when there was no redirect", async () => {
+    const { fetcher, calls }= fakeGithub({ sample: recentSample() });
+
+    await fetchGithubActivity("o", "r", { fetcher });
+
+    for (const call of calls.slice(2)) expect(call.url.pathname).toMatch(/^\/repos\/o\/r\//);
+  });
+
   it("spends only 2 requests on a repository that does not exist", async () => {
     const { fetcher, calls }= fakeGithub({ missing: true });
 

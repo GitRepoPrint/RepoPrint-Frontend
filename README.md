@@ -76,7 +76,8 @@ Quem não tem login analisa um repositório público sem passar pelo nosso servi
 - **Sem token e só repos públicos.** Um token no browser iria contra a NFR6 e a NFR8. Repos privados e a
   análise com login vão usar o backend, com o token da própria pessoa (guardado cifrado na BD).
 - **A quota é do IP de quem usa:** 60 pedidos por hora. Uma análise gasta 7 a 11 pedidos (2 se o repositório
-  não existe ou está vazio), por isso cabem cerca de 5 a 8 análises por hora. Numa rede partilhada (como a
+  não existe ou está vazio, e mais 2 se o repositório foi renomeado, porque o GitHub responde com um
+  redirect), por isso cabem cerca de 5 a 8 análises por hora. Numa rede partilhada (como a
   universidade) a quota é de todos. Quando acaba, a app diz a hora a que volta a haver quota.
 - **Cache de 10 minutos por repositório**, no `localStorage` do browser. Repetir o mesmo repositório nesse
   tempo mostra o resultado guardado e avisa a partir de que hora há dados novos.

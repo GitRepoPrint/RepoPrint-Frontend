@@ -137,12 +137,14 @@ export async function fetchGithubActivity(
 
   const [infoResponse, totalCommits]= await Promise.all([get(fetcher, base), count(fetcher, `${base}/commits`)]);
 
+  const resolved= infoResponse.redirected && infoResponse.url ? new URL(infoResponse.url).pathname : base;
+
   const [commits30d, commits90d, openPrs, sample, closedPrs]= await Promise.all([
-    count(fetcher, `${base}/commits`, { since: since30 }),
-    count(fetcher, `${base}/commits`, { since: since90 }),
-    orNull(count(fetcher, `${base}/pulls`, { state: "open" })),
-    paginate<Commit>(fetcher, `${base}/commits`, MAX_COMMIT_PAGES, { since: since90 }),
-    orNull(paginate<Pull>(fetcher, `${base}/pulls`, 1, { state: "closed", sort: "updated", direction: "desc" })),
+    count(fetcher, `${resolved}/commits`, { since: since30 }),
+    count(fetcher, `${resolved}/commits`, { since: since90 }),
+    orNull(count(fetcher, `${resolved}/pulls`, { state: "open" })),
+    paginate<Commit>(fetcher, `${resolved}/commits`, MAX_COMMIT_PAGES, { since: since90 }),
+    orNull(paginate<Pull>(fetcher, `${resolved}/pulls`, 1, { state: "closed", sort: "updated", direction: "desc" })),
   ]);
 
   const info= (await infoResponse.json()) as RepoInfo;
