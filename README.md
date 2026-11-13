@@ -3,8 +3,9 @@
 Frontend do RepoPrint: a "impressão digital" de um repositório GitHub, com threat modeling (STRIDE),
 riscos de privacidade (LINDDUN/RGPD), Data Flow Diagram e métricas da equipa.
 
-Ainda **não há backend**: todos os dados vêm de mocks em `src/lib/api/mock/` e o login é simulado.
-A app funciona de ponta a ponta, mas mostra sempre os mesmos dados de exemplo.
+Quase todos os dados vêm de mocks em `src/lib/api/mock/` e o login é simulado. A exceção é o bloco Git da
+análise instantânea (`/`): vem do GitHub a sério, chamado pelo próprio browser (ver
+"Análise instantânea e o GitHub"). O resto mostra sempre os mesmos dados de exemplo.
 
 ## Requisitos
 
@@ -36,6 +37,7 @@ pnpm start       # http://localhost:3000
 
 ```bash
 pnpm lint        # ESLint (regras do Next.js + TypeScript)
+pnpm test        # Vitest: testes da análise do GitHub (sem rede, com respostas simuladas)
 ```
 
 ## Como experimentar a app
@@ -61,16 +63,38 @@ src/
     api/            "contrato" com o backend: types.ts + funções que hoje devolvem mocks (mock/)
     auth/           sessão simulada, validação dos formulários, redirect depois do login
     dfd/            modelo do diagrama, auto-layout (Dagre) e exportação SVG
+    github/         análise de atividade do GitHub, corre no browser sem token (+ testes)
   proxy.ts          protege /repositories/* (no Next.js 16 o antigo middleware chama-se proxy)
   styles/           CSS por área (base, layout, landing, dashboard-*, canvas, report, ...)
 ```
+
+### Análise instantânea e o GitHub
+
+Quem não tem login analisa um repositório público sem passar pelo nosso servidor: o browser chama o
+`api.github.com` diretamente (o GitHub aceita pedidos de qualquer origem). O código está em `src/lib/github/`.
+
+- **Sem token e só repos públicos.** Um token no browser iria contra a NFR6 e a NFR8. Repos privados e a
+  análise com login vão usar o backend, com o token da própria pessoa (guardado cifrado na BD).
+- **A quota é do IP de quem usa:** 60 pedidos por hora. Uma análise gasta 7 a 11 pedidos (2 se o repositório
+  não existe ou está vazio), por isso cabem cerca de 5 a 8 análises por hora. Numa rede partilhada (como a
+  universidade) a quota é de todos. Quando acaba, a app diz a hora a que volta a haver quota.
+- **Cache de 10 minutos por repositório**, no `localStorage` do browser. Repetir o mesmo repositório nesse
+  tempo mostra o resultado guardado e avisa a partir de que hora há dados novos.
+- **O que cada número significa:**
+  - commits em 30 e 90 dias: por data de commit, na branch por defeito, com merges incluídos;
+  - contribuidores ativos: autores dos últimos 500 commits, sem bots (mostra "At least N" quando há mais commits do que os lidos);
+  - tempo de merge: mediana dos pull requests mergeados entre os últimos 100 fechados.
+- **O backend tem a mesma lógica em Python** (`GET /github/activity`, para o futuro login). Se mudares uma
+  definição, muda nos dois sítios e nos testes (`pnpm test` aqui, `uv run pytest` no backend).
+- **Em desenvolvimento** a quota gasta-se depressa. Se precisares de mais, usa outro IP ou espera a hora indicada.
 
 ### Ligar ao backend (quando existir)
 
 As páginas e os componentes só falam com `src/lib/api/*.ts`. Basta trocar o corpo dessas funções por
 chamadas `fetch`, mantendo a mesma assinatura e os tipos de `src/lib/api/types.ts`:
 
-- `analyzeInstant()` (análise instantânea): em caso de erro, lançar `ApiError` (`lib/api/errors.ts`) com uma
+- `analyzeInstant()` (análise instantânea): já chama o GitHub a partir do browser (ver acima); com login
+  passará a usar o backend. Em caso de erro, lança `ApiError` (`lib/api/errors.ts`) com uma
   mensagem para o utilizador. A landing mostra-a num toast e mantém o resultado anterior.
 - `getRepositoryAnalysis()` (dashboard e canvas): devolver `null` se o repositório não existir (página 404).
   Qualquer outro erro é apanhado por `src/app/repositories/error.tsx` (ecrã com "Try again").
