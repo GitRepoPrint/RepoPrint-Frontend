@@ -107,6 +107,29 @@ describe("graphToDfdModel in general", () => {
     expect(graphToDfdModel(overviewView(g)).nodes.find((n) => n.id === "process:apps/web")?.title).toBe("web");
   });
 
+  it("does not stretch a tiny diagram: it keeps a minimum area and sits in the middle of it", () => {
+    const app = buildOverview({ owner: "o", repo: "flask", now: "x", files: [] });
+    const m = graphToDfdModel(overviewView(app));
+    expect(m.nodes).toHaveLength(1);
+    expect(m.viewBox!.width).toBeGreaterThanOrEqual(640);
+    expect(m.viewBox!.height).toBeGreaterThanOrEqual(280);
+    expect(Math.abs(m.nodes[0].x - m.viewBox!.width / 2)).toBeLessThan(2);
+    expect(Math.abs(m.nodes[0].y - m.viewBox!.height / 2)).toBeLessThan(2);
+  });
+
+  it("keeps the flows and the shapes together when it centres a small diagram", () => {
+    const small = buildOverview({ owner: "o", repo: "r", now: "x", files: [{ path: "compose.yml", text: "services:\n  a:\n    build: ./a\n  db:\n    image: postgres\n    ports: ['5432:5432']\n  b:\n    build: ./b\n    depends_on: [db]\n" }] });
+    const m = graphToDfdModel(overviewView(small));
+    const half = { external: [66, 27], process: [43, 43], store: [73, 35] } as const;
+    m.edges.forEach((edge, i) => {
+      const [sx, sy, , , , , tx, ty] = m.flows[i].match(/-?[\d.]+/g)!.map(Number);
+      const s = m.nodes.find((n) => n.id === edge.source)!;
+      const t = m.nodes.find((n) => n.id === edge.target)!;
+      const onBorder = (n: typeof s, x: number, y: number) => Math.abs(Math.abs(x - n.x) - half[n.kind][0]) < 0.2 || Math.abs(Math.abs(y - n.y) - half[n.kind][1]) < 0.2;
+      expect(onBorder(s, sx, sy) && onBorder(t, tx, ty), edge.id).toBe(true);
+    });
+  });
+
   it("copes with an empty graph", () => {
     const m = graphToDfdModel({ nodes: [], edges: [], children: {} });
     expect(m.nodes).toEqual([]);

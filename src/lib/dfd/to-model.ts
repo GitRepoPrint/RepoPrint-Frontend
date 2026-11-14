@@ -16,6 +16,9 @@ const HALF: Record<DfdNodeKind, { w: number; h: number }> = {
   store: { w: 73, h: 35 },
 };
 const MARGIN = 50;
+// Um desenho pequeno (um só componente) não pode ser esticado até encher a largura: tem uma área mínima e fica ao centro.
+const MIN_WIDTH = 640;
+const MIN_HEIGHT = 280;
 
 /** "@acme/nextjs" -> "nextjs": o âmbito de um pacote npm só ocupa espaço no desenho. */
 const displayName = (name: string) => name.replace(/^@[^/]+\//, "");
@@ -149,6 +152,14 @@ export function graphToDfdModel(view: GraphView): DfdModel {
     };
   });
 
+  const contentRight = Math.max(0, ...nodes.map((n) => n.x + HALF[n.kind].w)) + MARGIN;
+  const contentBottom = Math.max(0, ...nodes.map((n) => n.y + HALF[n.kind].h)) + MARGIN;
+  const width = Math.max(MIN_WIDTH, Math.ceil(contentRight));
+  const height = Math.max(MIN_HEIGHT, Math.ceil(contentBottom));
+  const shiftX = round((width - contentRight) / 2);
+  const shiftY = round((height - contentBottom) / 2);
+  if (shiftX > 0 || shiftY > 0) for (const n of nodes) { n.x = round(n.x + shiftX); n.y = round(n.y + shiftY); }
+
   const byId = new Map(nodes.map((n) => [n.id, n]));
   const edges: DfdEdge[] = [];
   const flows: string[] = [];
@@ -169,8 +180,5 @@ export function graphToDfdModel(view: GraphView): DfdModel {
     }
   }
 
-  // O Dagre devolve centros com margem; a área do SVG é a que cobre as formas com a mesma margem à volta
-  const right = Math.max(0, ...nodes.map((n) => n.x + HALF[n.kind].w));
-  const bottom = Math.max(0, ...nodes.map((n) => n.y + HALF[n.kind].h));
-  return { viewBox: { width: Math.ceil(right + MARGIN), height: Math.ceil(bottom + MARGIN) }, nodes, flows, edges, ...(containment.length ? { containment } : {}) };
+  return { viewBox: { width, height }, nodes, flows, edges, ...(containment.length ? { containment } : {}) };
 }
