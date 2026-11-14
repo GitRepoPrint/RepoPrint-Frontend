@@ -54,7 +54,7 @@ describe("a compose stack", () => {
       "process:vote", "process:result", "process:worker", "data_store:redis", "data_store:db", "external_entity:client",
     ]);
     expect(node(g, "process:vote")).toMatchObject({ kind: "process", path: "vote", name: "vote" });
-    expect(node(g, "data_store:db")).toMatchObject({ kind: "data_store", technology: "postgresql", tags: [] });
+    expect(node(g, "data_store:db")).toMatchObject({ kind: "data_store", technology: "postgresql", tags: [], extra: { composeService: "db" } });
     expect(node(g, "data_store:redis")).toMatchObject({ kind: "data_store", technology: "redis" });
   });
 
@@ -488,5 +488,62 @@ describe("generic database dependencies do not depend on reading order", () => {
   it.each([["jpa first", jpa, mysql], ["mysql first", mysql, jpa]])("%s: the ORM joins the specific database", (_, first, second) => {
     const g = build([spring(first, second), spring(web, "")].slice(0, 1));
     expect(ids(g).filter((i) => i.startsWith("data_store:"))).toEqual(["data_store:mysql"]);
+  });
+});
+
+describe("what the diagram leaves out, and why", () => {
+  const compose = (services: string) => file("docker-compose.yml", `services:\n${services}`);
+
+  it("skips services that only test the system", () => {
+    const g = build([compose("  api:\n    build: ./api\n  playwright:\n    build: ./e2e\n    depends_on: [api]\n  e2e-tests:\n    image: acme/x\n  runner:\n    image: cypress/included:13\n  contest-api:\n    build: ./c\n")]);
+    expect(ids(g)).toEqual(["process:api", "process:c"]);
+  });
+
+  it("looks at the whole image path, but not at the registry or the tag", () => {
+    const g = build([compose("  a:\n    image: registry.test.local/acme/api:1\n  b:\n    image: localhost:5000/acme/web\n  c:\n    image: acme/api:e2e\n  d:\n    image: mcr.microsoft.com/playwright:v1.49\n")]);
+    expect(ids(g)).toEqual(["process:a", "process:b", "process:c"]);
+  });
+
+  it("does not take a word that merely contains 'test' for a test runner", () => {
+    const g = build([compose("  latest:\n    build: ./a\n  contest:\n    build: ./b\n  attestation:\n    build: ./c\n")]);
+    expect(ids(g)).toHaveLength(3);
+  });
+
+  it("does not draw edges to or from a skipped test runner", () => {
+    const g = build([compose("  api:\n    build: ./api\n    depends_on: [selenium]\n  selenium:\n    image: selenium/standalone-chrome\n    ports: ['4444:4444']\n")]);
+    expect(g.edges).toEqual([]);
+  });
+
+  it("treats a web frontend as something that answers HTTP", () => {
+    const g = build([file("frontend/package.json", `{"name":"ui","dependencies":{"react-dom":"19","vite":"6"}}`)]);
+    expect(edgesOf(g)).toEqual(["external_entity:client -> process:frontend [HTTP requests]"]);
+  });
+
+  it("treats the Spring Cloud Gateway as an entry point", () => {
+    const pom = `<project><artifactId>gw</artifactId><dependencies><dependency><groupId>org.springframework.cloud</groupId><artifactId>spring-cloud-starter-gateway-server-webmvc</artifactId></dependency></dependencies></project>`;
+    const g = build([file("services/gateway/pom.xml", pom)]);
+    expect(edgesOf(g)).toEqual(["external_entity:client -> process:services/gateway [HTTP requests]"]);
+  });
+
+  it("when some components are known to answer HTTP, a port published by another one is not an entry point", () => {
+    const g = build([
+      compose("  web:\n    build: ./web\n    ports: ['80:80']\n  tool:\n    image: acme/tool\n    ports: ['9000:9000']\n"),
+      file("web/package.json", `{"dependencies":{"express":"4"}}`),
+    ]);
+    expect(edgesOf(g)).toEqual(["external_entity:client -> process:web [HTTP requests]"]);
+    expect(node(g, "process:tool").extra).toMatchObject({ ports: [9000] }); // o nó continua a saber da porta
+  });
+
+  it("but a proxy always is one", () => {
+    const g = build([
+      compose("  edge:\n    image: traefik:v3\n    ports: ['80:80']\n  web:\n    build: ./web\n"),
+      file("web/package.json", `{"dependencies":{"express":"4"}}`),
+    ]);
+    expect(edgesOf(g)).toEqual(expect.arrayContaining(["external_entity:client -> process:edge [network access]", "external_entity:client -> process:web [HTTP requests]"]));
+  });
+
+  it("and when nothing is known to answer HTTP, the published ports are all there is", () => {
+    const g = build([compose("  a:\n    image: acme/a\n    ports: ['8080:80']\n  b:\n    image: acme/b\n    ports: ['8081:80']\n")]);
+    expect(edgesOf(g)).toEqual(["external_entity:client -> process:a [network access]", "external_entity:client -> process:b [network access]"]);
   });
 });

@@ -65,6 +65,19 @@ describe("parseCompose", () => {
     expect(parsed[0].environment.map((e) => e.key)).toEqual(["MODE"]);
   });
 
+  it("finds the right line for a variable whose name is part of an earlier one", () => {
+    const map = "services:\n  api:\n    environment:\n      DB_PORT: 5432\n      PORT: 80\n";
+    expect(parseCompose({ path: "compose.yml", text: map })[0].environment.map((e) => [e.key, e.line])).toEqual([["DB_PORT", 4], ["PORT", 5]]);
+    const list = "services:\n  api:\n    environment:\n      - DB_PORT=5432\n      - PORT=80\n      - PORT_FORWARD\n";
+    expect(parseCompose({ path: "compose.yml", text: list })[0].environment.map((e) => [e.key, e.line])).toEqual([["DB_PORT", 4], ["PORT", 5], ["PORT_FORWARD", 6]]);
+  });
+
+  it("survives a YAML alias bomb: nothing from that file, and no exception", () => {
+    const bomb = `x: &a [lol,lol,lol,lol,lol,lol,lol,lol,lol]\ny: &b [*a,*a,*a,*a,*a,*a,*a,*a,*a]\nz: &c [*b,*b,*b,*b,*b,*b,*b,*b,*b]\nw: &d [*c,*c,*c,*c,*c,*c,*c,*c,*c]\nv: &e [*d,*d,*d,*d,*d,*d,*d,*d,*d]\nservices:\n  a:\n    environment: *e\n`;
+    expect(() => parseCompose({ path: "compose.yml", text: bomb })).not.toThrow();
+    expect(parseCompose({ path: "compose.yml", text: bomb })).toEqual([]);
+  });
+
   it("gives nothing for files that are not compose files or are broken", () => {
     expect(parseCompose({ path: "compose.yml", text: "version: '3'\n" })).toEqual([]);
     expect(parseCompose({ path: "compose.yml", text: "services: [unclosed\n  - {" })).toEqual([]);

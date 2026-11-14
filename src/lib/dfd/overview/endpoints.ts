@@ -2,7 +2,7 @@
 // componente fala com a máquina "db" por PostgreSQL. Só se guardam a máquina, a porta, o esquema e o nome da chave;
 // as credenciais e o resto do valor nunca saem daqui.
 import { parseAllDocuments } from "yaml";
-import { basename, lineOf } from "./types";
+import { LineFinder, basename } from "./types";
 import type { RepoFile } from "./types";
 
 export interface Endpoint {
@@ -85,13 +85,8 @@ export function pairsOf(file: RepoFile): Pair[] {
     } catch {
       return [];
     }
-    let from = 0;
-    for (const [key, value] of flat) {
-      const last = key.slice(key.lastIndexOf(".") + 1);
-      const line = lineOf(file.text, `${last}:`, from);
-      from = Math.max(0, file.text.indexOf(`${last}:`, from));
-      pairs.push({ key, value, line });
-    }
+    const finder = new LineFinder(file.text);
+    for (const [key, value] of flat) pairs.push({ key, value, line: finder.findKey(key.slice(key.lastIndexOf(".") + 1)).line });
     return pairs;
   }
   file.text.split(/\r?\n/).forEach((raw, index) => {

@@ -24,6 +24,19 @@ describe("catalog", () => {
     expect(classify("PSYCOPG2")?.label).toBe("PostgreSQL");
   });
 
+  it("prefers the entry that comes first when several keys match (as the backend does)", () => {
+    // "org.springframework.web" e "org.springframework.web.bind" batem ambos em "org.springframework.web.bind.annotation"
+    const hits = ["org.springframework.web", "org.springframework.web.bind"].map((k) => classify(`${k}.annotation`)?.label);
+    expect(new Set(hits).size).toBe(1);
+  });
+
+  it("answers a huge name without scanning it for every catalog entry", () => {
+    const start = performance.now();
+    expect(classify("a".repeat(500_000))).toBeNull();
+    expect(classify("requests." + "x".repeat(500_000))?.label).toBe("HTTP API");
+    expect(performance.now() - start).toBeLessThan(500);
+  });
+
   it("loads every module of the shared file", () => {
     expect(catalogSize).toBe(new Set(catalog.entries.flatMap((e) => e.modules.map((m) => m.toLowerCase()))).size);
     expect(catalogSize).toBeGreaterThan(250);

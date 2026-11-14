@@ -3,7 +3,7 @@
 // nunca se guardam.
 import { LineCounter, isMap, parseDocument } from "yaml";
 import type { Scalar } from "yaml";
-import { basename, dirname, joinPath, lineOf } from "./types";
+import { LineFinder, basename, dirname, joinPath } from "./types";
 import type { RepoFile } from "./types";
 
 export interface PortSpec {
@@ -73,7 +73,7 @@ export function parsePort(value: unknown): PortSpec | null {
   return { published: firstNumber(host), target, public: true };
 }
 
-function parseEnvironment(value: unknown, file: string, text: string, from: number, to: number): ComposeEnv[] {
+function parseEnvironment(value: unknown, file: string, finder: LineFinder, from: number): ComposeEnv[] {
   const entries: [string, string][] = [];
   if (Array.isArray(value)) {
     for (const item of value) {
@@ -83,8 +83,13 @@ function parseEnvironment(value: unknown, file: string, text: string, from: numb
   } else if (isRecord(value)) {
     for (const [key, v] of Object.entries(value)) entries.push([key, v === null || v === undefined ? "" : String(v)]);
   }
-  const block = text.slice(from, to);
-  return entries.map(([key, v]) => ({ key, value: v, file, line: lineOf(text, key, from + Math.max(0, block.indexOf(key))) }));
+  // as variáveis de um serviço aparecem pela ordem em que as lemos: cada procura começa onde acabou a anterior
+  let cursor = from;
+  return entries.map(([key, v]) => {
+    const found = finder.findKey(key, cursor);
+    if (found.index >= 0) cursor = found.index + key.length;
+    return { key, value: v, file, line: found.line };
+  });
 }
 
 function parseBuild(value: unknown, composeDir: string): ComposeService["build"] {
@@ -119,8 +124,14 @@ export function parseCompose(file: RepoFile): ComposeService[] {
     return [];
   }
   const servicesNode = document.get("services", true);
-  const root = document.toJS({ maxAliasCount: 100 }) as unknown;
+  let root: unknown;
+  try {
+    root = document.toJS({ maxAliasCount: 100 });
+  } catch {
+    return []; // mais referências (aliases) do que as que um ficheiro de verdade tem: ataque de esgotamento de recursos
+  }
   if (!isMap(servicesNode) || !isRecord(root) || !isRecord(root.services)) return [];
+  const finder = new LineFinder(file.text);
   const composeDir = dirname(file.path);
 
   const services: ComposeService[] = [];
@@ -132,7 +143,6 @@ export function parseCompose(file: RepoFile): ComposeService[] {
     const body = isRecord(def) ? def : {};
     const value = pair.value as { range?: [number, number, number] | null } | null;
     const start = value?.range?.[0] ?? key.range![0];
-    const end = value?.range?.[2] ?? file.text.length;
     const line = lineCounter.linePos(key.range![0]).line;
     services.push({
       name,
@@ -145,7 +155,7 @@ export function parseCompose(file: RepoFile): ComposeService[] {
         .filter((p): p is PortSpec => p !== null)
         .map((p) => ({ ...p, file: file.path, line })),
       dependsOn: parseDependsOn(body).map((name) => ({ name, file: file.path, line })),
-      environment: parseEnvironment(body.environment, file.path, file.text, start, end),
+      environment: parseEnvironment(body.environment, file.path, finder, start),
     });
   }
   return services;

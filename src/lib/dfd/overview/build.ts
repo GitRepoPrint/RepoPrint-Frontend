@@ -8,6 +8,8 @@
 //  - um depósito encontrado só por uma dependência junta-se ao único depósito do compose com a mesma tecnologia;
 //  - tudo leva proveniência: de onde se tirou (ficheiro e linha) e com que confiança.
 import catalog from "../catalog.json";
+import { GENERIC_TECHNOLOGIES, SQL_DATABASES } from "../catalog";
+import { mergeProvenance } from "../provenance";
 import type { Confidence, DfdGraph, Evidence, GraphEdge, GraphNode, Provenance } from "../schema";
 import { mergeServices, parseCompose } from "./compose";
 import type { ComposeService } from "./compose";
@@ -30,13 +32,10 @@ export interface OverviewInput {
 
 const CLIENT_ID = "external_entity:client";
 const APPLICATION_ID = "process:application";
-const RANK: Record<Confidence, number> = { low: 0, medium: 1, high: 2 };
-const MAX_EVIDENCE = 6;
+// Mais do que isto não é um ficheiro de configuração: não se lê (a camada de rede já nem o descarrega).
+export const MAX_FILE_CHARS = 400_000;
 
-// Tecnologias do catálogo que são um protocolo ou uma biblioteca genérica, não um sistema com nome.
-const GENERIC = new Set(["http-api", "websocket", "grpc", "auth-oauth-jwt", "file-storage"]);
-// "SQL database" é o que um ORM (sqlalchemy, sequelize...) diz: há uma base de dados SQL, não qual. Liga-se à que já se conhece.
-const SQL_DATABASES = new Set(["postgresql", "mysql", "sqlite"]);
+
 
 const CATALOG_BY_TECHNOLOGY = new Map(catalog.entries.map((e) => [e.technology, e]));
 
@@ -48,22 +47,22 @@ const DEPLOY_PARENTS = new Set(["apps", "services", "servers", "cmd"]);
 // ...e nomes de pastas na raiz que quase sempre são uma aplicação.
 const APP_FOLDERS = new Set(["app", "api", "backend", "frontend", "server", "client", "web", "worker"]);
 
+// Serviços que só existem para testar o sistema (end-to-end, Selenium...): não fazem parte da arquitetura.
+const TEST_RUNNER_WORDS = new Set(["test", "tests", "e2e", "playwright", "cypress", "selenium", "sut"]);
+/** O caminho de uma imagem sem o registo e sem a etiqueta: "cypress/included:13" -> "cypress/included". */
+function imagePath(image: string): string {
+  const segments = image.split("@")[0].replace(/:[^/:]*$/, "").split("/");
+  const hasRegistry = segments.length > 1 && /[.:]|^localhost$/.test(segments[0]);
+  return (hasRegistry ? segments.slice(1) : segments).join("/");
+}
+
+const isTestRunner = (s: ComposeService) => {
+  const words = [s.name, s.image ? imagePath(s.image) : ""].flatMap((text) => text.toLowerCase().split(/[^a-z0-9]+/));
+  return words.some((word) => TEST_RUNNER_WORDS.has(word));
+};
+
 const claims = (component: string, dir: string) => component === "." || dir === component || dir.startsWith(`${component}/`);
 const flowLabel = (node: GraphNode) => (node.kind === "data_store" ? (node.tags?.includes("queue") ? "publishes/consumes" : "reads/writes") : "calls");
-
-function mergeProvenance(a: Provenance, b: Provenance): Provenance {
-  const seen = new Set<string>();
-  const evidence: Evidence[] = [];
-  for (const item of [...a.evidence, ...b.evidence]) {
-    const key = JSON.stringify(item);
-    if (!seen.has(key) && evidence.length < MAX_EVIDENCE) {
-      seen.add(key);
-      evidence.push(item);
-    }
-  }
-  const confidence = RANK[b.confidence] > RANK[a.confidence] ? b.confidence : a.confidence;
-  return { source: a.source, confidence, evidence };
-}
 
 class Graph {
   nodes = new Map<string, GraphNode>();
@@ -93,11 +92,31 @@ class Graph {
 
 export function buildOverview({ owner, repo, files, now }: OverviewInput): DfdGraph {
   const g = new Graph();
-  const ofKind = (kind: string) => files.filter((f) => fileKind(f.path) === kind);
+  const unreadable: string[] = [];
+  const ofKind = (kind: string) =>
+    files.filter((f) => {
+      if (fileKind(f.path) !== kind) return false;
+      if (f.text.length <= MAX_FILE_CHARS) return true;
+      unreadable.push(f.path);
+      return false;
+    });
+  // Um ficheiro que não se consegue ler (estragado, ou feito de propósito para atrapalhar) não derruba o resto.
+  const attempt = <T>(file: RepoFile, parse: (f: RepoFile) => T, fallback: T): T => {
+    try {
+      return parse(file);
+    } catch {
+      unreadable.push(file.path);
+      return fallback;
+    }
+  };
+
   const composeFiles = ofKind("compose");
-  const services = mergeServices(composeFiles.flatMap(parseCompose));
-  const dockerfiles = new Map(ofKind("dockerfile").map((f) => [f.path, parseDockerfile(f.text)]));
-  const manifests = ofKind("manifest").map(parseManifest).filter((m) => m !== null);
+  const services = mergeServices(composeFiles.flatMap((f) => attempt(f, parseCompose, [])));
+  const dockerfiles = new Map(ofKind("dockerfile").flatMap((f) => {
+    const info = attempt(f, (file) => parseDockerfile(file.text), null);
+    return info ? [[f.path, info] as const] : [];
+  }));
+  const manifests = ofKind("manifest").map((f) => attempt(f, parseManifest, null)).filter((m) => m !== null);
   const configs = ofKind("config");
 
   // Um serviço que só tem "image:" costuma ser construído noutro sítio (CI, plugin do Maven): a pasta com o mesmo nome
@@ -123,7 +142,7 @@ export function buildOverview({ owner, repo, files, now }: OverviewInput): DfdGr
   const buildDockerfiles = new Set<string>();
 
   // ---- 1. Serviços do compose
-  for (const s of services) {
+  for (const s of services.filter((candidate) => !isTestRunner(candidate))) {
     const dockerfile = s.build ? dockerfiles.get(s.build.dockerfile) : undefined;
     if (s.build) buildDockerfiles.add(s.build.dockerfile);
     const byImage = s.image ? classifyImage(s.image) : null;
@@ -137,6 +156,7 @@ export function buildOverview({ owner, repo, files, now }: OverviewInput): DfdGr
       node = {
         id: unique(`data_store:${s.name}`), kind: "data_store", name: s.name, technology: hit.technology, tags: hit.tags,
         provenance: provenance(byImage ? "high" : "medium", declared, { note: why }),
+        extra: { composeService: s.name }, // um depósito com nome, mesmo que o nome seja o da tecnologia
       };
     } else {
       const guessed = s.build || hit ? null : guessFolder(s);
@@ -253,7 +273,7 @@ export function buildOverview({ owner, repo, files, now }: OverviewInput): DfdGr
         if (hit.category === "entrypoint") {
           if (own.includes(m)) note(web, component.id, ev); // que o serviço responda a HTTP é com as suas próprias dependências
         } else if (hit.category === "external") {
-          if (GENERIC.has(hit.technology)) continue;
+          if (GENERIC_TECHNOLOGIES.has(hit.technology)) continue;
           const id = `external_entity:${hit.technology}`;
           g.addNode({ id, kind: "external_entity", name: hit.label, technology: hit.technology, tags: ["third-party"], provenance: provenance("medium", ev) });
           connect(component.id, id, provenance("medium", ev));
@@ -266,7 +286,7 @@ export function buildOverview({ owner, repo, files, now }: OverviewInput): DfdGr
 
   // ---- 4. Compose: dependências entre serviços, endereços nas variáveis e portas publicadas
   const resolve = (s: ComposeService, host: string) => serviceId.get(`${s.file}|${host}`);
-  for (const s of services) {
+  for (const s of services.filter((candidate) => serviceId.has(`${candidate.file}|${candidate.name}`))) {
     const sourceId = serviceId.get(`${s.file}|${s.name}`)!;
     const source = g.nodes.get(sourceId)!;
     for (const dep of s.dependsOn) {
@@ -291,7 +311,7 @@ export function buildOverview({ owner, repo, files, now }: OverviewInput): DfdGr
   for (const file of configs) {
     const componentId = ownerOf(dirname(file.path));
     if (!componentId) continue;
-    for (const ep of parseEndpoints(file)) {
+    for (const ep of attempt(file, parseEndpoints, [])) {
       const ev = at(file.path, ep.line, `${ep.key} points at '${ep.host}'`);
       const targetId = serviceByName.get(ep.host);
       if (targetId) connect(componentId, targetId, provenance("high", ev), undefined, ep.protocol);
@@ -308,7 +328,12 @@ export function buildOverview({ owner, repo, files, now }: OverviewInput): DfdGr
   }
 
   // ---- 7. O cliente: quem serve HTTP ou tem portas acessíveis recebe pedidos de fora
+  // Uma porta publicada, sozinha, é um sinal fraco (numa pilha de desenvolvimento publica-se tudo). Quando há componentes
+  // que se sabe que respondem a HTTP, só esses (e os proxies) são a entrada; sem nenhum, as portas são o que há.
+  const knownEntryPoints = web.size > 0;
+  const isProxy = (id: string) => g.nodes.get(id)?.tags?.includes("proxy") ?? false;
   for (const id of new Set([...web.keys(), ...exposed.keys()])) {
+    if (knownEntryPoints && !web.has(id) && !isProxy(id)) continue;
     const evidence = [...(web.get(id) ?? []), ...(exposed.get(id) ?? [])];
     g.addNode({
       id: CLIENT_ID, kind: "external_entity", name: "User / Client", tags: ["client"],
@@ -329,6 +354,7 @@ export function buildOverview({ owner, repo, files, now }: OverviewInput): DfdGr
       generated_at: now ?? new Date().toISOString(),
       inputs: files.map((f) => f.path),
       ...(fallback ? { fallback } : {}),
+      ...(unreadable.length ? { unreadable } : {}),
     },
   };
 }

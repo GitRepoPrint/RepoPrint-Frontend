@@ -24,11 +24,70 @@ export function joinPath(...parts: string[]): string {
   return out.length ? out.join("/") : ".";
 }
 
-/** Número da linha (a contar de 1) onde `needle` aparece pela primeira vez a partir de `from`; 1 se não aparecer. */
-export function lineOf(text: string, needle: string, from = 0): number {
-  const index = text.indexOf(needle, from);
-  if (index < 0) return 1;
-  let line = 1;
-  for (let i = text.indexOf("\n"); i >= 0 && i < index; i = text.indexOf("\n", i + 1)) line++;
-  return line;
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Procura linhas num texto sem o reler do princípio de cada vez. As procuras avançam: uma procura sem `from`
+ * começa onde acabou a última (as chaves de um ficheiro aparecem pela ordem em que as lemos) e, se não achar,
+ * tenta uma vez desde o princípio. Sem resultado, a linha é 1 e o índice -1.
+ */
+export class LineFinder {
+  private readonly breaks: number[] = [];
+  private cursor = 0;
+
+  constructor(readonly text: string) {
+    for (let i = text.indexOf("\n"); i >= 0; i = text.indexOf("\n", i + 1)) this.breaks.push(i);
+  }
+
+  /** Linha (a contar de 1) em que cai a posição `offset`. */
+  lineAt(offset: number): number {
+    let low = 0;
+    let high = this.breaks.length;
+    while (low < high) {
+      const middle = (low + high) >> 1;
+      if (this.breaks[middle] < offset) low = middle + 1;
+      else high = middle;
+    }
+    return low + 1;
+  }
+
+  /** Primeira ocorrência de `needle`. */
+  find(needle: string, from?: number): { line: number; index: number } {
+    let index = this.text.indexOf(needle, from ?? this.cursor);
+    if (index < 0 && from === undefined) index = this.text.indexOf(needle);
+    return this.found(index, needle.length);
+  }
+
+  /**
+   * Primeira linha em que `key` abre a linha (depois de espaços, "-" ou aspas) e é seguida de ":", "=" ou do fim da linha.
+   * Ao contrário de `find`, "PORT" não bate em "DB_PORT" nem em "PORT_FORWARD".
+   */
+  findKey(key: string, from?: number): { line: number; index: number } {
+    const pattern = new RegExp(`^[ \\t-]*["']?${escapeRegExp(key)}["']?[ \\t]*(?:[:=]|$)`, "gm");
+    pattern.lastIndex = from ?? this.cursor;
+    let match = pattern.exec(this.text);
+    if (!match && from === undefined) {
+      pattern.lastIndex = 0;
+      match = pattern.exec(this.text);
+    }
+    return this.found(match ? match.index + match[0].indexOf(key) : -1, key.length);
+  }
+
+  /** Como `findKey`, para JSON: `"key"` seguido de ":" em qualquer ponto da linha (os objetos podem ir numa linha só). */
+  findJsonKey(key: string, from?: number): { line: number; index: number } {
+    const pattern = new RegExp(`"${escapeRegExp(key)}"[ \\t\\r\\n]*:`, "g");
+    pattern.lastIndex = from ?? this.cursor;
+    let match = pattern.exec(this.text);
+    if (!match && from === undefined) {
+      pattern.lastIndex = 0;
+      match = pattern.exec(this.text);
+    }
+    return this.found(match ? match.index + 1 : -1, key.length);
+  }
+
+  private found(index: number, length: number) {
+    if (index < 0) return { line: 1, index: -1 };
+    this.cursor = index + length;
+    return { line: this.lineAt(index), index };
+  }
 }

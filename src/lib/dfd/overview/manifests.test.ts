@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifyDependency, parseManifest } from "./manifests";
+import { MAX_DEPENDENCIES, classifyDependency, parseManifest } from "./manifests";
 
 const parse = (path: string, text: string) => parseManifest({ path, text })!;
 const names = (path: string, text: string) => parse(path, text).dependencies.map((d) => d.name);
@@ -87,6 +87,16 @@ describe("classifyDependency", () => {
     expect(dep(artifact)?.category).toBe("entrypoint");
   });
 
+  it.each(["react-dom", "vue", "@angular/core", "svelte", "vite", "nuxt"])("%s is a web frontend", (name) => {
+    expect(dep(name)).toMatchObject({ category: "entrypoint", technology: "web-frontend" });
+  });
+
+  it("spring-cloud-starter-gateway (any version of the name) is a web entry point", () => {
+    for (const name of ["spring-cloud-starter-gateway", "spring-cloud-starter-gateway-server-webmvc", "spring-cloud-starter-gateway-server-webflux"]) {
+      expect(dep(name)?.category).toBe("entrypoint");
+    }
+  });
+
   it("returns null for libraries the catalog does not know", () => {
     expect(dep("lodash")).toBeNull();
     expect(dep("left-pad")).toBeNull();
@@ -95,5 +105,33 @@ describe("classifyDependency", () => {
 
   it("tries the alternates when the name alone is not enough", () => {
     expect(dep("some-artifact", ["org.mongodb"])?.technology).toBe("mongodb");
+  });
+});
+
+describe("hostile files", () => {
+  const took = (run: () => unknown) => {
+    const start = performance.now();
+    run();
+    return performance.now() - start;
+  };
+
+  it("caps how many dependencies a manifest can contribute", () => {
+    const deps = Object.fromEntries(Array.from({ length: 5000 }, (_, i) => [`pkg${i}`, "1"]));
+    expect(parse("package.json", JSON.stringify({ dependencies: deps })).dependencies).toHaveLength(MAX_DEPENDENCIES);
+    expect(parse("requirements.txt", Array.from({ length: 5000 }, (_, i) => `p${i}`).join("\n")).dependencies).toHaveLength(MAX_DEPENDENCIES);
+  });
+
+  it("reads a pom with unclosed or repeated tags in linear time", () => {
+    const hostile = ["<dependency>".repeat(16000), "<!--".repeat(50000), "<build>".repeat(30000), "<dependency><artifactId>" + " ".repeat(190000)];
+    for (const text of hostile) expect(took(() => parseManifest({ path: "pom.xml", text }))).toBeLessThan(1500);
+  });
+
+  it("an unclosed comment hides the rest of a pom, as an XML parser would", () => {
+    const pom = `<project><artifactId>x</artifactId><dependencies><dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId></dependency><!-- never closed <dependency><artifactId>hidden</artifactId></dependency></dependencies></project>`;
+    expect(names("pom.xml", pom)).toEqual(["postgresql"]);
+  });
+
+  it("classifies a ridiculous name instantly", () => {
+    expect(took(() => classifyDependency({ name: "a".repeat(200000), alternates: [] }))).toBeLessThan(500);
   });
 });
