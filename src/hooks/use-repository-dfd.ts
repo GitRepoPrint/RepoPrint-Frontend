@@ -44,6 +44,17 @@ export function useRepositoryDfd(repository: string) {
     };
   }, []);
 
+  const startDetail = useCallback((owner: string, repo: string) => {
+    if (!BACKEND_URL) return;
+    setDetail({ status: "loading" });
+    getDetail(owner, repo, { backendUrl: BACKEND_URL })
+      .then((graph) => alive.current && setDetail({ status: "ready", graph }))
+      .catch((error: unknown) => {
+        console.error("Code analysis failed", error);
+        if (alive.current) setDetail({ status: "error", message: errorMessage(error, "The code analysis failed. Please try again.") });
+      });
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     const [owner, repo] = repository.split("/");
@@ -51,6 +62,9 @@ export function useRepositoryDfd(repository: string) {
       .then((data) => {
         if (cancelled) return;
         setDfd({ status: "ready", model: graphToDfdModel(overviewView(data.graph)), graph: data.graph, partial: data.partial, cached: data.cached, fetchedAt: data.fetchedAt });
+        // Sem compose, Dockerfiles nem manifestos de serviços a configuração quase nada diz (um só componente): o que
+        // mostra a arquitetura é o código, por isso pede-se já, em vez de esperar que o utilizador carregue no botão.
+        if (data.graph.meta.fallback === "application" && !peekDetail(owner, repo)) startDetail(owner, repo);
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -60,7 +74,7 @@ export function useRepositoryDfd(repository: string) {
     return () => {
       cancelled = true;
     };
-  }, [repository, attempt]);
+  }, [repository, attempt, startDetail]);
 
   const retry = useCallback(() => {
     setDfd({ status: "loading" });
@@ -68,16 +82,9 @@ export function useRepositoryDfd(repository: string) {
   }, []);
 
   const loadDetail = useCallback(() => {
-    if (!BACKEND_URL) return;
     const [owner, repo] = repository.split("/");
-    setDetail({ status: "loading" });
-    getDetail(owner, repo, { backendUrl: BACKEND_URL })
-      .then((graph) => alive.current && setDetail({ status: "ready", graph }))
-      .catch((error: unknown) => {
-        console.error("Code analysis failed", error);
-        if (alive.current) setDetail({ status: "error", message: errorMessage(error, "The code analysis failed. Please try again.") });
-      });
-  }, [repository]);
+    startDetail(owner, repo);
+  }, [repository, startDetail]);
 
   return { dfd, retry, detail, loadDetail, detailAvailable: BACKEND_URL !== null };
 }

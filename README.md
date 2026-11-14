@@ -119,6 +119,17 @@ browser**, a partir da configuração que o repositório tem no GitHub: ficheiro
 - O código está em `src/lib/dfd/` (ver `docs/dfd-schema.md` no repositório raiz): `overview/` lê a configuração,
   `combine.ts` junta-a ao grafo do backend, `project.ts` decide o que se vê e `to-model.ts` prepara o desenho.
 
+### Como se chega ao diagrama
+
+Um repositório acabado de associar aparece com **Analyze now**. Clicar nele **analisa-o** (infere a arquitetura, ver acima) e abre o
+dashboard no diagrama; a lista passa a dizer *Not scored yet* e quando foi analisado. Não há pontuação de segurança: a análise de
+ameaças ainda não existe, e por isso nos repositórios reais os separadores *Threat Modeling* e *Team Dynamics* mostram dados de
+exemplo (têm um aviso a dizê-lo) e o dashboard abre no diagrama, que é a única parte verdadeira.
+
+Um repositório sem compose, Dockerfiles nem manifestos de serviços (uma biblioteca como o Flask) dá, só pela configuração, **um único
+componente**. Com o backend configurado (ver abaixo) o código-fonte é lido logo a seguir, sem carregar em nada, e o componente abre-se
+nas suas pastas; sem o backend, o diagrama diz isso mesmo.
+
 ### Detalhe ao nível do código (opcional)
 
 Com o backend a correr, o botão **Add code-level detail** pede-lhe o grafo ao nível do código (`GET /dfd`), junta-o ao anterior

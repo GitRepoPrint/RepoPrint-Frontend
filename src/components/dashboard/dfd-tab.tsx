@@ -33,10 +33,13 @@ export function DfdTab({ repository, demoModel, findings, nodeId, onSelectNode, 
 function LiveDfdTab({ repository, findings, onOpenThreats, onEdit }: Pick<DfdTabProps, "repository" | "findings" | "onOpenThreats" | "onEdit">) {
   const { dfd, retry, detail, loadDetail, detailAvailable } = useRepositoryDfd(repository);
   const [selected, setSelected] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<ReadonlySet<string>>(() => new Set());
+  // null = ainda não mexeu: aberto por defeito fica o "Application" (quando é só ele), para se ver o que tem dentro
+  const [chosen, setChosen] = useState<ReadonlySet<string> | null>(null);
 
   // Com a análise do código junta-se ao overview; sem ela, o overview é o que há. O que está aberto decide o que se vê.
   const overview = dfd.status === "ready" ? dfd.graph : null;
+  const initiallyOpen = useMemo<ReadonlySet<string>>(() => new Set(overview?.meta.fallback === "application" ? ["process:application"] : []), [overview]);
+  const expanded = chosen ?? initiallyOpen;
   const graph = useMemo(() => (overview ? (detail.status === "ready" ? combineGraphs(overview, detail.graph) : overview) : null), [overview, detail]);
   const view = useMemo(() => (graph ? project(graph, { expanded }) : null), [graph, expanded]);
   const model = useMemo(() => (view ? graphToDfdModel(view) : null), [view]);
@@ -69,8 +72,8 @@ function LiveDfdTab({ repository, findings, onOpenThreats, onEdit }: Pick<DfdTab
   if (!graph || !view || !model) return null;
 
   const toggle = (id: string) =>
-    setExpanded((current) => {
-      const next = new Set(current);
+    setChosen((current) => {
+      const next = new Set(current ?? initiallyOpen);
       if (!next.delete(id)) next.add(id);
       return next;
     });
@@ -94,8 +97,8 @@ function LiveDfdTab({ repository, findings, onOpenThreats, onEdit }: Pick<DfdTab
         onLoad: loadDetail,
         canExpand: Object.keys(view.children).length > 0,
         anyOpen: expanded.size > 0,
-        onExpandAll: () => setExpanded(new Set(Object.keys(view.children))),
-        onCollapseAll: () => setExpanded(new Set()),
+        onExpandAll: () => setChosen(new Set(Object.keys(view.children))),
+        onCollapseAll: () => setChosen(new Set()),
       }}
       inferred={{
         partial: dfd.partial,
@@ -189,7 +192,7 @@ export function DfdPanel({ repository, model, findings, nodeId, onSelectNode, on
           <Icon name="info" size={16} />
           <span>
             {inferred.fallback === "application"
-              ? "No compose files or Dockerfiles were found, so this is one application with what its dependencies reveal."
+              ? `No compose files or Dockerfiles were found, so the configuration shows one application with what its dependencies reveal.${detail?.available ? "" : " Connect the code analysis service (NEXT_PUBLIC_BACKEND_URL) to see what the code does."}`
               : `Inferred from ${inferred.files} configuration file${inferred.files === 1 ? "" : "s"} (compose, Dockerfiles, manifests).`}{" "}
             {inferred.codeFiles === undefined
               ? "Source code is not read here."

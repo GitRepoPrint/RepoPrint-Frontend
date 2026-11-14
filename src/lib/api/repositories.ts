@@ -37,7 +37,8 @@ function isRepository(value: unknown): value is Repository {
     typeof v === "object" && v !== null &&
     typeof v.name === "string" && typeof v.description === "string" &&
     typeof v.language === "string" && typeof v.updated === "string" &&
-    (v.score === null || typeof v.score === "number")
+    (v.score === null || typeof v.score === "number") &&
+    (v.analyzedAt === undefined || typeof v.analyzedAt === "string")
   );
 }
 
@@ -62,6 +63,29 @@ export function saveRepositories(repositories: Repository[]) {
 /** Os repositórios de demonstração não existem no GitHub: o diagrama deles é o mock, não se tenta inferir. */
 export const isDemoRepository = (name: string) => demoRepositories.some((repository) => repository.name.toLowerCase() === name.toLowerCase());
 
+export const PENDING_DESCRIPTION = "Newly associated repository · analysis pending";
+export const ANALYZED_DESCRIPTION = "Architecture inferred from the repository's configuration";
+
 export function newRepository(name: string): Repository {
-  return { name, description: "Newly associated repository · analysis pending", language: "—", score: null, updated: "Just added" };
+  return { name, description: PENDING_DESCRIPTION, language: "—", score: null, updated: "Just added" };
+}
+
+/** Em que ponto está um repositório: com pontuação (os de demonstração), analisado mas sem pontuação, ou à espera da análise. */
+export type RepositoryStage = "scored" | "analyzed" | "pending";
+
+export const stageOf = (repository: Repository): RepositoryStage =>
+  repository.score !== null ? "scored" : repository.analyzedAt ? "analyzed" : "pending";
+
+/** "Just now", "5 min ago", "2 hours ago", "3 days ago"; mais de um mês, a data. */
+export function timeAgo(iso: string, now: number = Date.now()): string {
+  const then = Date.parse(iso);
+  if (Number.isNaN(then)) return "—";
+  const minutes = Math.floor((now - then) / 60_000);
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} ${days === 1 ? "day" : "days"} ago`;
+  return new Date(then).toLocaleDateString("en-GB");
 }

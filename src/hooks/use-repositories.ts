@@ -18,5 +18,9 @@ export function useRepositories() {
     setRepositories((current) => (current ? [repository, ...current] : current));
   }, []);
 
-  return { repositories, add };
+  const update = useCallback((name: string, patch: Partial<Repository>) => {
+    setRepositories((current) => current?.map((r) => (r.name === name ? { ...r, ...patch } : r)) ?? current);
+  }, []);
+
+  return { repositories, add, update };
 }

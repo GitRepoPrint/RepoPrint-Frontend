@@ -68,8 +68,10 @@ export interface Repository {
   name: string;              // "org/repo"
   description: string;
   language: string;
-  score: number | null;      // null = análise pendente
+  score: number | null;      // null = ainda sem pontuação de segurança (a análise de ameaças ainda não existe)
   updated: string;           // texto livre no mock ("2 hours ago")
+  /** Quando se inferiu a arquitetura deste repositório (ISO 8601). Sem isto, a análise ainda não foi feita. */
+  analyzedAt?: string;
 }
 
 // ---------- Dashboard ----------
