@@ -69,6 +69,7 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
       <main className="dashboard-main print:hidden!">
         <DashboardHeader
           repository={analysis.repository}
+          demo={demo}
           lastScanned={analysis.lastScanned}
           branches={analysis.branches}
           branch={branch}

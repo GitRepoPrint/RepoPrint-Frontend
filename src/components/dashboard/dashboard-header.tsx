@@ -6,6 +6,8 @@ import type { ScanSummary } from "@/lib/api/types";
 
 type DashboardHeaderProps = {
   repository: string;
+  /** Só os repositórios de demonstração têm varrimentos, ramos e histórico (de exemplo). */
+  demo: boolean;
   lastScanned: string;
   branches: string[];
   branch: string;
@@ -48,17 +50,21 @@ export function DashboardHeader(p: DashboardHeaderProps) {
         </h1>
         <div className="dashboard-heading-actions">
           <div className="dashboard-action-buttons">
-            <div className="scan-action">
-              <button type="button" className="button button-primary scan-now" onClick={p.onScan}><Icon name="spark" size={16} /> Scan Now</button>
-              <span className="scan-time">Last scanned {p.lastScanned}</span>
-            </div>
-            <button type="button" className="button button-outline export-report" onClick={p.onExport}>
-              <Icon name="download" size={17} /> Export PDF Report
-            </button>
+            {p.demo && (
+              <div className="scan-action">
+                <button type="button" className="button button-primary scan-now" onClick={p.onScan}><Icon name="spark" size={16} /> Scan Now</button>
+                <span className="scan-time">Last scanned {p.lastScanned}</span>
+              </div>
+            )}
+            {p.demo && (
+              <button type="button" className="button button-outline export-report" onClick={p.onExport}>
+                <Icon name="download" size={17} /> Export PDF Report
+              </button>
+            )}
           </div>
         </div>
       </div>
-      <div className="dashboard-controls">
+      {p.demo && <div className="dashboard-controls">
         <div className="dropdown-wrap" ref={wrapRef}>
           <button type="button" className="branch-button" aria-haspopup="menu" aria-expanded={branchOpen} onClick={() => setBranchOpen((open) => !open)}>
             <Icon name="branch" size={14} /> {p.branch} <Icon name="chevron" size={13} />
@@ -81,7 +87,7 @@ export function DashboardHeader(p: DashboardHeaderProps) {
             </select>
           </label>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
