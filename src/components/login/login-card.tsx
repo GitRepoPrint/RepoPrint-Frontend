@@ -1,38 +1,51 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { Icon } from "@/components/ui/icon";
 import { ThemedLogo } from "@/components/ui/themed-logo";
-import { useAuth } from "@/lib/auth/auth-provider";
+import { postAuth } from "@/lib/auth/auth-client";
 import { nextPathFromLocation } from "@/lib/auth/redirect";
-import { validateCredentials } from "@/lib/auth/validation";
+import { validateLogin } from "@/lib/auth/validation";
 import type { CredentialErrors } from "@/lib/auth/validation";
 import { AuthSwitchLink } from "./auth-switch-link";
 import { FIELD_ERROR_CLASS } from "./form-styles";
 
-export function LoginCard() {
-  const router = useRouter();
-  const { signIn } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<CredentialErrors>({});
+const ERROR_MESSAGES: Record<string, string> = {
+  failed: "Sign in failed. Please try again.",
+  expired: "Your session expired. Sign in again to continue.",
+};
 
-  // O ?next= só é lido no momento do clique (no cliente): o cartão fica no HTML inicial, sem <Suspense>.
-  function continueWithGitHub() {
-    signIn("GitHub");
-    router.push(nextPathFromLocation());
-  }
+const SUBMIT_ERRORS: Record<string, string> = {
+  invalid: "Incorrect email/username or password.\nAfter five failed attempts, sign in is blocked for a few minutes.",
+  rate_limited: "Too many sign in attempts. Wait a minute and try again.",
+  forbidden: "Sign in failed. Reload the page and try again.",
+  unavailable: "Sign in is unavailable right now. Please try again.",
+};
 
-  function handleSubmit(event: FormEvent) {
+export function LoginCard({ error }: { error?: string }) {
+  const [identifier, setIdentifier]= useState("");
+  const [password, setPassword]= useState("");
+  const [errors, setErrors]= useState<CredentialErrors>({});
+  const [formError, setFormError]= useState<string | undefined>(error ? ERROR_MESSAGES[error] : undefined);
+  const [submitting, setSubmitting]= useState(false);
+
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    const found = validateCredentials(email, password);
+    const found= validateLogin(identifier, password);
     setErrors(found);
-    if (found.email || found.password) return;
-    signIn("RepoPrint");
+    setFormError(undefined);
+    if (found.identifier || found.password) return;
+
+    setSubmitting(true);
+    const outcome= await postAuth("/api/auth/login", { identifier, password, next: nextPathFromLocation() });
+    if (outcome.ok) {
+      window.location.assign(outcome.next);
+      return;
+    }
+    setSubmitting(false);
     setPassword("");
-    router.push(nextPathFromLocation());
+    setFormError(SUBMIT_ERRORS[outcome.error] ?? SUBMIT_ERRORS.unavailable);
   }
 
   return (
@@ -40,25 +53,19 @@ export function LoginCard() {
       <ThemedLogo className="login-logo" />
       <h1>Your architecture,<br /><span>all in one place.</span></h1>
       <p>Sign in to access your repositories, security insights, and interactive threat models.</p>
-      <div className="login-providers">
-        <button type="button" onClick={continueWithGitHub}>
-          <Icon name="github" size={21} /> Continue with GitHub <Icon name="arrowRight" size={17} />
-        </button>
-      </div>
-      <div className="login-separator"><span /> OR SIGN IN WITH YOUR REPOPRINT ACCOUNT <span /></div>
-      <form className="site-login-form" onSubmit={handleSubmit} autoComplete="off" noValidate>
-        <label htmlFor="account-email">Email address</label>
+      <form className="site-login-form mt-7" onSubmit={handleSubmit} noValidate>
+        <label htmlFor="account-identifier">Email or username</label>
         <input
-          id="account-email"
-          type="email"
+          id="account-identifier"
+          type="text"
           placeholder="you@company.com"
-          value={email}
-          onChange={(event) => { setEmail(event.target.value); setErrors((e) => ({ ...e, email: undefined })); }}
-          autoComplete="off"
-          aria-invalid={Boolean(errors.email)}
-          aria-describedby={errors.email ? "account-email-error" : undefined}
+          value={identifier}
+          onChange={(event) => { setIdentifier(event.target.value); setErrors((e) => ({ ...e, identifier: undefined })); }}
+          autoComplete="username"
+          aria-invalid={Boolean(errors.identifier)}
+          aria-describedby={errors.identifier ? "account-identifier-error" : undefined}
         />
-        {errors.email && <p id="account-email-error" role="alert" className={FIELD_ERROR_CLASS}>{errors.email}</p>}
+        {errors.identifier && <p id="account-identifier-error" role="alert" className={FIELD_ERROR_CLASS}>{errors.identifier}</p>}
         <label htmlFor="account-password">Password</label>
         <input
           id="account-password"
@@ -66,12 +73,15 @@ export function LoginCard() {
           placeholder="Enter your password"
           value={password}
           onChange={(event) => { setPassword(event.target.value); setErrors((e) => ({ ...e, password: undefined })); }}
-          autoComplete="new-password"
+          autoComplete="current-password"
           aria-invalid={Boolean(errors.password)}
           aria-describedby={errors.password ? "account-password-error" : undefined}
         />
         {errors.password && <p id="account-password-error" role="alert" className={FIELD_ERROR_CLASS}>{errors.password}</p>}
-        <button type="submit" className="button button-primary">Sign In <Icon name="arrowRight" size={17} /></button>
+        {formError && <p role="alert" className="mb-3 whitespace-pre-line text-sm text-red-500 [.theme-light_&]:text-red-700">{formError}</p>}
+        <button type="submit" disabled={submitting} className="button button-primary">
+          {submitting ? "Signing in" : "Sign In"} <Icon name="arrowRight" size={17} />
+        </button>
       </form>
       <AuthSwitchLink to="/signup" prompt="New to RepoPrint?" label="Create an account" />
     </div>

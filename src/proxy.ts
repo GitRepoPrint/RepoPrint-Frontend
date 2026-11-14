@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-// Cookie mock definido em lib/auth/auth-provider.tsx ("GitHub" | "RepoPrint").
+// Cookie HttpOnly definido pelo callback em app/api/auth/callback (só verifica se existe; o backend valida o token).
 // No Next.js 16+ este ficheiro chama-se proxy.ts e a função exportada chama-se `proxy`.
 export function proxy(req: NextRequest) {
   const hasSession = Boolean(req.cookies.get("rp_session")?.value);

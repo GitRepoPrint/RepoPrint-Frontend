@@ -19,14 +19,8 @@ function Logo({ href }: { href: string }) {
 
 export default function Navbar() {
   const router = useRouter();
-  const { authenticated, ready, signOut } = useAuth();
+  const { authenticated, ready } = useAuth();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-
-  function handleSignOut() {
-    setProfileMenuOpen(false);
-    signOut();
-    router.push("/");
-  }
 
   return <header className="topbar app-navbar">
     <div className="nav-inner">
@@ -45,7 +39,9 @@ export default function Navbar() {
             </svg>
           </button>
           {profileMenuOpen && <div className="profile-menu" role="menu">
-            <button type="button" role="menuitem" onClick={handleSignOut}>Sign out</button>
+            <form method="post" action="/api/auth/logout" role="none">
+              <button type="submit" role="menuitem">Sign out</button>
+            </form>
           </div>}
         </div> : <button className="button button-outline login-button" type="button" onClick={() => router.push("/login")}>Sign In <Icon name="arrowRight" size={15} /></button>)}
       </div>

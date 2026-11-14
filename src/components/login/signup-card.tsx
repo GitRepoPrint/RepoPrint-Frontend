@@ -1,12 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
 import { ThemedLogo } from "@/components/ui/themed-logo";
-import { useAuth } from "@/lib/auth/auth-provider";
+import { postAuth } from "@/lib/auth/auth-client";
 import { nextPathFromLocation } from "@/lib/auth/redirect";
 import { validateSignUp } from "@/lib/auth/validation";
 import type { SignUpErrors, SignUpField, SignUpValues } from "@/lib/auth/validation";
@@ -45,11 +44,21 @@ const INITIAL: SignUpValues = {
   acceptPrivacy: false,
 };
 
+const SERVER_ERRORS: Record<string, SignUpErrors | string> = {
+  username_taken: { username: "That username is already taken." },
+  email_taken: { email: "An account with this email already exists." },
+  password_policy: { password: "This password is not accepted. Use at least 12 characters and avoid your username or email." },
+  invalid: "Check the highlighted fields and try again.",
+  rate_limited: "Too many sign-up attempts. Please try again later.",
+  forbidden: "Sign up failed. Reload the page and try again.",
+  unavailable: "Account creation is unavailable right now. Please try again.",
+};
+
 export function SignUpCard() {
-  const router = useRouter();
-  const { signIn } = useAuth();
   const [values, setValues] = useState<SignUpValues>(INITIAL);
   const [errors, setErrors] = useState<SignUpErrors>({});
+  const [formError, setFormError] = useState<string>();
+  const [submitting, setSubmitting] = useState(false);
 
   function change<K extends SignUpField>(field: K, value: SignUpValues[K]) {
     setValues((current) => ({ ...current, [field]: value }));
@@ -59,16 +68,28 @@ export function SignUpCard() {
   const onCheck = (field: "acceptTerms" | "acceptPrivacy") => (event: ChangeEvent<HTMLInputElement>) =>
     change(field, event.target.checked);
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const found = validateSignUp(values);
     setErrors(found);
+    setFormError(undefined);
     if (Object.keys(found).length > 0) return;
 
-    // Mock: "cria" a conta e entra logo. O username e o email não são guardados em lado nenhum.
-    signIn("RepoPrint");
-    setValues((current) => ({ ...current, password: "", confirmPassword: "" }));
-    router.push(nextPathFromLocation());
+    setSubmitting(true);
+    const outcome= await postAuth("/api/auth/signup", {
+      username: values.username.trim(),
+      email: values.email.trim(),
+      password: values.password,
+      next: nextPathFromLocation(),
+    });
+    if (outcome.ok) {
+      window.location.assign(outcome.next);
+      return;
+    }
+    setSubmitting(false);
+    const mapped= SERVER_ERRORS[outcome.error] ?? SERVER_ERRORS.unavailable;
+    if (typeof mapped === "string") setFormError(mapped);
+    else setErrors(mapped);
   }
 
   const field = (id: SignUpField, label: string, type: string, placeholder: string, autoComplete: string) => (
@@ -98,7 +119,7 @@ export function SignUpCard() {
         <div className="site-login-form">
           {field("username", "Username", "text", "your-username", "username")}
           {field("email", "Email address", "email", "you@company.com", "email")}
-          {field("password", "Password", "password", `At least 8 characters`, "new-password")}
+          {field("password", "Password", "password", "At least 12 characters", "new-password")}
           {field("confirmPassword", "Confirm password", "password", "Repeat your password", "new-password")}
         </div>
 
@@ -112,8 +133,9 @@ export function SignUpCard() {
           </Agreement>
         </div>
 
-        <button type="submit" className="button button-primary h-[45px]! w-full text-sm!">
-          Create account <Icon name="arrowRight" size={17} />
+        {formError && <p role="alert" className="mb-3 text-sm text-red-500 [.theme-light_&]:text-red-700">{formError}</p>}
+        <button type="submit" disabled={submitting} className="button button-primary h-[45px]! w-full text-sm!">
+          {submitting ? "Creating account" : "Create account"} <Icon name="arrowRight" size={17} />
         </button>
       </form>
 
