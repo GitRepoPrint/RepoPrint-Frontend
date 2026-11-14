@@ -39,12 +39,21 @@ describe("fetchDetailGraph", () => {
   });
 
   it.each([
-    [400, /public GitHub repository address/], [404, /could not find this repository/], [413, /too large/], [429, /rate limit/], [500, /failed/], [502, /failed/],
+    [400, /public GitHub repository address/], [404, /could not find this repository/], [413, /too large/], [429, /rate-limited/], [503, /busy/], [500, /failed/], [502, /failed/],
   ])("turns a %i into a message for the user, whatever language the backend used", async (status, message) => {
     const error = await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher: respond(status, { detail: "Repositório não encontrado ou privado" }) }).catch((e) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect(error.message).toMatch(message);
     expect(error.message).not.toMatch(/Reposit[óo]rio|Falha/);
+  });
+
+  it("keeps 429 and 503 as they are, so the page can tell 'try later' from 'broken'", async () => {
+    for (const status of [429, 503]) {
+      const error = await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher: respond(status) }).catch((e) => e);
+      expect(error.status).toBe(status);
+    }
+    const broken = await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher: respond(500) }).catch((e) => e);
+    expect(broken.status).toBe(502);
   });
 
   it("says the service cannot be reached when the network or CORS stops the request", async () => {

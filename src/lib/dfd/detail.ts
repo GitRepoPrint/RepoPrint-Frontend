@@ -20,11 +20,13 @@ const BY_STATUS: Record<number, string> = {
   400: "That does not look like a public GitHub repository address.",
   404: "The code analysis could not find this repository. It may not exist or may be private (only public repositories are read).",
   413: "This repository is too large for the code analysis.",
-  429: "GitHub's rate limit was reached while reading the repository. Try again in a few minutes.",
+  // 429: o limite de pedidos do próprio serviço (por cliente) ou o do GitHub; para o utilizador é a mesma coisa
+  429: "The code analysis is rate-limited right now (too many requests, or GitHub's own limit). Try again in a few minutes.",
+  503: "The code analysis is busy with other repositories. Try again in a minute.",
 };
 
 const errorForStatus = (status: number) =>
-  new ApiError(BY_STATUS[status] ?? "The code analysis failed. Please try again.", status >= 500 ? 502 : status);
+  new ApiError(BY_STATUS[status] ?? "The code analysis failed. Please try again.", status >= 500 && status !== 503 ? 502 : status);
 
 export async function fetchDetailGraph(owner: string, repo: string, options: DetailOptions): Promise<DfdGraph> {
   const fetcher: Fetcher = options.fetcher ?? ((input, init) => fetch(input, init));
