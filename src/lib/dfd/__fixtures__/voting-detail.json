@@ -1,0 +1,1026 @@
+{
+ "edges": [
+  {
+   "extra": {
+    "count": 2,
+    "routes": [
+     "GET /"
+    ],
+    "via": [
+     "GET /",
+     "express"
+    ]
+   },
+   "id": "external_entity:client->process:result:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET /",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via express",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:result"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "pg"
+    ]
+   },
+   "id": "process:result->data_store:postgresql:reads/writes",
+   "label": "reads/writes",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via pg",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:result",
+   "target": "data_store:postgresql"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "socket.io"
+    ]
+   },
+   "id": "process:result->process:result/views:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via socket.io",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:result",
+   "target": "process:result/views"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "https://socket.io/docs/v3/migrating-from-2-x-to-3-0/"
+    ]
+   },
+   "id": "process:result/views->external_entity:socket.io:calls",
+   "label": "calls",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://socket.io/docs/v3/migrating-from-2-x-to-3-0/",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:result/views",
+   "target": "external_entity:socket.io"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "urllib.parse"
+    ]
+   },
+   "id": "process:seed-data->external_entity:http-api:calls",
+   "label": "calls",
+   "operations": [
+    "access"
+   ],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via urllib.parse",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:seed-data",
+   "target": "external_entity:http-api"
+  },
+  {
+   "extra": {
+    "count": 2,
+    "routes": [
+     "GET /",
+     "POST /"
+    ],
+    "via": [
+     "GET /",
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:vote:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET /",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:vote"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "redis"
+    ]
+   },
+   "id": "process:vote->data_store:redis:reads/writes",
+   "label": "reads/writes",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via redis",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:vote",
+   "target": "data_store:redis"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "POST /"
+    ]
+   },
+   "id": "external_entity:client->process:vote/templates:submits form",
+   "label": "submits form",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via POST /",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:vote/templates"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
+    ]
+   },
+   "id": "process:vote/templates->external_entity:maxcdn.bootstrapcdn.com:loads stylesheet/resource",
+   "label": "loads stylesheet/resource",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:vote/templates",
+   "target": "external_entity:maxcdn.bootstrapcdn.com"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "http://code.jquery.com/jquery-latest.min.js"
+    ]
+   },
+   "id": "process:vote/templates->external_entity:code.jquery.com:loads script",
+   "label": "loads script",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via http://code.jquery.com/jquery-latest.min.js",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:vote/templates",
+   "target": "external_entity:code.jquery.com"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"
+    ]
+   },
+   "id": "process:vote/templates->external_entity:cdnjs.cloudflare.com:loads script",
+   "label": "loads script",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via //cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:vote/templates",
+   "target": "external_entity:cdnjs.cloudflare.com"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "System.Data.Common"
+    ]
+   },
+   "id": "process:worker->data_store:sql-database:reads/writes",
+   "label": "reads/writes",
+   "operations": [
+    "read",
+    "write"
+   ],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via System.Data.Common",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:worker",
+   "target": "data_store:sql-database"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "Npgsql"
+    ]
+   },
+   "id": "process:worker->data_store:postgresql:reads/writes",
+   "label": "reads/writes",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via Npgsql",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:worker",
+   "target": "data_store:postgresql"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "StackExchange.Redis"
+    ]
+   },
+   "id": "process:worker->data_store:redis:reads/writes",
+   "label": "reads/writes",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via StackExchange.Redis",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:worker",
+   "target": "data_store:redis"
+  }
+ ],
+ "extra": {
+  "flows": []
+ },
+ "level": "detail",
+ "meta": {
+  "generated_at": "2026-11-14T12:00:00Z",
+  "group_by": "directory",
+  "producer": "backend-detail",
+  "stats": {
+   "files_parsed": 13,
+   "files_with_syntax_errors": 0,
+   "flows": 0,
+   "languages": {
+    "bash": 4,
+    "csharp": 1,
+    "html": 2,
+    "javascript": 4,
+    "python": 2
+   },
+   "routes": 3,
+   "unsupported_languages": {}
+  }
+ },
+ "nodes": [
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 2,
+    "files": [
+     "healthchecks/postgres.sh",
+     "healthchecks/redis.sh"
+    ],
+    "languages": {
+     "bash": 2
+    }
+   },
+   "id": "process:healthchecks",
+   "kind": "process",
+   "name": "healthchecks",
+   "parent": null,
+   "path": "healthchecks",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "healthchecks/postgres.sh",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "healthchecks/redis.sh",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 2,
+    "definitions": [
+     "function getVotes",
+     "function collectVotesFromResult"
+    ],
+    "file_count": 1,
+    "files": [
+     "result/server.js"
+    ],
+    "languages": {
+     "javascript": 1
+    },
+    "route_count": 1,
+    "routes": [
+     {
+      "file": "result/server.js",
+      "handler": "",
+      "line": 70,
+      "method": "GET",
+      "path": "/"
+     }
+    ]
+   },
+   "id": "process:result",
+   "kind": "process",
+   "name": "result",
+   "parent": null,
+   "path": "result",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "result/server.js",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 1,
+    "definitions": [
+     "function onLoadFinished"
+    ],
+    "file_count": 2,
+    "files": [
+     "result/tests/render.js",
+     "result/tests/tests.sh"
+    ],
+    "languages": {
+     "bash": 1,
+     "javascript": 1
+    }
+   },
+   "id": "process:result/tests",
+   "kind": "process",
+   "name": "tests",
+   "parent": null,
+   "path": "result/tests",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "result/tests/render.js",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "result/tests/tests.sh",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 100,
+    "definitions": [
+     "function updateScores",
+     "function init",
+     "function getPercentages",
+     "function t",
+     "function e",
+     "function n",
+     "function r",
+     "function i",
+     "function o",
+     "function s",
+     "function a",
+     "function u",
+     "function c",
+     "function h",
+     "function h"
+    ],
+    "file_count": 3,
+    "files": [
+     "result/views/app.js",
+     "result/views/index.html",
+     "result/views/socket.io.js"
+    ],
+    "languages": {
+     "html": 1,
+     "javascript": 2
+    }
+   },
+   "id": "process:result/views",
+   "kind": "process",
+   "name": "views",
+   "parent": null,
+   "path": "result/views",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "result/views/app.js",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "result/views/index.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "result/views/socket.io.js",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 2,
+    "files": [
+     "seed-data/generate-votes.sh",
+     "seed-data/make-data.py"
+    ],
+    "languages": {
+     "bash": 1,
+     "python": 1
+    }
+   },
+   "id": "process:seed-data",
+   "kind": "process",
+   "name": "seed-data",
+   "parent": null,
+   "path": "seed-data",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "seed-data/generate-votes.sh",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "seed-data/make-data.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 2,
+    "definitions": [
+     "function get_redis",
+     "function hello"
+    ],
+    "file_count": 1,
+    "files": [
+     "vote/app.py"
+    ],
+    "languages": {
+     "python": 1
+    },
+    "route_count": 2,
+    "routes": [
+     {
+      "file": "vote/app.py",
+      "handler": "hello",
+      "line": 25,
+      "method": "POST",
+      "path": "/"
+     },
+     {
+      "file": "vote/app.py",
+      "handler": "hello",
+      "line": 25,
+      "method": "GET",
+      "path": "/"
+     }
+    ]
+   },
+   "id": "process:vote",
+   "kind": "process",
+   "name": "vote",
+   "parent": null,
+   "path": "vote",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "vote/app.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     "vote/templates/index.html"
+    ],
+    "html": {
+     "external_resources": 3,
+     "forms": 1,
+     "inline_handlers": 0,
+     "inline_scripts": 1,
+     "inputs": 0
+    },
+    "languages": {
+     "html": 1
+    }
+   },
+   "id": "process:vote/templates",
+   "kind": "process",
+   "name": "templates",
+   "parent": null,
+   "path": "vote/templates",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "vote/templates/index.html",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 6,
+    "definitions": [
+     "class Program",
+     "method Main",
+     "method OpenDbConnection",
+     "method OpenRedisConnection",
+     "method GetIp",
+     "method UpdateVote"
+    ],
+    "file_count": 1,
+    "files": [
+     "worker/Program.cs"
+    ],
+    "languages": {
+     "csharp": 1
+    }
+   },
+   "id": "process:worker",
+   "kind": "process",
+   "name": "worker",
+   "parent": null,
+   "path": "worker",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "worker/Program.cs",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {},
+   "id": "external_entity:client",
+   "kind": "external_entity",
+   "name": "User / Client",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET /",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via express",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "client"
+   ],
+   "technology": null
+  },
+  {
+   "extra": {},
+   "id": "data_store:postgresql",
+   "kind": "data_store",
+   "name": "PostgreSQL",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via pg",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via Npgsql",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": "postgresql"
+  },
+  {
+   "extra": {
+    "url": "https://socket.io/docs/v3/migrating-from-2-x-to-3-0/"
+   },
+   "id": "external_entity:socket.io",
+   "kind": "external_entity",
+   "name": "socket.io",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://socket.io/docs/v3/migrating-from-2-x-to-3-0/",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "third-party"
+   ],
+   "technology": null
+  },
+  {
+   "extra": {},
+   "id": "external_entity:http-api",
+   "kind": "external_entity",
+   "name": "HTTP API",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via urllib.parse",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "third-party"
+   ],
+   "technology": "http-api"
+  },
+  {
+   "extra": {},
+   "id": "data_store:redis",
+   "kind": "data_store",
+   "name": "Redis",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via redis",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via StackExchange.Redis",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": "redis"
+  },
+  {
+   "extra": {
+    "url": "https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css"
+   },
+   "id": "external_entity:maxcdn.bootstrapcdn.com",
+   "kind": "external_entity",
+   "name": "maxcdn.bootstrapcdn.com",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "third-party"
+   ],
+   "technology": null
+  },
+  {
+   "extra": {
+    "url": "http://code.jquery.com/jquery-latest.min.js"
+   },
+   "id": "external_entity:code.jquery.com",
+   "kind": "external_entity",
+   "name": "code.jquery.com",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via http://code.jquery.com/jquery-latest.min.js",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "third-party"
+   ],
+   "technology": null
+  },
+  {
+   "extra": {
+    "url": "//cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js"
+   },
+   "id": "external_entity:cdnjs.cloudflare.com",
+   "kind": "external_entity",
+   "name": "cdnjs.cloudflare.com",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via //cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.js",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "third-party"
+   ],
+   "technology": null
+  },
+  {
+   "extra": {},
+   "id": "data_store:sql-database",
+   "kind": "data_store",
+   "name": "SQL database",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via System.Data.Common",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": "sql-database"
+  }
+ ],
+ "repository": {
+  "owner": "dockersamples",
+  "ref": null,
+  "repo": "example-voting-app"
+ },
+ "schema_version": "1"
+}

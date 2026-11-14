@@ -47,7 +47,7 @@ export interface DfdGraph {
   level: "overview" | "detail";
   nodes: GraphNode[];
   edges: GraphEdge[];
-  meta: { producer: "browser-overview" | "backend-detail"; generated_at: string; [key: string]: unknown };
+  meta: { producer: "browser-overview" | "backend-detail" | "combined"; generated_at: string; [key: string]: unknown };
   extra?: Record<string, unknown>;
 }
 
