@@ -110,8 +110,9 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
             )}
             {tab === "dfd" && (
               <DfdTab
-                model={analysis.dfd}
-                risks={risks}
+                repository={analysis.repository}
+                demoModel={analysis.dfd}
+                findings={analysis.findings}
                 nodeId={nodeId}
                 onSelectNode={setNodeId}
                 onOpenThreats={(id) => openNode("threats", id)}

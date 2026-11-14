@@ -76,6 +76,13 @@ export interface Repository {
 
 export type DfdNodeKind = "external" | "process" | "store";
 
+/** De onde se tirou um componente do DFD (ver docs/dfd-schema.md, proveniência). */
+export interface DfdEvidence {
+  file?: string;
+  line?: number;
+  note?: string;
+}
+
 export interface DfdNodeData {
   id: string;
   title: string;
@@ -86,6 +93,15 @@ export interface DfdNodeData {
   code: string;              // identificador mostrado no inspector: "PR-003"
   classification: string;    // "Sensitive · PII", "Internal service"...
   findingIds: string[];      // findings que afetam este componente
+  // Só nos DFD reais (inferidos do repositório); o mock não os tem.
+  technology?: string;       // "postgresql", "redis"...
+  confidence?: "high" | "medium" | "low";
+  evidence?: DfdEvidence[];
+  /** Frases curtas sobre o que há por trás do componente: "12 files", "python 10, html 2", "4 HTTP routes"... */
+  facts?: string[];
+  /** Quantas partes tem (pastas, ficheiros) e se estão à vista: só quando se juntou a análise do código. */
+  expandable?: number;
+  expanded?: boolean;
 }
 
 export interface DfdEdge {
@@ -98,9 +114,14 @@ export interface DfdEdge {
 }
 
 export interface DfdModel {
-  boundary: { x: number; y: number; width: number; height: number; label: string };
+  /** Só o mock a tem: num DFD inferido do repositório não se sabe onde está a fronteira de confiança. */
+  boundary?: { x: number; y: number; width: number; height: number; label: string };
+  /** Área do SVG; sem ela usa-se a da pré-visualização do mock (1000x320). */
+  viewBox?: { width: number; height: number };
   nodes: DfdNodeData[];
   flows: string[];           // atributo "d" de cada ligação (pré-visualização do dashboard)
+  /** Traços "contém" de um componente aberto para as suas partes (a tracejado, sem seta). */
+  containment?: string[];
   edges: DfdEdge[];          // as mesmas ligações como grafo (canvas completo)
 }
 

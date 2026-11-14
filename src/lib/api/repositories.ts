@@ -59,6 +59,9 @@ export function saveRepositories(repositories: Repository[]) {
   }
 }
 
+/** Os repositórios de demonstração não existem no GitHub: o diagrama deles é o mock, não se tenta inferir. */
+export const isDemoRepository = (name: string) => demoRepositories.some((repository) => repository.name.toLowerCase() === name.toLowerCase());
+
 export function newRepository(name: string): Repository {
   return { name, description: "Newly associated repository · analysis pending", language: "—", score: null, updated: "Just added" };
 }

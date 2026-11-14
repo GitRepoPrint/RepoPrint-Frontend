@@ -3,9 +3,9 @@
 Frontend do RepoPrint: a "impressão digital" de um repositório GitHub, com threat modeling (STRIDE),
 riscos de privacidade (LINDDUN/RGPD), Data Flow Diagram e métricas da equipa.
 
-Quase todos os dados vêm de mocks em `src/lib/api/mock/` e o login é simulado. A exceção é o bloco Git da
-análise instantânea (`/`): vem do GitHub a sério, chamado pelo próprio browser (ver
-"Análise instantânea e o GitHub"). O resto mostra sempre os mesmos dados de exemplo.
+Quase todos os dados vêm de mocks em `src/lib/api/mock/` e o login é simulado. As exceções são o bloco Git da
+análise instantânea (`/`) e o diagrama (DFD) dos repositórios reais: vêm do GitHub a sério, chamado pelo próprio
+browser (ver "Análise instantânea e o GitHub" e "O diagrama (DFD)"). O resto mostra sempre os mesmos dados de exemplo.
 
 ## Requisitos
 
@@ -105,3 +105,28 @@ chamadas `fetch`, mantendo a mesma assinatura e os tipos de `src/lib/api/types.t
 - Esta versão do Next.js (16) tem APIs diferentes das versões anteriores. Ver `AGENTS.md` e a documentação em
   `node_modules/next/dist/docs/`.
 - O histórico das alterações e das decisões tomadas está em `ChangesAndDecisions.md`.
+
+## O diagrama (DFD)
+
+Para um repositório **real** (não os de demonstração `deti-org/...` e `marta-costa/...`, que mantêm o diagrama de exemplo),
+o separador "Inferred Architecture & Data Flow Diagram" do dashboard e o canvas completo mostram um diagrama **inferido no
+browser**, a partir da configuração que o repositório tem no GitHub: ficheiros compose, Dockerfiles, manifestos
+(`package.json`, `pom.xml`, `pyproject.toml`...) e `application.yml`. Não se lê código-fonte.
+
+- Pede-se **um** pedido à API do GitHub (a lista de ficheiros) e depois cada ficheiro a `raw.githubusercontent.com`.
+  Sem sessão, o GitHub dá 60 pedidos por hora por rede, por isso o resultado fica **10 minutos** no `localStorage`.
+- Para cada componente o painel mostra **de onde veio** (ficheiro e linha, com ligação para o GitHub) e com que confiança.
+- O código está em `src/lib/dfd/` (ver `docs/dfd-schema.md` no repositório raiz): `overview/` lê a configuração,
+  `combine.ts` junta-a ao grafo do backend, `project.ts` decide o que se vê e `to-model.ts` prepara o desenho.
+
+### Detalhe ao nível do código (opcional)
+
+Com o backend a correr, o botão **Add code-level detail** pede-lhe o grafo ao nível do código (`GET /dfd`), junta-o ao anterior
+e deixa abrir cada componente nas suas pastas (**Show n parts**, **Expand all**). Sem backend configurado o botão não aparece.
+
+```bash
+# .env.local  (o Next.js lê este valor ao arrancar; reinicie o `pnpm dev` depois de o mudar)
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+```
+
+No backend, `CORS_ORIGINS` tem de incluir a origem do frontend (por defeito `http://localhost:3000`).
