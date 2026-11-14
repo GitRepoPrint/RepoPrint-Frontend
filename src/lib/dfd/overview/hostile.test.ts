@@ -7,6 +7,8 @@ import { parseDockerfile } from "./dockerfile";
 import { endpointsOf, parseEndpoints } from "./endpoints";
 import { parseManifest } from "./manifests";
 import { selectConfigFiles } from "./select";
+import { isDfdGraph } from "../schema";
+import { overviewView } from "../project";
 
 const N = 200_000;
 const rep = (s: string, n: number) => s.repeat(Math.ceil(n / s.length)).slice(0, n);
@@ -53,5 +55,59 @@ describe("hostile inputs", () => {
     const g = buildOverview({ owner: "o", repo: "r", files: [huge, { path: "package.json", text: "{}" }] });
     expect(g.meta.unreadable).toEqual(["docker-compose.yml"]);
     expect(g.nodes.map((n) => n.id)).toEqual(["process:application"]);
+  });
+});
+
+// Nomes que também são propriedades de todos os objetos de JavaScript. Um repositório hostil pode usá-los de propósito
+// (uma imagem "constructor", uma dependência "__proto__"); nenhum pode rebentar a análise nem passar por um nome conhecido.
+describe("names that are also properties of every JavaScript object", () => {
+  const NAMES = ["constructor", "__proto__", "toString", "hasOwnProperty", "valueOf", "prototype", "__defineGetter__"];
+  const build = (files: { path: string; text: string }[]) => buildOverview({ owner: "o", repo: "r", files, now: "x" });
+  const sound = (g: ReturnType<typeof build>) => {
+    expect(isDfdGraph(g)).toBe(true);
+    for (const n of g.nodes) expect(typeof n.technology === "string" || n.technology == null).toBe(true);
+  };
+
+  it.each(NAMES)("%s as an image", (name) => {
+    const g = build([{ path: "compose.yml", text: `services:\n  s:\n    image: ${name}\n    ports: ['80:80']\n` }]);
+    sound(g);
+    expect(g.nodes.find((n) => n.id === "process:s")).toBeDefined(); // um serviço qualquer, não uma base de dados
+  });
+
+  it.each(NAMES)("%s as a compose service, and as something another service depends on", (name) => {
+    const g = build([{ path: "compose.yml", text: `services:\n  ${name}:\n    image: postgres\n  other:\n    image: acme/x\n    depends_on: [${name}]\n    environment:\n      DB_HOST: ${name}\n` }]);
+    sound(g);
+    expect(g.nodes.some((n) => n.name === name && n.kind === "data_store")).toBe(true);
+    expect(g.edges.some((e) => e.source === "process:other" && e.target === `data_store:${name}`)).toBe(true);
+  });
+
+  it.each(NAMES)("%s as a dependency in every kind of manifest", (name) => {
+    const g = build([
+      { path: "a/package.json", text: JSON.stringify({ dependencies: { [name]: "1" } }) },
+      { path: "b/requirements.txt", text: `${name}\n` },
+      { path: "c/pyproject.toml", text: `[project]\ndependencies = ["${name}"]\n` },
+      { path: "d/Cargo.toml", text: `[dependencies]\n"${name}" = "1"\n` },
+      { path: "e/go.mod", text: `module m\nrequire ${name} v1.0.0\n` },
+      { path: "f/build.gradle", text: `dependencies { implementation 'x:${name}:1' }\n` },
+      { path: "g/pom.xml", text: `<project><dependencies><dependency><groupId>${name}</groupId><artifactId>${name}</artifactId></dependency></dependencies></project>` },
+    ]);
+    sound(g);
+  });
+
+  it.each(NAMES)("%s as the scheme of a URL in a config file", (name) => {
+    const g = build([
+      { path: "compose.yml", text: `services:\n  app:\n    image: acme/app\n    environment:\n      URL: ${name}://db:5432/x\n` },
+      { path: ".env.example", text: `URL=${name}://cache:6379\n` },
+    ]);
+    sound(g);
+  });
+
+  it.each(NAMES)("%s as the label of an edge in a graph being projected", (name) => {
+    const node = (id: string) => ({ id: `process:${id}`, kind: "process" as const, name: id, path: id, provenance: { source: "code" as const, confidence: "medium" as const, evidence: [{ note: "x" }] } });
+    const g = { schema_version: "1" as const, repository: { owner: "o", repo: "r" }, level: "detail" as const, nodes: [node("a"), node("b")],
+      edges: [{ id: `e:${name}`, source: "process:a", target: "process:b", label: name, provenance: { source: "code" as const, confidence: "medium" as const, evidence: [{ note: "x" }] } }],
+      meta: { producer: "backend-detail" as const, generated_at: "x" } };
+    expect(() => overviewView(g)).not.toThrow();
+    expect(overviewView(g).edges.map((e) => e.label)).toEqual([name]);
   });
 });

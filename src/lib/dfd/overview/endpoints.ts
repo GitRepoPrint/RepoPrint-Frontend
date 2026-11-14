@@ -26,10 +26,10 @@ export interface Pair {
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]", "host.docker.internal"]);
 
-const BY_SCHEME: Record<string, string> = {
+const BY_SCHEME = new Map<string, string>(Object.entries({
   postgres: "postgresql", postgresql: "postgresql", mysql: "mysql", mariadb: "mysql",
   mongodb: "mongodb", "mongodb+srv": "mongodb", redis: "redis", rediss: "redis", amqp: "rabbitmq", amqps: "rabbitmq", kafka: "kafka",
-};
+}));
 const BY_KEY: [RegExp, string][] = [
   [/postgres|pg_?host|pghost/i, "postgresql"], [/mysql|mariadb/i, "mysql"], [/mongo/i, "mongodb"], [/redis/i, "redis"],
   [/rabbit|amqp/i, "rabbitmq"], [/kafka/i, "kafka"], [/elastic|opensearch/i, "elasticsearch"], [/cassandra/i, "cassandra"],
@@ -52,7 +52,7 @@ export function endpointsOf(file: string, pair: Pair): Endpoint[] {
     if (!usable(host)) continue;
     out.push({
       file, line: pair.line, key: pair.key, host, port: match[3] ? Number(match[3]) : null,
-      technology: BY_SCHEME[scheme] ?? BY_SCHEME[scheme.split("+")[0]] ?? technologyFromKey(pair.key), protocol: scheme,
+      technology: BY_SCHEME.get(scheme) ?? BY_SCHEME.get(scheme.split("+")[0]) ?? technologyFromKey(pair.key), protocol: scheme,
     });
   }
   if (out.length === 0 && HOST_KEY.test(pair.key) && value && !/\s/.test(value.replace(/,\s*/g, ","))) {

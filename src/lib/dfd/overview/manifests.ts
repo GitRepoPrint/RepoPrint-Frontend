@@ -29,14 +29,15 @@ export interface Manifest {
 export const MAX_DEPENDENCIES = 2000;
 
 // O catálogo tem nomes de import; as distribuições de Python e os starters do Spring chamam-se de outra maneira.
-const ALIASES: Record<string, string> = {
+// Map pela mesma razão que em images.ts: os nomes das dependências vêm de um manifesto que não é nosso.
+const ALIASES = new Map<string, string>(Object.entries({
   "psycopg2-binary": "psycopg2", mysqlclient: "mysql", "mysql-connector-python": "mysql.connector",
   "python-redis": "redis", "spring-boot-starter-web": "org.springframework.web", "spring-boot-starter-webmvc": "org.springframework.web",
   "spring-boot-starter-webflux": "org.springframework.web",
   "spring-boot-starter-data-jpa": "org.springframework.data", "spring-boot-starter-jdbc": "org.springframework.jdbc",
   "spring-boot-starter-data-redis": "redis", "spring-boot-starter-data-mongodb": "mongodb",
   "spring-boot-starter-amqp": "org.springframework.amqp", "spring-boot-starter-data-elasticsearch": "org.elasticsearch",
-};
+}));
 
 // O catálogo (partilhado com o backend) conhece frameworks de servidor; as de interface, que também respondem a pedidos
 // HTTP do navegador, só interessam ao overview.
@@ -51,7 +52,7 @@ export function classifyDependency(dependency: Pick<Dependency, "name" | "altern
     const lowered = name.toLowerCase();
     if (WEB_FRONTENDS.has(lowered)) return WEB_FRONTEND_HIT;
     if (SPRING_GATEWAY.test(lowered)) return classify("org.springframework.web");
-    const candidates = [ALIASES[lowered], lowered, lowered.replace(/-/g, "_"), lowered.replace(/-/g, "."), lowered.replace(/-/g, "/")];
+    const candidates = [ALIASES.get(lowered), lowered, lowered.replace(/-/g, "_"), lowered.replace(/-/g, "."), lowered.replace(/-/g, "/")];
     for (const candidate of candidates) {
       const hit = candidate ? classify(candidate) : null;
       if (hit) return hit;

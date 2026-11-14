@@ -16,11 +16,11 @@ const MAX_ROUTES = 20;
 // O overview só sabe que um serviço usa uma base de dados ("reads/writes"); o detalhe sabe se lê ou se escreve.
 // "depends on" (um serviço espera por outro ao arrancar) é a prova mais fraca de todas: cede a qualquer outra ligação do par.
 const YIELDS_TO_ANY = new Set(["depends on"]);
-const MORE_PRECISE: Record<string, readonly string[]> = {
-  "reads/writes": ["reads", "writes"],
-  accesses: ["reads", "writes", "reads/writes"],
-  "publishes/consumes": ["publishes", "consumes"],
-};
+const MORE_PRECISE = new Map<string, readonly string[]>([
+  ["reads/writes", ["reads", "writes"]],
+  ["accesses", ["reads", "writes", "reads/writes"]],
+  ["publishes/consumes", ["publishes", "consumes"]],
+]);
 
 export interface GraphView {
   nodes: GraphNode[];
@@ -109,7 +109,7 @@ function foldVague(edges: GraphEdge[]): GraphEdge[] {
   const dropped = new Set<GraphEdge>();
   for (const pair of byPair.values()) {
     for (const vague of pair) {
-      const precise = pair.filter((e) => (YIELDS_TO_ANY.has(vague.label) ? e !== vague && !YIELDS_TO_ANY.has(e.label) : MORE_PRECISE[vague.label]?.includes(e.label)));
+      const precise = pair.filter((e) => (YIELDS_TO_ANY.has(vague.label) ? e !== vague && !YIELDS_TO_ANY.has(e.label) : MORE_PRECISE.get(vague.label)?.includes(e.label)));
       if (!precise.length) continue;
       dropped.add(vague);
       for (const e of precise) replaced.set(e, { ...(replaced.get(e) ?? e), provenance: mergeProvenance((replaced.get(e) ?? e).provenance, vague.provenance) });

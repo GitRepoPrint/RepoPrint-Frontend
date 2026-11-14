@@ -20,7 +20,8 @@ const ELASTIC = store("elasticsearch");
 const CASSANDRA = store("cassandra");
 const KAFKA = store("kafka", "queue");
 
-const BY_NAME: Record<string, ImageHit> = {
+// Map y no um objeto: o nome vem de um ficheiro de qualquer pessoa, e em {} o nome "constructor" ou "__proto__" encontrava coisas que não são nossas.
+const BY_NAME = new Map<string, ImageHit>(Object.entries({
   postgres: POSTGRES, postgresql: POSTGRES, postgis: POSTGRES, timescaledb: POSTGRES, pgvector: POSTGRES,
   mysql: MYSQL, "mysql-server": MYSQL, mariadb: MYSQL, percona: MYSQL,
   mongo: MONGO, mongodb: MONGO, "mongodb-community-server": MONGO,
@@ -35,7 +36,7 @@ const BY_NAME: Record<string, ImageHit> = {
   "clickhouse-server": store("clickhouse"), minio: store("minio"),
   nginx: proxy("nginx"), traefik: proxy("traefik"), haproxy: proxy("haproxy"), caddy: proxy("caddy"),
   envoy: proxy("envoy"), httpd: proxy("httpd"), apache: proxy("httpd"),
-};
+}));
 
 /** Tecnologias que não estão no catálogo: só o overview as conhece. */
 export const OVERVIEW_ONLY = new Set([
@@ -44,7 +45,7 @@ export const OVERVIEW_ONLY = new Set([
 ]);
 
 export const CATALOG_TECHNOLOGIES = new Set(catalog.entries.map((e) => e.technology));
-export const knownTechnologies = () => [...new Set(Object.values(BY_NAME).map((hit) => hit.technology))];
+export const knownTechnologies = () => [...new Set([...BY_NAME.values()].map((hit) => hit.technology))];
 
 /** "ghcr.io/acme/postgres:16@sha256:..." -> "postgres". */
 export function imageName(image: string): string {
@@ -55,6 +56,6 @@ export function imageName(image: string): string {
 
 export function classifyImage(image: string): ImageHit | null {
   if (!image || image.includes("$")) return null;
-  const hit = BY_NAME[imageName(image)];
+  const hit = BY_NAME.get(imageName(image));
   return hit ? { ...hit, tags: [...hit.tags] } : null;
 }
