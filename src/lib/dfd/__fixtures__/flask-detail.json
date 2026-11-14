@@ -1,0 +1,3373 @@
+{
+ "edges": [
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "task_app"
+    ]
+   },
+   "id": "process:examples/celery->process:examples/celery/src/task_app:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via task_app",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:examples/celery",
+   "target": "process:examples/celery/src/task_app"
+  },
+  {
+   "extra": {
+    "count": 2,
+    "via": [
+     "celery"
+    ]
+   },
+   "id": "process:examples/celery/src/task_app->data_store:message-queue:publishes/consumes",
+   "label": "publishes/consumes",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via celery",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:examples/celery/src/task_app",
+   "target": "data_store:message-queue"
+  },
+  {
+   "extra": {
+    "count": 4,
+    "routes": [
+     "GET /",
+     "GET /result/<id>",
+     "POST /add",
+     "POST /block",
+     "POST /process"
+    ],
+    "via": [
+     "GET /",
+     "GET /result/<id>",
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:examples/celery/src/task_app:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET /",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET /result/<id>",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:examples/celery/src/task_app"
+  },
+  {
+   "extra": {
+    "count": 3,
+    "via": [
+     "POST {{ url_for("
+    ]
+   },
+   "id": "external_entity:client->process:examples/celery/src/task_app/templates:submits form",
+   "label": "submits form",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via POST {{ url_for(",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:examples/celery/src/task_app/templates"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "celery.result"
+    ]
+   },
+   "id": "process:examples/celery/src/task_app->process:examples/celery:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via celery.result",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:examples/celery/src/task_app",
+   "target": "process:examples/celery"
+  },
+  {
+   "extra": {
+    "count": 3,
+    "routes": [
+     "GET /",
+     "GET /<any(xhr, jquery, fetch):js>",
+     "POST /add"
+    ],
+    "via": [
+     "GET /",
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:examples/javascript/js_example:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET /",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:examples/javascript/js_example"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "GET (same page)"
+    ]
+   },
+   "id": "external_entity:client->process:examples/javascript/js_example/templates:submits form",
+   "label": "submits form",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET (same page)",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:examples/javascript/js_example/templates"
+  },
+  {
+   "extra": {
+    "count": 2,
+    "via": [
+     "https://unpkg.com/normalize.css@8.0.1/normalize.css",
+     "https://unpkg.com/sakura.css@1.3.1/css/sakura.css"
+    ]
+   },
+   "id": "process:examples/javascript/js_example/templates->external_entity:unpkg.com:loads stylesheet/resource",
+   "label": "loads stylesheet/resource",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://unpkg.com/normalize.css@8.0.1/normalize.css",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://unpkg.com/sakura.css@1.3.1/css/sakura.css",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:examples/javascript/js_example/templates",
+   "target": "external_entity:unpkg.com"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "https://code.jquery.com/jquery-3.3.1.min.js"
+    ]
+   },
+   "id": "process:examples/javascript/js_example/templates->external_entity:code.jquery.com:loads script",
+   "label": "loads script",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://code.jquery.com/jquery-3.3.1.min.js",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:examples/javascript/js_example/templates",
+   "target": "external_entity:code.jquery.com"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "js_example"
+    ]
+   },
+   "id": "process:examples/javascript/tests->process:examples/javascript/js_example:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via js_example",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:examples/javascript/tests",
+   "target": "process:examples/javascript/js_example"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:examples/javascript/tests:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:examples/javascript/tests"
+  },
+  {
+   "extra": {
+    "count": 7,
+    "routes": [
+     "GET /",
+     "GET /<int:id>/update",
+     "GET /create",
+     "GET /hello",
+     "GET /login",
+     "GET /logout",
+     "GET /register",
+     "POST /<int:id>/delete",
+     "POST /<int:id>/update",
+     "POST /create",
+     "POST /login",
+     "POST /register"
+    ],
+    "via": [
+     "GET /",
+     "GET /login",
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:examples/tutorial/flaskr:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET /",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET /login",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:examples/tutorial/flaskr"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "sqlite3"
+    ]
+   },
+   "id": "process:examples/tutorial/flaskr->data_store:sqlite:accesses",
+   "label": "accesses",
+   "operations": [
+    "access"
+   ],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via sqlite3",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:examples/tutorial/flaskr",
+   "target": "data_store:sqlite"
+  },
+  {
+   "extra": {
+    "count": 2,
+    "via": [
+     "POST (same page)"
+    ]
+   },
+   "id": "external_entity:client->process:examples/tutorial/flaskr/templates/auth:submits form",
+   "label": "submits form",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via POST (same page)",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:examples/tutorial/flaskr/templates/auth"
+  },
+  {
+   "extra": {
+    "count": 3,
+    "via": [
+     "POST (same page)",
+     "POST {{ url_for("
+    ]
+   },
+   "id": "external_entity:client->process:examples/tutorial/flaskr/templates/blog:submits form",
+   "label": "submits form",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via POST (same page)",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via POST {{ url_for(",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:examples/tutorial/flaskr/templates/blog"
+  },
+  {
+   "extra": {
+    "count": 6,
+    "via": [
+     "flaskr",
+     "flaskr.db"
+    ]
+   },
+   "id": "process:examples/tutorial/tests->process:examples/tutorial/flaskr:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flaskr",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flaskr.db",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:examples/tutorial/tests",
+   "target": "process:examples/tutorial/flaskr"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:examples/tutorial/tests:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:examples/tutorial/tests"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "sqlite3"
+    ]
+   },
+   "id": "process:examples/tutorial/tests->data_store:sqlite:reads",
+   "label": "reads",
+   "operations": [
+    "read"
+   ],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via sqlite3",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:examples/tutorial/tests",
+   "target": "data_store:sqlite"
+  },
+  {
+   "extra": {
+    "count": 3,
+    "via": [
+     ".json",
+     ".json.tag",
+     "json"
+    ]
+   },
+   "id": "process:src/flask->process:src/flask/json:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via .json",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via .json.tag",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via json",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:src/flask",
+   "target": "process:src/flask/json"
+  },
+  {
+   "extra": {
+    "count": 2,
+    "via": [
+     "urllib.parse"
+    ]
+   },
+   "id": "process:src/flask->external_entity:http-api:calls",
+   "label": "calls",
+   "operations": [
+    "access"
+   ],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via urllib.parse",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:src/flask",
+   "target": "external_entity:http-api"
+  },
+  {
+   "extra": {
+    "count": 9,
+    "via": [
+     ".sansio.app",
+     ".sansio.blueprints",
+     ".sansio.scaffold"
+    ]
+   },
+   "id": "process:src/flask->process:src/flask/sansio:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via .sansio.app",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via .sansio.blueprints",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via .sansio.scaffold",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:src/flask",
+   "target": "process:src/flask/sansio"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "https://flask.palletsprojects.com/blueprints/#templates"
+    ]
+   },
+   "id": "process:src/flask->external_entity:flask.palletsprojects.com:calls",
+   "label": "calls",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://flask.palletsprojects.com/blueprints/#templates",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:src/flask",
+   "target": "external_entity:flask.palletsprojects.com"
+  },
+  {
+   "extra": {
+    "count": 5,
+    "via": [
+     "..globals",
+     "..wrappers",
+     "typing"
+    ]
+   },
+   "id": "process:src/flask/json->process:src/flask:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via ..globals",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via ..wrappers",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via typing",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:src/flask/json",
+   "target": "process:src/flask"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "..sansio.app"
+    ]
+   },
+   "id": "process:src/flask/json->process:src/flask/sansio:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via ..sansio.app",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:src/flask/json",
+   "target": "process:src/flask/sansio"
+  },
+  {
+   "extra": {
+    "count": 15,
+    "via": [
+     "..",
+     "..config",
+     "..ctx",
+     "..helpers",
+     "..logging",
+     "..templating",
+     "..testing",
+     "logging",
+     "typing"
+    ]
+   },
+   "id": "process:src/flask/sansio->process:src/flask:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via ..",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via ..config",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via ..ctx",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:src/flask/sansio",
+   "target": "process:src/flask"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "..json.provider"
+    ]
+   },
+   "id": "process:src/flask/sansio->process:src/flask/json:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via ..json.provider",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:src/flask/sansio",
+   "target": "process:src/flask/json"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "pathlib"
+    ]
+   },
+   "id": "process:src/flask/sansio->data_store:file-storage:reads",
+   "label": "reads",
+   "operations": [
+    "access",
+    "read"
+   ],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via pathlib",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:src/flask/sansio",
+   "target": "data_store:file-storage"
+  },
+  {
+   "extra": {
+    "count": 20,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:tests:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:tests"
+  },
+  {
+   "extra": {
+    "count": 22,
+    "via": [
+     "flask.cli",
+     "flask.debughelpers",
+     "flask.globals",
+     "flask.helpers",
+     "flask.json",
+     "flask.logging",
+     "flask.sessions",
+     "flask.testing",
+     "flask.views"
+    ]
+   },
+   "id": "process:tests->process:tests/test_apps/cliapp/inner1/inner2:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask.cli",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask.debughelpers",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask.globals",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests",
+   "target": "process:tests/test_apps/cliapp/inner1/inner2"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:tests/test_apps/blueprintapp:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:tests/test_apps/blueprintapp"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "blueprintapp.apps.admin"
+    ]
+   },
+   "id": "process:tests/test_apps/blueprintapp->process:tests/test_apps/blueprintapp/apps/admin:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via blueprintapp.apps.admin",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests/test_apps/blueprintapp",
+   "target": "process:tests/test_apps/blueprintapp/apps/admin"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "blueprintapp.apps.frontend"
+    ]
+   },
+   "id": "process:tests/test_apps/blueprintapp->process:tests/test_apps/blueprintapp/apps/frontend:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via blueprintapp.apps.frontend",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests/test_apps/blueprintapp",
+   "target": "process:tests/test_apps/blueprintapp/apps/frontend"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:tests/test_apps/blueprintapp/apps/admin:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:tests/test_apps/blueprintapp/apps/admin"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:tests/test_apps/blueprintapp/apps/frontend:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:tests/test_apps/blueprintapp/apps/frontend"
+  },
+  {
+   "extra": {
+    "count": 4,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:tests/test_apps/cliapp:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:tests/test_apps/cliapp"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:tests/test_apps/cliapp/inner1:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:tests/test_apps/cliapp/inner1"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:tests/test_apps/cliapp/inner1/inner2:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:tests/test_apps/cliapp/inner1/inner2"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:tests/test_apps/helloworld:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:tests/test_apps/helloworld"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:tests/test_apps/subdomaintestmodule:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:tests/test_apps/subdomaintestmodule"
+  },
+  {
+   "extra": {
+    "count": 3,
+    "via": [
+     "logging",
+     "typing"
+    ]
+   },
+   "id": "process:tests->process:src/flask:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via logging",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via typing",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests",
+   "target": "process:src/flask"
+  },
+  {
+   "extra": {
+    "count": 2,
+    "via": [
+     "pathlib"
+    ]
+   },
+   "id": "process:tests->data_store:file-storage:accesses",
+   "label": "accesses",
+   "operations": [
+    "access"
+   ],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via pathlib",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests",
+   "target": "data_store:file-storage"
+  },
+  {
+   "extra": {
+    "count": 2,
+    "via": [
+     "blueprintapp"
+    ]
+   },
+   "id": "process:tests->process:tests/test_apps/blueprintapp:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via blueprintapp",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests",
+   "target": "process:tests/test_apps/blueprintapp"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "cliapp.app"
+    ]
+   },
+   "id": "process:tests->process:tests/test_apps/cliapp:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via cliapp.app",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests",
+   "target": "process:tests/test_apps/cliapp"
+  },
+  {
+   "extra": {
+    "count": 3,
+    "via": [
+     "flask.json.provider",
+     "flask.json.tag",
+     "json"
+    ]
+   },
+   "id": "process:tests->process:src/flask/json:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask.json.provider",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask.json.tag",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via json",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests",
+   "target": "process:src/flask/json"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "https://flask.palletsprojects.com/blueprints/#templates"
+    ]
+   },
+   "id": "process:tests->external_entity:flask.palletsprojects.com:calls",
+   "label": "calls",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://flask.palletsprojects.com/blueprints/#templates",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests",
+   "target": "external_entity:flask.palletsprojects.com"
+  },
+  {
+   "extra": {
+    "count": 3,
+    "via": [
+     "flask"
+    ]
+   },
+   "id": "external_entity:client->process:tests/type_check:HTTP requests",
+   "label": "HTTP requests",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "external_entity:client",
+   "target": "process:tests/type_check"
+  },
+  {
+   "extra": {
+    "count": 1,
+    "via": [
+     "typing"
+    ]
+   },
+   "id": "process:tests/type_check->process:src/flask:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via typing",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests/type_check",
+   "target": "process:src/flask"
+  },
+  {
+   "extra": {
+    "count": 3,
+    "via": [
+     "flask.templating",
+     "flask.views",
+     "flask.wrappers"
+    ]
+   },
+   "id": "process:tests/type_check->process:tests/test_apps/cliapp/inner1/inner2:imports",
+   "label": "imports",
+   "operations": [],
+   "protocol": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask.templating",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask.views",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask.wrappers",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "source": "process:tests/type_check",
+   "target": "process:tests/test_apps/cliapp/inner1/inner2"
+  }
+ ],
+ "extra": {
+  "flows": [
+   {
+    "file": "examples/celery/src/task_app/views.py",
+    "handler": "add",
+    "id": "POST /add [examples/celery/src/task_app/views.py]",
+    "method": "POST",
+    "path": "/add",
+    "process": "process:examples/celery/src/task_app",
+    "resources": [
+     {
+      "id": "data_store:message-queue",
+      "kind": "queue",
+      "label": "Message queue",
+      "operations": [
+       "write"
+      ],
+      "path": [
+       "process:examples/celery/src/task_app",
+       "data_store:message-queue"
+      ],
+      "site": {
+       "call": "import",
+       "file": "examples/celery/src/task_app/tasks.py",
+       "line": 1
+      }
+     }
+    ],
+    "route": "POST /add"
+   },
+   {
+    "file": "examples/celery/src/task_app/views.py",
+    "handler": "block",
+    "id": "POST /block [examples/celery/src/task_app/views.py]",
+    "method": "POST",
+    "path": "/block",
+    "process": "process:examples/celery/src/task_app",
+    "resources": [
+     {
+      "id": "data_store:message-queue",
+      "kind": "queue",
+      "label": "Message queue",
+      "operations": [
+       "write"
+      ],
+      "path": [
+       "process:examples/celery/src/task_app",
+       "data_store:message-queue"
+      ],
+      "site": {
+       "call": "import",
+       "file": "examples/celery/src/task_app/tasks.py",
+       "line": 1
+      }
+     }
+    ],
+    "route": "POST /block"
+   },
+   {
+    "file": "examples/celery/src/task_app/views.py",
+    "handler": "process",
+    "id": "POST /process [examples/celery/src/task_app/views.py]",
+    "method": "POST",
+    "path": "/process",
+    "process": "process:examples/celery/src/task_app",
+    "resources": [
+     {
+      "id": "data_store:message-queue",
+      "kind": "queue",
+      "label": "Message queue",
+      "operations": [
+       "write"
+      ],
+      "path": [
+       "process:examples/celery/src/task_app",
+       "data_store:message-queue"
+      ],
+      "site": {
+       "call": "import",
+       "file": "examples/celery/src/task_app/tasks.py",
+       "line": 1
+      }
+     }
+    ],
+    "route": "POST /process"
+   }
+  ]
+ },
+ "level": "detail",
+ "meta": {
+  "generated_at": "2026-11-14T12:00:00Z",
+  "group_by": "directory",
+  "producer": "backend-detail",
+  "stats": {
+   "files_parsed": 102,
+   "files_with_syntax_errors": 4,
+   "flows": 3,
+   "languages": {
+    "bash": 1,
+    "html": 20,
+    "python": 79,
+    "sql": 2
+   },
+   "routes": 21,
+   "unsupported_languages": {}
+  }
+ },
+ "nodes": [
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     ".devcontainer/on-create-command.sh"
+    ],
+    "languages": {
+     "bash": 1
+    }
+   },
+   "id": "process:.devcontainer",
+   "kind": "process",
+   "name": ".devcontainer",
+   "parent": null,
+   "path": ".devcontainer",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": ".devcontainer/on-create-command.sh",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     "examples/celery/make_celery.py"
+    ],
+    "languages": {
+     "python": 1
+    }
+   },
+   "id": "process:examples/celery",
+   "kind": "process",
+   "name": "celery",
+   "parent": null,
+   "path": "examples/celery",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/celery/make_celery.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 12,
+    "definitions": [
+     "function create_app",
+     "function index",
+     "function celery_init_app",
+     "class FlaskTask",
+     "function __call__",
+     "function add",
+     "function block",
+     "function process",
+     "function result",
+     "function add",
+     "function block",
+     "function process"
+    ],
+    "file_count": 3,
+    "files": [
+     "examples/celery/src/task_app/__init__.py",
+     "examples/celery/src/task_app/tasks.py",
+     "examples/celery/src/task_app/views.py"
+    ],
+    "languages": {
+     "python": 3
+    },
+    "route_count": 5,
+    "routes": [
+     {
+      "file": "examples/celery/src/task_app/__init__.py",
+      "handler": "index",
+      "line": 20,
+      "method": "GET",
+      "path": "/"
+     },
+     {
+      "file": "examples/celery/src/task_app/views.py",
+      "handler": "result",
+      "line": 11,
+      "method": "GET",
+      "path": "/result/<id>"
+     },
+     {
+      "file": "examples/celery/src/task_app/views.py",
+      "handler": "add",
+      "line": 22,
+      "method": "POST",
+      "path": "/add"
+     },
+     {
+      "file": "examples/celery/src/task_app/views.py",
+      "handler": "block",
+      "line": 30,
+      "method": "POST",
+      "path": "/block"
+     },
+     {
+      "file": "examples/celery/src/task_app/views.py",
+      "handler": "process",
+      "line": 36,
+      "method": "POST",
+      "path": "/process"
+     }
+    ]
+   },
+   "id": "process:examples/celery/src/task_app",
+   "kind": "process",
+   "name": "task_app",
+   "parent": null,
+   "path": "examples/celery/src/task_app",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/celery/src/task_app/__init__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/celery/src/task_app/tasks.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/celery/src/task_app/views.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 2,
+    "definitions": [
+     "function taskForm",
+     "function poll"
+    ],
+    "file_count": 1,
+    "files": [
+     "examples/celery/src/task_app/templates/index.html"
+    ],
+    "html": {
+     "external_resources": 0,
+     "forms": 3,
+     "inline_handlers": 0,
+     "inline_scripts": 1,
+     "inputs": 6
+    },
+    "languages": {
+     "html": 1
+    }
+   },
+   "id": "process:examples/celery/src/task_app/templates",
+   "kind": "process",
+   "name": "templates",
+   "parent": null,
+   "path": "examples/celery/src/task_app/templates",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/celery/src/task_app/templates/index.html",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 2,
+    "definitions": [
+     "function index",
+     "function add"
+    ],
+    "file_count": 2,
+    "files": [
+     "examples/javascript/js_example/__init__.py",
+     "examples/javascript/js_example/views.py"
+    ],
+    "languages": {
+     "python": 2
+    },
+    "route_count": 3,
+    "routes": [
+     {
+      "file": "examples/javascript/js_example/views.py",
+      "handler": "index",
+      "line": 10,
+      "method": "GET",
+      "path": "/"
+     },
+     {
+      "file": "examples/javascript/js_example/views.py",
+      "handler": "index",
+      "line": 10,
+      "method": "GET",
+      "path": "/<any(xhr, jquery, fetch):js>"
+     },
+     {
+      "file": "examples/javascript/js_example/views.py",
+      "handler": "add",
+      "line": 15,
+      "method": "POST",
+      "path": "/add"
+     }
+    ]
+   },
+   "id": "process:examples/javascript/js_example",
+   "kind": "process",
+   "name": "js_example",
+   "parent": null,
+   "path": "examples/javascript/js_example",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/javascript/js_example/__init__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/javascript/js_example/views.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 7,
+    "definitions": [
+     "function addSubmit",
+     "function parseJSON",
+     "function addShow",
+     "function addSubmit",
+     "function addShow",
+     "function addSubmit",
+     "function addShow"
+    ],
+    "file_count": 4,
+    "files": [
+     "examples/javascript/js_example/templates/base.html",
+     "examples/javascript/js_example/templates/fetch.html",
+     "examples/javascript/js_example/templates/jquery.html",
+     "examples/javascript/js_example/templates/xhr.html"
+    ],
+    "html": {
+     "external_resources": 3,
+     "forms": 1,
+     "inline_handlers": 0,
+     "inline_scripts": 3,
+     "inputs": 3
+    },
+    "languages": {
+     "html": 4
+    }
+   },
+   "id": "process:examples/javascript/js_example/templates",
+   "kind": "process",
+   "name": "templates",
+   "parent": null,
+   "path": "examples/javascript/js_example/templates",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/javascript/js_example/templates/base.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/javascript/js_example/templates/fetch.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/javascript/js_example/templates/jquery.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/javascript/js_example/templates/xhr.html",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 5,
+    "definitions": [
+     "function fixture_app",
+     "function client",
+     "function test_index",
+     "function check",
+     "function test_add"
+    ],
+    "file_count": 2,
+    "files": [
+     "examples/javascript/tests/conftest.py",
+     "examples/javascript/tests/test_js_example.py"
+    ],
+    "languages": {
+     "python": 2
+    }
+   },
+   "id": "process:examples/javascript/tests",
+   "kind": "process",
+   "name": "tests",
+   "parent": null,
+   "path": "examples/javascript/tests",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/javascript/tests/conftest.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/javascript/tests/test_js_example.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 18,
+    "definitions": [
+     "function create_app",
+     "function hello",
+     "function login_required",
+     "function wrapped_view",
+     "function load_logged_in_user",
+     "function register",
+     "function login",
+     "function logout",
+     "function index",
+     "function get_post",
+     "function create",
+     "function update",
+     "function delete",
+     "function get_db",
+     "function close_db"
+    ],
+    "file_count": 5,
+    "files": [
+     "examples/tutorial/flaskr/__init__.py",
+     "examples/tutorial/flaskr/auth.py",
+     "examples/tutorial/flaskr/blog.py",
+     "examples/tutorial/flaskr/db.py",
+     "examples/tutorial/flaskr/schema.sql"
+    ],
+    "languages": {
+     "python": 4,
+     "sql": 1
+    },
+    "route_count": 13,
+    "routes": [
+     {
+      "file": "examples/tutorial/flaskr/__init__.py",
+      "handler": "hello",
+      "line": 27,
+      "method": "GET",
+      "path": "/hello"
+     },
+     {
+      "file": "examples/tutorial/flaskr/__init__.py",
+      "handler": "",
+      "line": 46,
+      "method": "GET",
+      "path": "/"
+     },
+     {
+      "file": "examples/tutorial/flaskr/auth.py",
+      "handler": "register",
+      "line": 47,
+      "method": "GET",
+      "path": "/register"
+     },
+     {
+      "file": "examples/tutorial/flaskr/auth.py",
+      "handler": "register",
+      "line": 47,
+      "method": "POST",
+      "path": "/register"
+     },
+     {
+      "file": "examples/tutorial/flaskr/auth.py",
+      "handler": "login",
+      "line": 85,
+      "method": "GET",
+      "path": "/login"
+     },
+     {
+      "file": "examples/tutorial/flaskr/auth.py",
+      "handler": "login",
+      "line": 85,
+      "method": "POST",
+      "path": "/login"
+     },
+     {
+      "file": "examples/tutorial/flaskr/auth.py",
+      "handler": "logout",
+      "line": 113,
+      "method": "GET",
+      "path": "/logout"
+     },
+     {
+      "file": "examples/tutorial/flaskr/blog.py",
+      "handler": "index",
+      "line": 17,
+      "method": "GET",
+      "path": "/"
+     },
+     {
+      "file": "examples/tutorial/flaskr/blog.py",
+      "handler": "create",
+      "line": 62,
+      "method": "GET",
+      "path": "/create"
+     },
+     {
+      "file": "examples/tutorial/flaskr/blog.py",
+      "handler": "create",
+      "line": 62,
+      "method": "POST",
+      "path": "/create"
+     },
+     {
+      "file": "examples/tutorial/flaskr/blog.py",
+      "handler": "update",
+      "line": 88,
+      "method": "GET",
+      "path": "/<int:id>/update"
+     },
+     {
+      "file": "examples/tutorial/flaskr/blog.py",
+      "handler": "update",
+      "line": 88,
+      "method": "POST",
+      "path": "/<int:id>/update"
+     },
+     {
+      "file": "examples/tutorial/flaskr/blog.py",
+      "handler": "delete",
+      "line": 115,
+      "method": "POST",
+      "path": "/<int:id>/delete"
+     }
+    ]
+   },
+   "id": "process:examples/tutorial/flaskr",
+   "kind": "process",
+   "name": "flaskr",
+   "parent": null,
+   "path": "examples/tutorial/flaskr",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/tutorial/flaskr/__init__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/flaskr/auth.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/flaskr/blog.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/flaskr/db.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/flaskr/schema.sql",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 2,
+    "files": [
+     "examples/tutorial/flaskr/templates/auth/login.html",
+     "examples/tutorial/flaskr/templates/auth/register.html"
+    ],
+    "html": {
+     "external_resources": 0,
+     "forms": 2,
+     "inline_handlers": 0,
+     "inline_scripts": 0,
+     "inputs": 6
+    },
+    "languages": {
+     "html": 2
+    }
+   },
+   "id": "process:examples/tutorial/flaskr/templates/auth",
+   "kind": "process",
+   "name": "auth",
+   "parent": null,
+   "path": "examples/tutorial/flaskr/templates/auth",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/tutorial/flaskr/templates/auth/login.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/flaskr/templates/auth/register.html",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     "examples/tutorial/flaskr/templates/base.html"
+    ],
+    "languages": {
+     "html": 1
+    }
+   },
+   "id": "process:examples/tutorial/flaskr/templates",
+   "kind": "process",
+   "name": "templates",
+   "parent": null,
+   "path": "examples/tutorial/flaskr/templates",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/tutorial/flaskr/templates/base.html",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 3,
+    "files": [
+     "examples/tutorial/flaskr/templates/blog/create.html",
+     "examples/tutorial/flaskr/templates/blog/index.html",
+     "examples/tutorial/flaskr/templates/blog/update.html"
+    ],
+    "html": {
+     "external_resources": 0,
+     "forms": 3,
+     "inline_handlers": 1,
+     "inline_scripts": 0,
+     "inputs": 7
+    },
+    "languages": {
+     "html": 3
+    }
+   },
+   "id": "process:examples/tutorial/flaskr/templates/blog",
+   "kind": "process",
+   "name": "blog",
+   "parent": null,
+   "path": "examples/tutorial/flaskr/templates/blog",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/tutorial/flaskr/templates/blog/create.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/flaskr/templates/blog/index.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/flaskr/templates/blog/update.html",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 27,
+    "definitions": [
+     "function app",
+     "function client",
+     "function runner",
+     "class AuthActions",
+     "function __init__",
+     "function login",
+     "function logout",
+     "function auth",
+     "function test_register",
+     "function test_register_validate_input",
+     "function test_login",
+     "function test_login_validate_input",
+     "function test_logout",
+     "function test_index",
+     "function test_login_required"
+    ],
+    "file_count": 6,
+    "files": [
+     "examples/tutorial/tests/conftest.py",
+     "examples/tutorial/tests/data.sql",
+     "examples/tutorial/tests/test_auth.py",
+     "examples/tutorial/tests/test_blog.py",
+     "examples/tutorial/tests/test_db.py",
+     "examples/tutorial/tests/test_factory.py"
+    ],
+    "languages": {
+     "python": 5,
+     "sql": 1
+    }
+   },
+   "id": "process:examples/tutorial/tests",
+   "kind": "process",
+   "name": "tests",
+   "parent": null,
+   "path": "examples/tutorial/tests",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "examples/tutorial/tests/conftest.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/tests/data.sql",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/tests/test_auth.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/tests/test_blog.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "examples/tutorial/tests/test_db.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 261,
+    "definitions": [
+     "function _make_timedelta",
+     "function remove_ctx",
+     "function wrapper",
+     "function add_ctx",
+     "function wrapper",
+     "class Flask",
+     "function __init_subclass__",
+     "function __init__",
+     "function get_send_file_max_age",
+     "function send_static_file",
+     "function open_resource",
+     "function open_instance_resource",
+     "function create_jinja_environment",
+     "function create_url_adapter",
+     "function raise_routing_exception"
+    ],
+    "file_count": 18,
+    "files": [
+     "src/flask/__init__.py",
+     "src/flask/__main__.py",
+     "src/flask/app.py",
+     "src/flask/blueprints.py",
+     "src/flask/cli.py",
+     "src/flask/config.py",
+     "src/flask/ctx.py",
+     "src/flask/debughelpers.py",
+     "src/flask/globals.py",
+     "src/flask/helpers.py",
+     "src/flask/logging.py",
+     "src/flask/sessions.py",
+     "src/flask/signals.py",
+     "src/flask/templating.py",
+     "src/flask/testing.py",
+     "src/flask/typing.py",
+     "src/flask/views.py",
+     "src/flask/wrappers.py"
+    ],
+    "languages": {
+     "python": 18
+    }
+   },
+   "id": "process:src/flask",
+   "kind": "process",
+   "name": "flask",
+   "parent": null,
+   "path": "src/flask",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "src/flask/__init__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "src/flask/__main__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "src/flask/app.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "src/flask/blueprints.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "src/flask/cli.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 62,
+    "definitions": [
+     "function dumps",
+     "function dump",
+     "function loads",
+     "function load",
+     "function jsonify",
+     "class JSONProvider",
+     "function __init__",
+     "function dumps",
+     "function dump",
+     "function loads",
+     "function load",
+     "function _prepare_response_obj",
+     "function response",
+     "function _default",
+     "class DefaultJSONProvider"
+    ],
+    "file_count": 3,
+    "files": [
+     "src/flask/json/__init__.py",
+     "src/flask/json/provider.py",
+     "src/flask/json/tag.py"
+    ],
+    "languages": {
+     "python": 3
+    }
+   },
+   "id": "process:src/flask/json",
+   "kind": "process",
+   "name": "json",
+   "parent": null,
+   "path": "src/flask/json",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "src/flask/json/__init__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "src/flask/json/provider.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "src/flask/json/tag.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 119,
+    "definitions": [
+     "function _make_timedelta",
+     "class App",
+     "function __init__",
+     "function _check_setup_finished",
+     "function name",
+     "function logger",
+     "function jinja_env",
+     "function create_jinja_environment",
+     "function make_config",
+     "function make_aborter",
+     "function auto_find_instance_path",
+     "function create_global_jinja_loader",
+     "function select_jinja_autoescape",
+     "function debug",
+     "function debug"
+    ],
+    "file_count": 3,
+    "files": [
+     "src/flask/sansio/app.py",
+     "src/flask/sansio/blueprints.py",
+     "src/flask/sansio/scaffold.py"
+    ],
+    "languages": {
+     "python": 3
+    }
+   },
+   "id": "process:src/flask/sansio",
+   "kind": "process",
+   "name": "sansio",
+   "parent": null,
+   "path": "src/flask/sansio",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "src/flask/sansio/app.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "src/flask/sansio/blueprints.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "src/flask/sansio/scaffold.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 1076,
+    "definitions": [
+     "function _standard_os_environ",
+     "function app",
+     "function app_ctx",
+     "function req_ctx",
+     "function client",
+     "function test_apps",
+     "function leak_detector",
+     "function modules_tmp_path",
+     "function modules_tmp_path_prefix",
+     "function site_packages",
+     "function purge_module",
+     "function inner",
+     "function test_basic_url_generation",
+     "function index",
+     "function test_url_generation_requires_server_name"
+    ],
+    "file_count": 23,
+    "files": [
+     "tests/conftest.py",
+     "tests/test_appctx.py",
+     "tests/test_async.py",
+     "tests/test_basic.py",
+     "tests/test_blueprints.py",
+     "tests/test_cli.py",
+     "tests/test_config.py",
+     "tests/test_converters.py",
+     "tests/test_helpers.py",
+     "tests/test_instance_config.py",
+     "tests/test_json.py",
+     "tests/test_json_tag.py",
+     "tests/test_logging.py",
+     "tests/test_regression.py",
+     "tests/test_reqctx.py",
+     "tests/test_request.py",
+     "tests/test_session_interface.py",
+     "tests/test_signals.py",
+     "tests/test_subclassing.py",
+     "tests/test_templating.py",
+     "tests/test_testing.py",
+     "tests/test_user_error_handler.py",
+     "tests/test_views.py"
+    ],
+    "languages": {
+     "python": 23
+    }
+   },
+   "id": "process:tests",
+   "kind": "process",
+   "name": "tests",
+   "parent": null,
+   "path": "tests",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/conftest.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/test_appctx.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/test_async.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/test_basic.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/test_blueprints.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     "tests/static/index.html"
+    ],
+    "languages": {
+     "html": 1
+    }
+   },
+   "id": "process:tests/static",
+   "kind": "process",
+   "name": "static",
+   "parent": null,
+   "path": "tests/static",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/static/index.html",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 6,
+    "files": [
+     "tests/templates/_macro.html",
+     "tests/templates/context_template.html",
+     "tests/templates/escaping_template.html",
+     "tests/templates/simple_template.html",
+     "tests/templates/template_filter.html",
+     "tests/templates/template_test.html"
+    ],
+    "languages": {
+     "html": 6
+    }
+   },
+   "id": "process:tests/templates",
+   "kind": "process",
+   "name": "templates",
+   "parent": null,
+   "path": "tests/templates",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/templates/_macro.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/templates/context_template.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/templates/escaping_template.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/templates/simple_template.html",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/templates/template_filter.html",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     "tests/test_apps/blueprintapp/__init__.py"
+    ],
+    "languages": {
+     "python": 1
+    }
+   },
+   "id": "process:tests/test_apps/blueprintapp",
+   "kind": "process",
+   "name": "blueprintapp",
+   "parent": null,
+   "path": "tests/test_apps/blueprintapp",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/test_apps/blueprintapp/__init__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 2,
+    "definitions": [
+     "function index",
+     "function index2"
+    ],
+    "file_count": 1,
+    "files": [
+     "tests/test_apps/blueprintapp/apps/admin/__init__.py"
+    ],
+    "languages": {
+     "python": 1
+    }
+   },
+   "id": "process:tests/test_apps/blueprintapp/apps/admin",
+   "kind": "process",
+   "name": "admin",
+   "parent": null,
+   "path": "tests/test_apps/blueprintapp/apps/admin",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/test_apps/blueprintapp/apps/admin/__init__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     "tests/test_apps/blueprintapp/apps/admin/templates/admin/index.html"
+    ],
+    "languages": {
+     "html": 1
+    }
+   },
+   "id": "process:tests/test_apps/blueprintapp/apps/admin/templates/admin",
+   "kind": "process",
+   "name": "admin",
+   "parent": null,
+   "path": "tests/test_apps/blueprintapp/apps/admin/templates/admin",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/test_apps/blueprintapp/apps/admin/templates/admin/index.html",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 2,
+    "definitions": [
+     "function index",
+     "function missing_template"
+    ],
+    "file_count": 1,
+    "files": [
+     "tests/test_apps/blueprintapp/apps/frontend/__init__.py"
+    ],
+    "languages": {
+     "python": 1
+    }
+   },
+   "id": "process:tests/test_apps/blueprintapp/apps/frontend",
+   "kind": "process",
+   "name": "frontend",
+   "parent": null,
+   "path": "tests/test_apps/blueprintapp/apps/frontend",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/test_apps/blueprintapp/apps/frontend/__init__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     "tests/test_apps/blueprintapp/apps/frontend/templates/frontend/index.html"
+    ],
+    "languages": {
+     "html": 1
+    }
+   },
+   "id": "process:tests/test_apps/blueprintapp/apps/frontend/templates/frontend",
+   "kind": "process",
+   "name": "frontend",
+   "parent": null,
+   "path": "tests/test_apps/blueprintapp/apps/frontend/templates/frontend",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/test_apps/blueprintapp/apps/frontend/templates/frontend/index.html",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 3,
+    "definitions": [
+     "function create_app",
+     "function create_app2",
+     "function no_app"
+    ],
+    "file_count": 4,
+    "files": [
+     "tests/test_apps/cliapp/app.py",
+     "tests/test_apps/cliapp/factory.py",
+     "tests/test_apps/cliapp/importerrorapp.py",
+     "tests/test_apps/cliapp/multiapp.py"
+    ],
+    "languages": {
+     "python": 4
+    }
+   },
+   "id": "process:tests/test_apps/cliapp",
+   "kind": "process",
+   "name": "cliapp",
+   "parent": null,
+   "path": "tests/test_apps/cliapp",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/test_apps/cliapp/app.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/test_apps/cliapp/factory.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/test_apps/cliapp/importerrorapp.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/test_apps/cliapp/multiapp.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     "tests/test_apps/cliapp/inner1/__init__.py"
+    ],
+    "languages": {
+     "python": 1
+    }
+   },
+   "id": "process:tests/test_apps/cliapp/inner1",
+   "kind": "process",
+   "name": "inner1",
+   "parent": null,
+   "path": "tests/test_apps/cliapp/inner1",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/test_apps/cliapp/inner1/__init__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     "tests/test_apps/cliapp/inner1/inner2/flask.py"
+    ],
+    "languages": {
+     "python": 1
+    }
+   },
+   "id": "process:tests/test_apps/cliapp/inner1/inner2",
+   "kind": "process",
+   "name": "inner2",
+   "parent": null,
+   "path": "tests/test_apps/cliapp/inner1/inner2",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/test_apps/cliapp/inner1/inner2/flask.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 1,
+    "definitions": [
+     "function hello"
+    ],
+    "file_count": 2,
+    "files": [
+     "tests/test_apps/helloworld/hello.py",
+     "tests/test_apps/helloworld/wsgi.py"
+    ],
+    "languages": {
+     "python": 2
+    }
+   },
+   "id": "process:tests/test_apps/helloworld",
+   "kind": "process",
+   "name": "helloworld",
+   "parent": null,
+   "path": "tests/test_apps/helloworld",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/test_apps/helloworld/hello.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/test_apps/helloworld/wsgi.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 0,
+    "definitions": [],
+    "file_count": 1,
+    "files": [
+     "tests/test_apps/subdomaintestmodule/__init__.py"
+    ],
+    "languages": {
+     "python": 1
+    }
+   },
+   "id": "process:tests/test_apps/subdomaintestmodule",
+   "kind": "process",
+   "name": "subdomaintestmodule",
+   "parent": null,
+   "path": "tests/test_apps/subdomaintestmodule",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/test_apps/subdomaintestmodule/__init__.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {
+    "definition_count": 30,
+    "definitions": [
+     "function after_sync",
+     "function after_async",
+     "function before_sync",
+     "function before_async",
+     "function teardown_sync",
+     "function teardown_async",
+     "function handle_400",
+     "function handle_custom",
+     "function handle_accept_base",
+     "function handle_multiple",
+     "function hello_str",
+     "function hello_bytes",
+     "function hello_json",
+     "function hello_json_dict",
+     "function hello_json_list"
+    ],
+    "file_count": 3,
+    "files": [
+     "tests/type_check/typing_app_decorators.py",
+     "tests/type_check/typing_error_handler.py",
+     "tests/type_check/typing_route.py"
+    ],
+    "languages": {
+     "python": 3
+    }
+   },
+   "id": "process:tests/type_check",
+   "kind": "process",
+   "name": "type_check",
+   "parent": null,
+   "path": "tests/type_check",
+   "provenance": {
+    "confidence": "high",
+    "evidence": [
+     {
+      "file": "tests/type_check/typing_app_decorators.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/type_check/typing_error_handler.py",
+      "line": null,
+      "note": null,
+      "span": null
+     },
+     {
+      "file": "tests/type_check/typing_route.py",
+      "line": null,
+      "note": null,
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": null
+  },
+  {
+   "extra": {},
+   "id": "data_store:message-queue",
+   "kind": "data_store",
+   "name": "Message queue",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via celery",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "queue"
+   ],
+   "technology": "message-queue"
+  },
+  {
+   "extra": {},
+   "id": "external_entity:client",
+   "kind": "external_entity",
+   "name": "User / Client",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET /",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via GET /result/<id>",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via flask",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "client"
+   ],
+   "technology": null
+  },
+  {
+   "extra": {
+    "url": "https://unpkg.com/normalize.css@8.0.1/normalize.css"
+   },
+   "id": "external_entity:unpkg.com",
+   "kind": "external_entity",
+   "name": "unpkg.com",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://unpkg.com/normalize.css@8.0.1/normalize.css",
+      "span": null
+     },
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://unpkg.com/sakura.css@1.3.1/css/sakura.css",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "third-party"
+   ],
+   "technology": null
+  },
+  {
+   "extra": {
+    "url": "https://code.jquery.com/jquery-3.3.1.min.js"
+   },
+   "id": "external_entity:code.jquery.com",
+   "kind": "external_entity",
+   "name": "code.jquery.com",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://code.jquery.com/jquery-3.3.1.min.js",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "third-party"
+   ],
+   "technology": null
+  },
+  {
+   "extra": {},
+   "id": "data_store:sqlite",
+   "kind": "data_store",
+   "name": "SQLite",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via sqlite3",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": "sqlite"
+  },
+  {
+   "extra": {},
+   "id": "external_entity:http-api",
+   "kind": "external_entity",
+   "name": "HTTP API",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via urllib.parse",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "third-party"
+   ],
+   "technology": "http-api"
+  },
+  {
+   "extra": {
+    "url": "https://flask.palletsprojects.com/blueprints/#templates"
+   },
+   "id": "external_entity:flask.palletsprojects.com",
+   "kind": "external_entity",
+   "name": "flask.palletsprojects.com",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via https://flask.palletsprojects.com/blueprints/#templates",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [
+    "third-party"
+   ],
+   "technology": null
+  },
+  {
+   "extra": {},
+   "id": "data_store:file-storage",
+   "kind": "data_store",
+   "name": "File storage",
+   "parent": null,
+   "path": null,
+   "provenance": {
+    "confidence": "medium",
+    "evidence": [
+     {
+      "file": null,
+      "line": null,
+      "note": "seen via pathlib",
+      "span": null
+     }
+    ],
+    "source": "code"
+   },
+   "tags": [],
+   "technology": "file-storage"
+  }
+ ],
+ "repository": {
+  "owner": "pallets",
+  "ref": null,
+  "repo": "flask"
+ },
+ "schema_version": "1"
+}
