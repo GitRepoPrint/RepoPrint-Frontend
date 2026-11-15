@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { Icon } from "@/components/ui/icon";
 import { ThemedLogo } from "@/components/ui/themed-logo";
@@ -33,7 +33,14 @@ export function LoginCard({ error }: { error?: string }) {
   const [formError, setFormError]= useState<string | undefined>(error ? ERROR_MESSAGES[error] : undefined);
   const [submitting, setSubmitting]= useState(false);
 
+  useEffect(() => {
+    const restore= (event: PageTransitionEvent) => { if (event.persisted) setSubmitting(false); };
+    window.addEventListener("pageshow", restore);
+    return () => window.removeEventListener("pageshow", restore);
+  }, []);
+
   function continueWithGithub() {
+    setSubmitting(true);
     window.location.assign(`/api/auth/github?intent=login&next=${encodeURIComponent(nextPathFromLocation())}`);
   }
 
@@ -61,7 +68,7 @@ export function LoginCard({ error }: { error?: string }) {
       <h1>Your architecture,<br /><span>all in one place.</span></h1>
       <p>Sign in to access your repositories, security insights, and interactive threat models.</p>
       <div className="login-providers">
-        <button type="button" onClick={continueWithGithub} disabled={submitting}>
+        <button type="button" onClick={continueWithGithub} disabled={submitting} aria-busy={submitting}>
           <Icon name="github" size={21} /> Continue with GitHub <Icon name="arrowRight" size={17} />
         </button>
       </div>

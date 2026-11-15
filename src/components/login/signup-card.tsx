@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { Icon } from "@/components/ui/icon";
 import { ThemedLogo } from "@/components/ui/themed-logo";
@@ -69,6 +69,12 @@ export function SignUpCard() {
   const onCheck = (field: "acceptTerms" | "acceptPrivacy") => (event: ChangeEvent<HTMLInputElement>) =>
     change(field, event.target.checked);
 
+  useEffect(() => {
+    const restore= (event: PageTransitionEvent) => { if (event.persisted) setSubmitting(false); };
+    window.addEventListener("pageshow", restore);
+    return () => window.removeEventListener("pageshow", restore);
+  }, []);
+
   function signUpWithGithub() {
     const found= validateConsent(values);
     setErrors(found);
@@ -78,6 +84,7 @@ export function SignUpCard() {
       setGithubError("Accept the Terms of Service and the Privacy Policy below to continue with GitHub.");
       return;
     }
+    setSubmitting(true);
     window.location.assign(`/api/auth/github?intent=signup&next=${encodeURIComponent(nextPathFromLocation())}`);
   }
 
@@ -129,7 +136,7 @@ export function SignUpCard() {
       <p>Create an account to save analyses, audit private repositories, and track risk over time.</p>
 
       <div className="login-providers">
-        <button type="button" onClick={signUpWithGithub} disabled={submitting}>
+        <button type="button" onClick={signUpWithGithub} disabled={submitting} aria-busy={submitting}>
           <Icon name="github" size={21} /> Sign up with GitHub <Icon name="arrowRight" size={17} />
         </button>
       </div>
