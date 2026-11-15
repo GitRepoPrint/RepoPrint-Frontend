@@ -7,6 +7,7 @@ const count = (framework: Framework, severity?: Severity) =>
   findings.filter((f) => f.framework === framework && (!severity || f.severity === severity)).length;
 
 export const mockInstantReport: Omit<InstantReport, "repository" | "analyzedAt"> = {
+  source: "demo",
   commit: "a3f89c1",
   branch: "main",
   summary: {

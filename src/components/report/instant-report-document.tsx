@@ -12,10 +12,49 @@ export function InstantReportDocument({ report }: { report: InstantReport }) {
   const date = formatReportDate(report.analyzedAt);
   const highCount = findings.filter((f) => f.severity === "high").length;
   const grade = hygieneGrade(summary.git);
+  const real = report.source === "git";
+  const owners = summary.git.codeOwnersCoverage === null ? "Not available" : `${summary.git.codeOwnersCoverage}%`;
+
+  if (real) {
+    return (
+      <main className="report-document hidden! print:block!" aria-labelledby="formal-report-title">
+        <ReportHeader repository={report.repository} branch={report.branch} date={date} />
+
+        <ReportSection number="01" title="Git Activity">
+          <table className="formal-table">
+            <tbody>
+              <tr><th>Commits / month</th><td>{summary.git.commitsPerMonth}</td></tr>
+              <tr><th>Median PR merge time</th><td>{formatHours(summary.git.prMergeHours)}</td></tr>
+              {report.activity && (
+                <tr><th>Active contributors</th><td>{report.activity.contributorsWindow.complete ? report.activity.activeContributors : `At least ${report.activity.activeContributors}`}</td></tr>
+              )}
+            </tbody>
+          </table>
+        </ReportSection>
+
+        {report.activity && (
+          <ReportSection number="02" title="Git Data Methodology">
+            <table className="formal-table">
+              <tbody>
+                {activityNotes(report.activity, summary.git.commitsPerMonth, summary.git.prMergeHours).map((row) => (
+                  <tr key={row.metric}>
+                    <th>{row.metric}</th>
+                    <td>{row.value} · {row.rule}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </ReportSection>
+        )}
+
+        <ReportFooter date={date} />
+      </main>
+    );
+  }
 
   return (
     <main className="report-document hidden! print:block!" aria-labelledby="formal-report-title">
-      <ReportHeader repository={report.repository} branch={report.branch} commit={report.commit} date={date} />
+      <ReportHeader repository={report.repository} branch={report.branch} commit={report.commit ?? "Not available"} date={date} />
 
       <ReportSection number="01" title="Executive Summary & Risk Overview">
         <p className="report-lead">
@@ -25,15 +64,15 @@ export function InstantReportDocument({ report }: { report: InstantReport }) {
           <tbody>
             <tr>
               <th>Threat modeling (STRIDE)</th>
-              <td>{summary.stride.findings} findings ({summary.stride.high} High, {summary.stride.medium} Medium) · {summary.stride.detail}</td>
+              <td>{summary.stride ? `${summary.stride.findings} findings (${summary.stride.high} High, ${summary.stride.medium} Medium) · ${summary.stride.detail}` : "Not available"}</td>
             </tr>
             <tr>
               <th>Privacy (LINDDUN / GDPR)</th>
-              <td>{summary.privacy.highRisks} high risks ({summary.privacy.labels}) · {summary.privacy.detail}</td>
+              <td>{summary.privacy ? `${summary.privacy.highRisks} high risks (${summary.privacy.labels}) · ${summary.privacy.detail}` : "Not available"}</td>
             </tr>
             <tr>
               <th>Git intelligence &amp; hygiene</th>
-              <td>Grade {grade.total}/100 · median PR merge time {formatHours(summary.git.prMergeHours)} · {summary.git.commitsPerMonth} commits / month · {summary.git.codeOwnersCoverage}% Code Owners coverage</td>
+              <td>Grade {grade.total === null ? "N/A" : `${grade.total}/100`} · median PR merge time {formatHours(summary.git.prMergeHours)} · {summary.git.commitsPerMonth} commits / month · {owners} Code Owners coverage</td>
             </tr>
           </tbody>
         </table>

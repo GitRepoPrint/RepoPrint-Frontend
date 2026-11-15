@@ -13,7 +13,7 @@ function HygieneGradeTable({ git }: { git: GitMetrics }) {
       <tbody>
         <tr><th scope="row">Median PR merge time</th><td>{formatHours(git.prMergeHours)}</td><td>{grade.merge}</td></tr>
         <tr><th scope="row">Commits / month</th><td>{git.commitsPerMonth}</td><td>{grade.activity}</td></tr>
-        <tr><th scope="row">Code Owners coverage</th><td>{git.codeOwnersCoverage}%</td><td>{grade.owners}</td></tr>
+        <tr><th scope="row">Code Owners coverage</th><td>{git.codeOwnersCoverage === null ? "Not available" : `${git.codeOwnersCoverage}%`}</td><td>{grade.owners ?? "N/A"}</td></tr>
       </tbody>
     </table>
   );
@@ -24,12 +24,12 @@ export function HygieneGradeCard({ git }: { git: GitMetrics }) {
   return (
     <article className="report-kpi framework-card hygiene-grade-card">
       <div className="report-kpi-label"><span className="report-kpi-icon blue"><Icon name="branch" size={18} /></span> GIT INTELLIGENCE &amp; HYGIENE</div>
-      <div className="report-kpi-value">{grade.total} <small>/ 100</small></div>
+      <div className="report-kpi-value">{grade.total ?? "N/A"} {grade.total !== null && <small>/ 100</small>}</div>
       <div className="report-kpi-foot">Median PR merge <strong>{formatHours(git.prMergeHours)}</strong></div>
       <div className="report-kpi-foot"><strong>{git.commitsPerMonth}</strong> commits / month</div>
       <details className="framework-card-more">
-        <summary aria-label={`Grade ${grade.total} out of 100: show details`}>
-          <span className="report-kpi-detail">{git.codeOwnersCoverage}% Code Owners coverage</span>
+        <summary aria-label={grade.total === null ? "Grade not available: show details" : `Grade ${grade.total} out of 100: show details`}>
+          <span className="report-kpi-detail">{git.codeOwnersCoverage === null ? "Code Owners coverage not available" : `${git.codeOwnersCoverage}% Code Owners coverage`}</span>
           <span className="disclosure-pill"><span className="disclosure-icon"><Icon name="chevron" size={16} /></span></span>
         </summary>
         <HygieneGradeTable git={git} />

@@ -13,18 +13,20 @@ export async function analyzeInstant(repository: string): Promise<InstantReport>
 
   const [owner, repo]= repository.split("/");
   const { activity, fetchedAt, refreshAvailableAt, cached }= await getActivity(owner, repo);
-  const { summary }= mockInstantReport;
   return {
-    ...mockInstantReport,
+    source: "git",
     repository,
+    commit: null,
     branch: activity.defaultBranch,
     analyzedAt: fetchedAt,
+    findings: [],
     summary: {
-      ...summary,
+      stride: null,
+      privacy: null,
       git: {
-        ...summary.git,
         prMergeHours: activity.medianPrMergeHours,
         commitsPerMonth: activity.commitsLast30d,
+        codeOwnersCoverage: null,
       },
     },
     activity: {
