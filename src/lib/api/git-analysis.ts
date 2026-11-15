@@ -1,6 +1,6 @@
 import { backendFetch } from "@/lib/auth/backend";
-import { formatClock } from "@/lib/format";
-import type { DfdModel, LoadFailure, RepositoryAnalysis } from "./types";
+import { formatClock, formatShortDate } from "@/lib/format";
+import type { Contributor, DfdModel, LoadFailure, RepositoryAnalysis } from "./types";
 
 export type BackendActivity= {
   default_branch: string;
@@ -28,6 +28,7 @@ export type BackendActivity= {
   weekly_commits?: number[] | null;
   punch_card?: number[][] | null;
   recent_prs?: { number: number; hours: number }[];
+  contributors?: { login: string | null; commits: number; last_commit_at: string }[];
 };
 
 export type GitLoad=
@@ -76,6 +77,10 @@ const isPunchCard= (value: unknown) =>
 const isRecentPrs= (value: unknown) =>
   Array.isArray(value) && value.every((pr) => isRecord(pr) && isCount(pr.number) && isCount(pr.hours));
 
+const isContributors= (value: unknown) =>
+  Array.isArray(value) &&
+  value.every((p) => isRecord(p) && (p.login === null || isText(p.login)) && isCount(p.commits) && isDate(p.last_commit_at));
+
 export function isBackendActivity(value: unknown): value is BackendActivity {
   if (!isRecord(value) || !isRecord(value.contributors_window) || !isRecord(value.raw_metrics)) return false;
   const window= value.contributors_window;
@@ -97,7 +102,8 @@ export function isBackendActivity(value: unknown): value is BackendActivity {
     (value.ci == null || isCi(value.ci)) &&
     (value.weekly_commits == null || isWeekly(value.weekly_commits)) &&
     (value.punch_card == null || isPunchCard(value.punch_card)) &&
-    (value.recent_prs === undefined || isRecentPrs(value.recent_prs))
+    (value.recent_prs === undefined || isRecentPrs(value.recent_prs)) &&
+    (value.contributors === undefined || isContributors(value.contributors))
   );
 }
 
@@ -106,12 +112,41 @@ function branchNames(body: BackendActivity): string[] {
   return [body.default_branch, ...names.filter((name) => name !== body.default_branch)];
 }
 
+const COLORS: Contributor["color"][]= ["lavender", "peach", "mint", "blue"];
+
+function initialsOf(login: string | null): string {
+  const letters= (login ?? "").replace(/[^A-Za-z0-9]/g, "").slice(0, 2).toUpperCase();
+  return letters || "?";
+}
+
+function toContributors(body: BackendActivity): Contributor[] | null {
+  const list= body.contributors ?? [];
+  if (!list.length) return null;
+  return list.map((person, index) => ({
+    initials: initialsOf(person.login),
+    name: person.login ?? "Unlinked author",
+    role: `Last commit ${formatShortDate(person.last_commit_at)}`,
+    commits: person.commits,
+    reviewParticipation: null,
+    ownership: null,
+    color: COLORS[index % COLORS.length],
+  }));
+}
+
+function contributorsNote(body: BackendActivity, shown: number): string {
+  const window= body.contributors_window;
+  const span= window.complete ? "in the last 90 days" : `since ${formatShortDate(window.since)}, from the ${window.commits_read} most recent commits`;
+  const top= body.active_contributors > shown ? `Top ${shown} of ${window.complete ? "" : "at least "}${body.active_contributors} contributors. ` : "";
+  return `${top}Commits ${span}. Bots are excluded.`;
+}
+
 export function toGitAnalysis(repository: string, body: BackendActivity): RepositoryAnalysis {
   const raw= body.raw_metrics;
   const branches= body.branches ?? null;
   const weekly= body.weekly_commits?.length ? body.weekly_commits : null;
   const prs= body.recent_prs?.length ? body.recent_prs : null;
   const license= body.license ?? null;
+  const contributors= toContributors(body);
 
   return {
     source: "git",
@@ -135,7 +170,8 @@ export function toGitAnalysis(repository: string, body: BackendActivity): Reposi
       weeklyCommits: weekly,
       recentPrs: prs,
       punchCard: body.punch_card ?? null,
-      contributors: null,
+      contributors,
+      contributorsNote: contributors ? contributorsNote(body, contributors.length) : undefined,
       activeContributors: body.contributors_window.complete ? String(body.active_contributors) : `At least ${body.active_contributors}`,
       timeZone: "UTC",
     },

@@ -57,7 +57,7 @@ export function DashboardReportDocument({ analysis, branch }: Props) {
             </tr>
             <tr>
               <th>Contributors</th>
-              <td>{team.contributors ? team.contributors.map((c) => `${c.name} (${c.commits} commits)`).join(", ") : NA}</td>
+              <td>{team.contributors ? team.contributors.map((c, index) => `${real ? `Contributor ${index + 1}` : c.name} (${c.commits} commits)`).join(", ") + (real ? ". Names are withheld in exported reports." : "") : NA}</td>
             </tr>
             <tr>
               <th>Branches</th>

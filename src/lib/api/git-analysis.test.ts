@@ -31,6 +31,10 @@ const BODY: BackendActivity= {
   weekly_commits: WEEKS,
   punch_card: PUNCH,
   recent_prs: [{ number: 431, hours: 2.1 }, { number: 434, hours: 5.5 }],
+  contributors: [
+    { login: "ana-dev", commits: 40, last_commit_at: "2026-11-14T09:00:00Z" },
+    { login: null, commits: 12, last_commit_at: "2026-11-02T18:30:00Z" },
+  ],
 };
 
 const reply= (status: number, body: unknown= BODY) => vi.fn(async () => new Response(JSON.stringify(body), { status }));
@@ -67,7 +71,7 @@ describe("toGitAnalysis", () => {
     expect(team.codeOwnersCoverage).toBeNull();
     expect(team.codeOwnersStatus).toBeNull();
     expect(team.commitsStatus).toBeNull();
-    expect(team.contributors).toBeNull();
+    expect(team.contributors?.every((person) => person.reviewParticipation === null && person.ownership === null)).toBe(true);
     expect(hygiene.languages).toBeNull();
     expect(hygiene.quality.coverage).toBeNull();
     expect(hygiene.license.osiApproved).toBeNull();
@@ -131,6 +135,46 @@ describe("toGitAnalysis", () => {
     const analysis= toGitAnalysis("org/repo", { ...BODY, license: { spdx_id: "NOASSERTION", name: null } });
 
     expect(analysis.hygiene.license.name).toBe("NOASSERTION");
+  });
+});
+
+describe("contributors", () => {
+  it("maps the ranking to the table without inventing review or ownership data", () => {
+    const { contributors }= toGitAnalysis("org/repo", BODY).team;
+
+    expect(contributors).toEqual([
+      { initials: "AN", name: "ana-dev", role: "Last commit 14 Nov 2026", commits: 40, reviewParticipation: null, ownership: null, color: "lavender" },
+      { initials: "?", name: "Unlinked author", role: "Last commit 2 Nov 2026", commits: 12, reviewParticipation: null, ownership: null, color: "peach" },
+    ]);
+  });
+
+  it("explains the window and the limit under the table", () => {
+    const complete= toGitAnalysis("org/repo", BODY).team.contributorsNote;
+    const partial= toGitAnalysis("org/repo", {
+      ...BODY,
+      active_contributors: 49,
+      contributors_window: { complete: false, commits_read: 500, since: "2026-10-30T00:00:00Z" },
+    }).team.contributorsNote;
+
+    expect(complete).toBe("Top 2 of 7 contributors. Commits in the last 90 days. Bots are excluded.");
+    expect(partial).toBe("Top 2 of at least 49 contributors. Commits since 30 Oct 2026, from the 500 most recent commits. Bots are excluded.");
+  });
+
+  it("has no table when GitHub returned no commits or the backend is older", () => {
+    const { contributors, ...old }= BODY;
+    void contributors;
+
+    expect(toGitAnalysis("org/repo", { ...BODY, contributors: [] }).team.contributors).toBeNull();
+    expect(toGitAnalysis("org/repo", old).team.contributors).toBeNull();
+    expect(toGitAnalysis("org/repo", old).team.contributorsNote).toBeUndefined();
+  });
+
+  it.each([
+    ["a text commit count", [{ login: "a", commits: "3", last_commit_at: "2026-11-14T09:00:00Z" }]],
+    ["a bad date", [{ login: "a", commits: 3, last_commit_at: "yesterday" }]],
+    ["a numeric login", [{ login: 5, commits: 3, last_commit_at: "2026-11-14T09:00:00Z" }]],
+  ])("rejects %s", (_name, value) => {
+    expect(isBackendActivity({ ...BODY, contributors: value })).toBe(false);
   });
 });
 

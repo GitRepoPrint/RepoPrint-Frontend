@@ -589,3 +589,10 @@
   background: var(--c-surface-2);
   box-shadow: none;
 }
+
+.team-table-note {
+  margin: 12px 0 0;
+  color: var(--c-text-2);
+  font-size: 13px;
+  line-height: 1.5;
+}

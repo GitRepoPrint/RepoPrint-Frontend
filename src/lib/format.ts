@@ -3,6 +3,10 @@ export function formatReportDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { dateStyle: "long", timeZone: "UTC" });
 }
 
+export function formatShortDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+}
+
 export function formatClock(iso: string, timeZone?: string): string {
   const clock= new Date(iso).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone });
   return timeZone ? `${clock} ${timeZone}` : clock;

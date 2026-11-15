@@ -67,27 +67,30 @@ export function TeamTab({ analysis }: { analysis: RepositoryAnalysis }) {
             </thead>
             <tbody>
               {!team.contributors && <tr><td colSpan={4}>{NA}</td></tr>}
-              {team.contributors?.map((person) => (
-                <tr key={person.initials}>
+              {team.contributors?.map((person, index) => (
+                <tr key={`${person.initials}-${index}`}>
                   <td>
                     <div className="team-person">
                       <span className={`avatar ${person.color}`}>{person.initials}</span>
-                      <div><strong>{person.name}</strong><small>{person.role}</small></div>
+                      <div><strong>{person.name}</strong>{person.role !== null && <small>{person.role}</small>}</div>
                     </div>
                   </td>
                   <td>{person.commits}</td>
                   <td>
-                    <div className="team-review">
-                      <span className="team-review-bar" aria-hidden="true"><span style={{ width: `${person.reviewParticipation}%` }} /></span>
-                      <strong>{person.reviewParticipation}%</strong>
-                    </div>
+                    {person.reviewParticipation === null ? NA : (
+                      <div className="team-review">
+                        <span className="team-review-bar" aria-hidden="true"><span style={{ width: `${person.reviewParticipation}%` }} /></span>
+                        <strong>{person.reviewParticipation}%</strong>
+                      </div>
+                    )}
                   </td>
-                  <td>{person.ownership}</td>
+                  <td>{person.ownership ?? NA}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        {team.contributorsNote && <p className="team-table-note">{team.contributorsNote}</p>}
       </section>
 
       <section className="team-box" aria-labelledby="repo-hygiene-title">

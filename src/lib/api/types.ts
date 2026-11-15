@@ -115,10 +115,10 @@ export interface DfdModel {
 export interface Contributor {
   initials: string;
   name: string;
-  role: string;
+  role: string | null;
   commits: number;           // total no repositório
-  reviewParticipation: number; // 0-100
-  ownership: string;
+  reviewParticipation: number | null; // 0-100
+  ownership: string | null;
   color: "lavender" | "peach" | "mint" | "blue";
 }
 
@@ -134,6 +134,7 @@ export interface TeamStats {
   punchCard: number[][] | null;
   contributors: Contributor[] | null;
   activeContributors?: string;
+  contributorsNote?: string;
   timeZone?: string;
 }
 
