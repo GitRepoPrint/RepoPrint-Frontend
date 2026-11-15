@@ -7,7 +7,7 @@ import { Icon } from "@/components/ui/icon";
 import { ThemedLogo } from "@/components/ui/themed-logo";
 import { postAuth } from "@/lib/auth/auth-client";
 import { nextPathFromLocation } from "@/lib/auth/redirect";
-import { validateSignUp } from "@/lib/auth/validation";
+import { validateConsent, validateSignUp } from "@/lib/auth/validation";
 import type { SignUpErrors, SignUpField, SignUpValues } from "@/lib/auth/validation";
 import { AuthSwitchLink } from "./auth-switch-link";
 import { FIELD_ERROR_CLASS } from "./form-styles";
@@ -58,6 +58,7 @@ export function SignUpCard() {
   const [values, setValues] = useState<SignUpValues>(INITIAL);
   const [errors, setErrors] = useState<SignUpErrors>({});
   const [formError, setFormError] = useState<string>();
+  const [githubError, setGithubError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
 
   function change<K extends SignUpField>(field: K, value: SignUpValues[K]) {
@@ -67,6 +68,18 @@ export function SignUpCard() {
   const onText = (field: SignUpField) => (event: ChangeEvent<HTMLInputElement>) => change(field, event.target.value);
   const onCheck = (field: "acceptTerms" | "acceptPrivacy") => (event: ChangeEvent<HTMLInputElement>) =>
     change(field, event.target.checked);
+
+  function signUpWithGithub() {
+    const found= validateConsent(values);
+    setErrors(found);
+    setFormError(undefined);
+    setGithubError(undefined);
+    if (Object.keys(found).length > 0) {
+      setGithubError("Accept the Terms of Service and the Privacy Policy below to continue with GitHub.");
+      return;
+    }
+    window.location.assign(`/api/auth/github?intent=signup&next=${encodeURIComponent(nextPathFromLocation())}`);
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -115,7 +128,15 @@ export function SignUpCard() {
       <h1>Start mapping<br /><span>your threats.</span></h1>
       <p>Create an account to save analyses, audit private repositories, and track risk over time.</p>
 
-      <form onSubmit={handleSubmit} noValidate className="mt-7">
+      <div className="login-providers">
+        <button type="button" onClick={signUpWithGithub} disabled={submitting}>
+          <Icon name="github" size={21} /> Sign up with GitHub <Icon name="arrowRight" size={17} />
+        </button>
+      </div>
+      {githubError && <div role="alert" className="mt-3 text-sm text-red-500 [.theme-light_&]:text-red-700">{githubError}</div>}
+      <div className="login-separator"><span /> OR CREATE A REPOPRINT ACCOUNT <span /></div>
+
+      <form onSubmit={handleSubmit} noValidate>
         <div className="site-login-form">
           {field("username", "Username", "text", "your-username", "username")}
           {field("email", "Email address", "email", "you@company.com", "email")}

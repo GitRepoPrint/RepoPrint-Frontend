@@ -14,6 +14,9 @@ import { FIELD_ERROR_CLASS } from "./form-styles";
 const ERROR_MESSAGES: Record<string, string> = {
   failed: "Sign in failed. Please try again.",
   expired: "Your session expired. Sign in again to continue.",
+  rate_limited: "Too many sign in attempts. Wait a minute and try again.",
+  github_failed: "Sign in with GitHub failed. Please try again.",
+  github_no_account: "No RepoPrint account uses that GitHub account yet. Create one with Sign up with GitHub.",
 };
 
 const SUBMIT_ERRORS: Record<string, string> = {
@@ -29,6 +32,10 @@ export function LoginCard({ error }: { error?: string }) {
   const [errors, setErrors]= useState<CredentialErrors>({});
   const [formError, setFormError]= useState<string | undefined>(error ? ERROR_MESSAGES[error] : undefined);
   const [submitting, setSubmitting]= useState(false);
+
+  function continueWithGithub() {
+    window.location.assign(`/api/auth/github?intent=login&next=${encodeURIComponent(nextPathFromLocation())}`);
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -53,7 +60,13 @@ export function LoginCard({ error }: { error?: string }) {
       <ThemedLogo className="login-logo" />
       <h1>Your architecture,<br /><span>all in one place.</span></h1>
       <p>Sign in to access your repositories, security insights, and interactive threat models.</p>
-      <form className="site-login-form mt-7" onSubmit={handleSubmit} noValidate>
+      <div className="login-providers">
+        <button type="button" onClick={continueWithGithub} disabled={submitting}>
+          <Icon name="github" size={21} /> Continue with GitHub <Icon name="arrowRight" size={17} />
+        </button>
+      </div>
+      <div className="login-separator"><span /> OR SIGN IN WITH YOUR REPOPRINT ACCOUNT <span /></div>
+      <form className="site-login-form" onSubmit={handleSubmit} noValidate>
         <label htmlFor="account-identifier">Email or username</label>
         <input
           id="account-identifier"

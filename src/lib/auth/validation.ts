@@ -49,7 +49,12 @@ export function validateSignUp(values: SignUpValues): SignUpErrors {
   const errors: SignUpErrors= validateAccount(values);
   if (!values.confirmPassword) errors.confirmPassword = "Confirm your password.";
   else if (values.confirmPassword !== values.password) errors.confirmPassword = "Passwords do not match.";
-  if (!values.acceptTerms) errors.acceptTerms = "You must accept the Terms of Service to create an account.";
-  if (!values.acceptPrivacy) errors.acceptPrivacy = "You must accept the Privacy Policy to create an account.";
+  return { ...errors, ...validateConsent(values) };
+}
+
+export function validateConsent(values: Pick<SignUpValues, "acceptTerms" | "acceptPrivacy">): SignUpErrors {
+  const errors: SignUpErrors= {};
+  if (!values.acceptTerms) errors.acceptTerms= "You must accept the Terms of Service to create an account.";
+  if (!values.acceptPrivacy) errors.acceptPrivacy= "You must accept the Privacy Policy to create an account.";
   return errors;
 }

@@ -72,3 +72,52 @@ describe("refreshTokens", () => {
     expect((await refreshTokens("old", reply(200, TOKENS)))?.accessToken).toBe("a");
   });
 });
+
+describe("github sign in", () => {
+  it("builds a PKCE authorization request that skips the Keycloak login page", async () => {
+    vi.stubEnv("APP_URL", "http://app.test");
+    vi.stubEnv("KEYCLOAK_PUBLIC_URL", "http://kc.test/realms/repoprint");
+    const { githubAuthorizeUrl, newPkce }= await import("./oidc");
+    const { challenge, state }= newPkce();
+
+    const url= new URL(githubAuthorizeUrl({ challenge, state }));
+
+    expect(url.origin + url.pathname).toBe("http://kc.test/realms/repoprint/protocol/openid-connect/auth");
+    expect(Object.fromEntries(url.searchParams)).toMatchObject({
+      client_id: "repoprint-frontend",
+      redirect_uri: "http://app.test/api/auth/callback",
+      response_type: "code",
+      code_challenge: challenge,
+      code_challenge_method: "S256",
+      state,
+      kc_idp_hint: "github",
+    });
+  });
+
+  it("derives the challenge from the verifier with SHA-256", async () => {
+    const { newPkce }= await import("./oidc");
+    const { createHash }= await import("node:crypto");
+    const { verifier, challenge }= newPkce();
+
+    expect(challenge).toBe(createHash("sha256").update(verifier).digest("base64url"));
+  });
+
+  it("exchanges the code with the verifier on the internal Keycloak address", async () => {
+    vi.stubEnv("APP_URL", "http://app.test");
+    const { exchangeCode }= await import("./oidc");
+    const fetcher= reply(200, TOKENS);
+
+    const result= await exchangeCode("the-code", "the-verifier", fetcher);
+
+    expect(result.ok).toBe(true);
+    const [url, init]= vi.mocked(fetcher).mock.calls[0];
+    expect(url).toBe("http://kc/realms/repoprint/protocol/openid-connect/token");
+    expect(Object.fromEntries(new URLSearchParams(String(init?.body)))).toMatchObject({
+      grant_type: "authorization_code",
+      code: "the-code",
+      code_verifier: "the-verifier",
+      redirect_uri: "http://app.test/api/auth/callback",
+      client_secret: "client-secret",
+    });
+  });
+});

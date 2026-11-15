@@ -1,4 +1,7 @@
+import { createHash, randomBytes } from "node:crypto";
+
 export const SESSION_COOKIE= "rp_session";
+export const OAUTH_COOKIE= "rp_oauth";
 
 const CLIENT_ID= "repoprint-frontend";
 const ADMIN_CLIENT_ID= "repoprint-admin";
@@ -16,6 +19,7 @@ export function authConfig() {
   return {
     appUrl: process.env.APP_URL ?? "http://localhost:3000",
     realmUrl,
+    publicRealmUrl: process.env.KEYCLOAK_PUBLIC_URL ?? "http://localhost:8080/realms/repoprint",
     adminUrl: realmUrl.replace("/realms/", "/admin/realms/"),
     clientId: CLIENT_ID,
     clientSecret: required("KEYCLOAK_CLIENT_SECRET"),
@@ -69,6 +73,39 @@ async function tokenRequest(body: Record<string, string>, fetcher: Fetcher): Pro
   }
   if (response.status >= 500) return { ok: false, error: "unavailable" };
   return { ok: false, error: "invalid" };
+}
+
+export function base64url(input: Buffer | string): string {
+  return Buffer.from(input).toString("base64url");
+}
+
+export function newPkce() {
+  const verifier= base64url(randomBytes(48));
+  const challenge= base64url(createHash("sha256").update(verifier).digest());
+  return { verifier, challenge, state: base64url(randomBytes(24)) };
+}
+
+export function githubAuthorizeUrl(params: { challenge: string; state: string }): string {
+  const { appUrl, publicRealmUrl, clientId }= authConfig();
+  const query= new URLSearchParams({
+    client_id: clientId,
+    redirect_uri: `${appUrl}/api/auth/callback`,
+    response_type: "code",
+    scope: "openid",
+    state: params.state,
+    code_challenge: params.challenge,
+    code_challenge_method: "S256",
+    kc_idp_hint: "github",
+  });
+  return `${publicRealmUrl}/protocol/openid-connect/auth?${query}`;
+}
+
+export function exchangeCode(code: string, verifier: string, fetcher: Fetcher= fetch): Promise<GrantResult> {
+  const { appUrl }= authConfig();
+  return tokenRequest(
+    { grant_type: "authorization_code", code, code_verifier: verifier, redirect_uri: `${appUrl}/api/auth/callback` },
+    fetcher,
+  );
 }
 
 export function passwordGrant(identifier: string, password: string, fetcher: Fetcher= fetch): Promise<GrantResult> {
