@@ -10,7 +10,7 @@ import type { DragEvent } from "react";
 import { useToast } from "@/components/ui/toast";
 import { loadDiagram, saveDiagram } from "@/lib/api/diagram";
 import { repoSlug } from "@/lib/api/repositories";
-import type { DemoAnalysis, DfdNodeKind } from "@/lib/api/types";
+import type { DfdNodeKind, RepositoryAnalysis } from "@/lib/api/types";
 import { buildDiagramSvg } from "@/lib/dfd/export-svg";
 import {
   GRID, MAX_ZOOM, MIN_ZOOM, NODE_HEIGHT, NODE_WIDTH, createNode, diagramFromModel, serializeDiagram, toDiagram, toFlowEdge, toFlowEdges, toFlowNodes,
@@ -41,7 +41,7 @@ const THEME_VARS = [
   "[.theme-light_&]:[--xy-minimap-mask-background-color:#f6f7fccc]",
 ].join(" ");
 
-type CanvasViewProps = { analysis: DemoAnalysis; branch: string };
+type CanvasViewProps = { analysis: RepositoryAnalysis; branch: string };
 
 export function CanvasView(props: CanvasViewProps) {
   // O Provider deixa a barra de ferramentas (fora do <ReactFlow>) usar zoom e viewport.

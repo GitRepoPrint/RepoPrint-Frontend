@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { DashboardReportDocument } from "@/components/report/dashboard-report-document";
 import { useToast } from "@/components/ui/toast";
@@ -8,24 +8,31 @@ import { repoSlug } from "@/lib/api/repositories";
 import { risksByNode } from "@/lib/findings";
 import { fileBaseName } from "@/lib/download";
 import { printReport } from "@/lib/print";
-import type { DemoAnalysis, Finding, RepositoryAnalysis } from "@/lib/api/types";
+import type { Finding, RepositoryAnalysis } from "@/lib/api/types";
 import { DashboardHeader } from "./dashboard-header";
-import { DashboardTabList, DashboardTabPanel, useDashboardTab } from "./dashboard-tabs";
-import type { Tab } from "./dashboard-tabs";
 import { DfdTab } from "./dfd-tab";
 import { FalsePositiveModal } from "./false-positive-modal";
-import { GitDashboard } from "./git-dashboard";
 import { TeamTab } from "./team-tab";
 import { ThreatsTab } from "./threats-tab";
 
-export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
-  return analysis.mode === "demo" ? <DemoDashboard analysis={analysis} /> : <GitDashboard analysis={analysis} />;
-}
+type Tab = "threats" | "dfd" | "team";
 
-function DemoDashboard({ analysis }: { analysis: DemoAnalysis }) {
+const TABS: { id: Tab; label: string }[] = [
+  { id: "threats", label: "Threat Modeling & Architectural Posture" },
+  { id: "dfd", label: "Inferred Architecture & Data Flow Diagram" },
+  { id: "team", label: "Team Dynamics & Repository Hygiene" },
+];
+
+const isTab = (value: string | null): value is Tab => TABS.some((tab) => tab.id === value);
+
+export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { notify } = useToast();
-  const { tab, selectTab } = useDashboardTab();
+
+  const rawTab = searchParams.get("tab");
+  const tab: Tab = isTab(rawTab) ? rawTab : "threats";
 
   const [branch, setBranch] = useState(analysis.defaultBranch);
   const [scanId, setScanId] = useState(analysis.scans[0]?.id ?? "");
@@ -37,6 +44,10 @@ function DemoDashboard({ analysis }: { analysis: DemoAnalysis }) {
 
   const base = `/repositories/${repoSlug(analysis.repository)}`;
   const canvasUrl = `${base}/dfd?branch=${encodeURIComponent(branch)}`;
+
+  function selectTab(next: Tab) {
+    router.replace(`${pathname}?tab=${next}`, { scroll: false });
+  }
 
   function openNode(next: Tab, id: string) {
     setNodeId(id);
@@ -67,32 +78,49 @@ function DemoDashboard({ analysis }: { analysis: DemoAnalysis }) {
           onExport={() => printReport(`${fileBaseName(analysis.repository)}-audit-report`)}
         />
 
-        <DashboardTabList tab={tab} onSelect={selectTab} />
+        <nav className="dashboard-tabs" role="tablist" aria-label="Dashboard analysis sections">
+          {TABS.map(({ id, label }) => (
+            <button
+              key={id}
+              id={`${id}-tab`}
+              type="button"
+              className={`dashboard-tab ${tab === id ? "active" : ""}`}
+              role="tab"
+              aria-selected={tab === id}
+              aria-controls={`${id}-panel`}
+              onClick={() => selectTab(id)}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
 
-        <DashboardTabPanel tab={tab}>
-          {tab === "threats" && (
-            <ThreatsTab
-              analysis={analysis}
-              risks={risks}
-              nodeId={nodeId}
-              reasons={reasons}
-              onTriage={setTriaged}
-              onSelectNode={setNodeId}
-              onShowInDiagram={(id) => openNode("dfd", id)}
-            />
-          )}
-          {tab === "dfd" && (
-            <DfdTab
-              model={analysis.dfd}
-              risks={risks}
-              nodeId={nodeId}
-              onSelectNode={setNodeId}
-              onOpenThreats={(id) => openNode("threats", id)}
-              onEdit={() => router.push(canvasUrl)}
-            />
-          )}
-          {tab === "team" && <TeamTab analysis={analysis} />}
-        </DashboardTabPanel>
+        <div className="dashboard-tab-content">
+          <div id={`${tab}-panel`} className="dashboard-tab-panel" role="tabpanel" aria-labelledby={`${tab}-tab`}>
+            {tab === "threats" && (
+              <ThreatsTab
+                analysis={analysis}
+                risks={risks}
+                nodeId={nodeId}
+                reasons={reasons}
+                onTriage={setTriaged}
+                onSelectNode={setNodeId}
+                onShowInDiagram={(id) => openNode("dfd", id)}
+              />
+            )}
+            {tab === "dfd" && (
+              <DfdTab
+                model={analysis.dfd}
+                risks={risks}
+                nodeId={nodeId}
+                onSelectNode={setNodeId}
+                onOpenThreats={(id) => openNode("threats", id)}
+                onEdit={() => router.push(canvasUrl)}
+              />
+            )}
+            {tab === "team" && <TeamTab analysis={analysis} />}
+          </div>
+        </div>
       </main>
 
       {triaged && (

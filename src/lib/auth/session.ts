@@ -69,16 +69,3 @@ export async function activeSession(): Promise<SessionState> {
   await storeSession(renewed);
   return { status: "active", accessToken: renewed.accessToken };
 }
-
-export type PeekState=
-  | { status: "anonymous" }
-  | { status: "stale" }
-  | { status: "active"; accessToken: string };
-
-export async function peekSession(): Promise<PeekState> {
-  const tokens= await readSession();
-  if (!tokens) return { status: (await cookies()).get(SESSION_COOKIE) ? "stale" : "anonymous" };
-  return tokens.accessExpiresAt - EXPIRY_MARGIN_MS > Date.now()
-    ? { status: "active", accessToken: tokens.accessToken }
-    : { status: "stale" };
-}

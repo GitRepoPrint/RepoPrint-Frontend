@@ -147,8 +147,7 @@ export interface ScanSummary {
   label: string;
 }
 
-export interface DemoAnalysis {
-  mode: "demo";
+export interface RepositoryAnalysis {
   repository: string;
   commit: string;
   branches: string[];
@@ -161,32 +160,4 @@ export interface DemoAnalysis {
   dfd: DfdModel;
   team: TeamStats;
   hygiene: Hygiene;
-}
-
-export interface GitFacts {
-  defaultBranch: string;
-  totalCommits: number;
-  commitsLast30d: number;
-  commitsLast90d: number;
-  commitsPerWeek90d: number;
-  medianPrMergeHours: number | null;
-  openPrs: number;
-  openIssues: number;
-  stars: number;
-}
-
-export interface GitAnalysis {
-  mode: "git";
-  repository: string;
-  analyzedAt: string;
-  git: GitFacts;
-  activity: ActivityInfo;
-}
-
-export type RepositoryAnalysis= DemoAnalysis | GitAnalysis;
-
-export interface LoadFailure {
-  title: string;
-  message: string;
-  retryable: boolean;
 }

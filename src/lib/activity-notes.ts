@@ -7,21 +7,12 @@ export interface NoteRow {
   rule: string;
 }
 
-export const DATA_TIME_ZONE= "UTC";
+const plural= (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
-export const plural= (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
-
-export const contributorsValue= (activity: ActivityInfo) =>
-  activity.contributorsWindow.complete ? String(activity.activeContributors) : `At least ${activity.activeContributors}`;
-
-export const mergeSampleText= (sampleSize: number) =>
-  sampleSize === 0 ? "No merged PRs among the last 100 closed" : `${plural(sampleSize, "merged PR")} sampled`;
-
-export function activityNotes(activity: ActivityInfo, commitsPerMonth: number, mergeHours: number | null, timeZone?: string): NoteRow[] {
+export function activityNotes(activity: ActivityInfo, commitsPerMonth: number, mergeHours: number | null): NoteRow[] {
   const contributors= activity.contributorsWindow;
   const bots= activity.botsExcluded > 0 ? `Bots are not counted (${activity.botsExcluded} excluded).` : "Bots are not counted.";
   const minutes= Math.round((Date.parse(activity.refreshAvailableAt) - Date.parse(activity.fetchedAt)) / 60000);
-  const clock= (iso: string) => formatClock(iso, timeZone);
 
   return [
     {
@@ -31,7 +22,7 @@ export function activityNotes(activity: ActivityInfo, commitsPerMonth: number, m
     },
     {
       metric: "Active contributors",
-      value: contributorsValue(activity),
+      value: contributors.complete ? String(activity.activeContributors) : `At least ${activity.activeContributors}`,
       rule: contributors.complete
         ? `People with commits in the last 90 days. ${bots}`
         : `Only the latest ${contributors.commitsRead} commits are read, back to ${formatReportDate(contributors.since)}, so the real number can be higher. ${bots}`,
@@ -43,9 +34,9 @@ export function activityNotes(activity: ActivityInfo, commitsPerMonth: number, m
     },
     {
       metric: "Data",
-      value: activity.cached ? `Saved at ${clock(activity.fetchedAt)}` : `Read at ${clock(activity.fetchedAt)}`,
+      value: activity.cached ? `Saved at ${formatClock(activity.fetchedAt)}` : `Read at ${formatClock(activity.fetchedAt)}`,
       rule: activity.cached
-        ? `This result was read earlier. Fresh data is available after ${clock(activity.refreshAvailableAt)}.`
+        ? `This result was read earlier. Fresh data is available after ${formatClock(activity.refreshAvailableAt)}.`
         : `Read from GitHub just now. Analyzing the same repository again within ${minutes} minutes shows this result.`,
     },
   ];
