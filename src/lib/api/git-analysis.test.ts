@@ -35,6 +35,7 @@ const BODY: BackendActivity= {
     { login: "ana-dev", commits: 40, last_commit_at: "2026-11-14T09:00:00Z" },
     { login: null, commits: 12, last_commit_at: "2026-11-02T18:30:00Z" },
   ],
+  code_owners: { file: ".github/CODEOWNERS", coverage: 62.5, files_total: 200, files_owned: 125 },
 };
 
 const reply= (status: number, body: unknown= BODY) => vi.fn(async () => new Response(JSON.stringify(body), { status }));
@@ -68,8 +69,6 @@ describe("toGitAnalysis", () => {
   it("leaves unavailable data empty instead of inventing it", () => {
     const { team, hygiene, findings, scans, executiveSummary }= toGitAnalysis("org/repo", BODY);
 
-    expect(team.codeOwnersCoverage).toBeNull();
-    expect(team.codeOwnersStatus).toBeNull();
     expect(team.commitsStatus).toBeNull();
     expect(team.contributors?.every((person) => person.reviewParticipation === null && person.ownership === null)).toBe(true);
     expect(hygiene.languages).toBeNull();
@@ -135,6 +134,40 @@ describe("toGitAnalysis", () => {
     const analysis= toGitAnalysis("org/repo", { ...BODY, license: { spdx_id: "NOASSERTION", name: null } });
 
     expect(analysis.hygiene.license.name).toBe("NOASSERTION");
+  });
+});
+
+describe("code owners", () => {
+  it("maps the coverage and explains where it comes from", () => {
+    const { team }= toGitAnalysis("org/repo", BODY);
+
+    expect(team.codeOwnersCoverage).toBe(62.5);
+    expect(team.codeOwnersStatus).toBe("125 of 200 files");
+  });
+
+  it("reports a missing CODEOWNERS file as zero coverage", () => {
+    const { team }= toGitAnalysis("org/repo", { ...BODY, code_owners: { file: null, coverage: 0, files_total: 90, files_owned: 0 } });
+
+    expect(team.codeOwnersCoverage).toBe(0);
+    expect(team.codeOwnersStatus).toBe("No CODEOWNERS file");
+  });
+
+  it("is not available when the backend could not compute it", () => {
+    const { team }= toGitAnalysis("org/repo", { ...BODY, code_owners: null });
+    const { code_owners, ...old }= BODY;
+    void code_owners;
+
+    expect(team.codeOwnersCoverage).toBeNull();
+    expect(team.codeOwnersStatus).toBeNull();
+    expect(toGitAnalysis("org/repo", old).team.codeOwnersCoverage).toBeNull();
+  });
+
+  it.each([
+    ["a coverage above 100", { file: null, coverage: 120, files_total: 1, files_owned: 1 }],
+    ["a text file name", { file: 5, coverage: 10, files_total: 1, files_owned: 1 }],
+    ["a missing total", { file: null, coverage: 10, files_owned: 1 }],
+  ])("rejects %s", (_name, value) => {
+    expect(isBackendActivity({ ...BODY, code_owners: value })).toBe(false);
   });
 });
 

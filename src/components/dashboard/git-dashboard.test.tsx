@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { DashboardReportDocument } from "@/components/report/dashboard-report-document";
 import { toGitAnalysis } from "@/lib/api/git-analysis";
+import { hygieneGrade } from "@/lib/score";
 import type { BackendActivity } from "@/lib/api/git-analysis";
 import { DashboardHeader } from "./dashboard-header";
 import { NotAvailableCard } from "./not-available-card";
@@ -35,6 +36,7 @@ const BODY: BackendActivity= {
     { login: "ana-dev", commits: 40, last_commit_at: "2026-11-14T09:00:00Z" },
     { login: null, commits: 12, last_commit_at: "2026-11-02T18:30:00Z" },
   ],
+  code_owners: null,
 };
 
 const html= (body: BackendActivity) => renderToStaticMarkup(<TeamTab analysis={toGitAnalysis("org/repo", body)} />);
@@ -88,6 +90,35 @@ describe("team tab with GitHub data", () => {
     expect(bare).toContain("<strong>N/A</strong>");
     expect(bare.match(/chart-unavailable/g)?.length ?? 0).toBeGreaterThanOrEqual(1);
     expect(bare).toContain("Not available");
+  });
+});
+
+describe("hygiene grade with Code Owners", () => {
+  const withOwners= (coverage: number, file: string | null)=> html({ ...BODY, code_owners: { file, coverage, files_total: 100, files_owned: coverage } });
+
+  it("shows the grade and the coverage once the data exists", () => {
+    const page= withOwners(60, ".github/CODEOWNERS");
+
+    expect(page).toContain("<strong>60%</strong>");
+    expect(page).toContain("60 of 100 files");
+    expect(page).toContain("Git hygiene grade ");
+    expect(page).not.toContain("Git hygiene grade not available");
+    expect(page).toContain("/ 100");
+  });
+
+  it("computes the grade from merge time, activity and Code Owners", () => {
+    const grade= hygieneGrade({ prMergeHours: 4.2, commitsPerMonth: 47, codeOwnersCoverage: 60 });
+
+    expect(withOwners(60, ".github/CODEOWNERS")).toContain(`aria-label="Git hygiene grade ${grade.total} out of 100"`);
+  });
+
+  it("scores zero coverage and warns about the missing file", () => {
+    const page= withOwners(0, null);
+
+    expect(page).toContain("No CODEOWNERS file");
+    expect(page).toContain("<strong>0%</strong>");
+    expect(page).toContain("team-chip warn");
+    expect(page).not.toContain("Git hygiene grade not available");
   });
 });
 

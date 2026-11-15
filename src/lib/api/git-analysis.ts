@@ -29,6 +29,7 @@ export type BackendActivity= {
   punch_card?: number[][] | null;
   recent_prs?: { number: number; hours: number }[];
   contributors?: { login: string | null; commits: number; last_commit_at: string }[];
+  code_owners?: { file: string | null; coverage: number; files_total: number; files_owned: number } | null;
 };
 
 export type GitLoad=
@@ -77,6 +78,9 @@ const isPunchCard= (value: unknown) =>
 const isRecentPrs= (value: unknown) =>
   Array.isArray(value) && value.every((pr) => isRecord(pr) && isCount(pr.number) && isCount(pr.hours));
 
+const isCodeOwners= (value: unknown) =>
+  isRecord(value) && (value.file === null || isText(value.file)) && isCount(value.coverage) && value.coverage <= 100 && isCount(value.files_total) && isCount(value.files_owned);
+
 const isContributors= (value: unknown) =>
   Array.isArray(value) &&
   value.every((p) => isRecord(p) && (p.login === null || isText(p.login)) && isCount(p.commits) && isDate(p.last_commit_at));
@@ -103,7 +107,8 @@ export function isBackendActivity(value: unknown): value is BackendActivity {
     (value.weekly_commits == null || isWeekly(value.weekly_commits)) &&
     (value.punch_card == null || isPunchCard(value.punch_card)) &&
     (value.recent_prs === undefined || isRecentPrs(value.recent_prs)) &&
-    (value.contributors === undefined || isContributors(value.contributors))
+    (value.contributors === undefined || isContributors(value.contributors)) &&
+    (value.code_owners == null || isCodeOwners(value.code_owners))
   );
 }
 
@@ -147,6 +152,7 @@ export function toGitAnalysis(repository: string, body: BackendActivity): Reposi
   const prs= body.recent_prs?.length ? body.recent_prs : null;
   const license= body.license ?? null;
   const contributors= toContributors(body);
+  const owners= body.code_owners ?? null;
 
   return {
     source: "git",
@@ -165,8 +171,8 @@ export function toGitAnalysis(repository: string, body: BackendActivity): Reposi
       commitsStatus: null,
       prMergeHours: body.median_pr_merge_time,
       prMergeStatus: raw.merged_prs_sampled ? `Based on ${raw.merged_prs_sampled} merged PRs` : "No merged PRs",
-      codeOwnersCoverage: null,
-      codeOwnersStatus: null,
+      codeOwnersCoverage: owners ? owners.coverage : null,
+      codeOwnersStatus: owners ? (owners.file ? `${owners.files_owned} of ${owners.files_total} files` : "No CODEOWNERS file") : null,
       weeklyCommits: weekly,
       recentPrs: prs,
       punchCard: body.punch_card ?? null,

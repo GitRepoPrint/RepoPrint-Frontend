@@ -57,7 +57,7 @@ export function TeamTab({ analysis }: { analysis: RepositoryAnalysis }) {
         <div className="team-stats">
           <Stat label="Average commits per week" value={String(commitsPerWeek)} status={<Chip tone="neutral">{team.commitsStatus ?? NA}</Chip>} />
           <Stat label="Median PR merge time" value={team.prMergeHours === null ? "N/A" : `${team.prMergeHours}h`} status={<Chip tone="neutral">{team.prMergeStatus ?? NA}</Chip>} />
-          <Stat label="Code Owners coverage" value={team.codeOwnersCoverage === null ? NA : `${team.codeOwnersCoverage}%`} status={<Chip tone={team.codeOwnersStatus ? "good" : "neutral"}>{team.codeOwnersStatus ?? NA}</Chip>} />
+          <Stat label="Code Owners coverage" value={team.codeOwnersCoverage === null ? NA : `${team.codeOwnersCoverage}%`} status={<Chip tone={!team.codeOwnersStatus ? "neutral" : team.codeOwnersCoverage === 0 ? "warn" : "good"}>{team.codeOwnersStatus ?? NA}</Chip>} />
         </div>
 
         <div className="team-table-wrap">
