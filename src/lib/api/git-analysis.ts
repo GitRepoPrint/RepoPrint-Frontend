@@ -1,6 +1,6 @@
 import { backendFetch } from "@/lib/auth/backend";
 import { formatClock, formatShortDate } from "@/lib/format";
-import type { Contributor, DfdModel, LoadFailure, RepositoryAnalysis } from "./types";
+import type { ActivityInfo, Contributor, DfdModel, LoadFailure, RepositoryAnalysis } from "./types";
 
 export type BackendActivity= {
   default_branch: string;
@@ -28,7 +28,8 @@ export type BackendActivity= {
   weekly_commits?: number[] | null;
   punch_card?: number[][] | null;
   recent_prs?: { number: number; hours: number }[];
-  contributors?: { login: string | null; commits: number; last_commit_at: string }[];
+  contributors?: { login: string | null; commits: number; last_commit_at: string; review_participation?: number | null }[];
+  reviews_sampled?: number;
   code_owners?: { file: string | null; coverage: number; files_total: number; files_owned: number } | null;
 };
 
@@ -83,7 +84,7 @@ const isCodeOwners= (value: unknown) =>
 
 const isContributors= (value: unknown) =>
   Array.isArray(value) &&
-  value.every((p) => isRecord(p) && (p.login === null || isText(p.login)) && isCount(p.commits) && isDate(p.last_commit_at));
+  value.every((p) => isRecord(p) && (p.login === null || isText(p.login)) && isCount(p.commits) && isDate(p.last_commit_at) && (p.review_participation == null || (isCount(p.review_participation) && p.review_participation <= 100)));
 
 export function isBackendActivity(value: unknown): value is BackendActivity {
   if (!isRecord(value) || !isRecord(value.contributors_window) || !isRecord(value.raw_metrics)) return false;
@@ -108,7 +109,8 @@ export function isBackendActivity(value: unknown): value is BackendActivity {
     (value.punch_card == null || isPunchCard(value.punch_card)) &&
     (value.recent_prs === undefined || isRecentPrs(value.recent_prs)) &&
     (value.contributors === undefined || isContributors(value.contributors)) &&
-    (value.code_owners == null || isCodeOwners(value.code_owners))
+    (value.code_owners == null || isCodeOwners(value.code_owners)) &&
+    (value.reviews_sampled === undefined || isCount(value.reviews_sampled))
   );
 }
 
@@ -132,17 +134,32 @@ function toContributors(body: BackendActivity): Contributor[] | null {
     name: person.login ?? "Unlinked author",
     role: `Last commit ${formatShortDate(person.last_commit_at)}`,
     commits: person.commits,
-    reviewParticipation: null,
+    reviewParticipation: person.review_participation == null ? null : Math.round(person.review_participation),
     ownership: null,
     color: COLORS[index % COLORS.length],
   }));
 }
 
-function contributorsNote(body: BackendActivity, shown: number): string {
+function contributorsNote(body: BackendActivity, list: NonNullable<BackendActivity["contributors"]>, shown: number): string {
   const window= body.contributors_window;
   const span= window.complete ? "in the last 90 days" : `since ${formatShortDate(window.since)}, from the ${window.commits_read} most recent commits`;
   const top= body.active_contributors > shown ? `Top ${shown} of ${window.complete ? "" : "at least "}${body.active_contributors} contributors. ` : "";
-  return `${top}Commits ${span}. Bots are excluded.`;
+  const reviews= body.reviews_sampled && list.some((person) => person.review_participation != null)
+    ? ` Review participation is the share of the last ${body.reviews_sampled} merged pull requests by other people that the person reviewed.`
+    : "";
+  return `${top}Commits ${span}. Bots are excluded.${reviews}`;
+}
+
+function toActivity(body: BackendActivity): ActivityInfo {
+  return {
+    fetchedAt: body.fetched_at,
+    refreshAvailableAt: body.refresh_available_at,
+    cached: body.cached,
+    activeContributors: body.active_contributors,
+    botsExcluded: body.bots_excluded,
+    contributorsWindow: { complete: body.contributors_window.complete, commitsRead: body.contributors_window.commits_read, since: body.contributors_window.since },
+    mergeSampleSize: body.raw_metrics.merged_prs_sampled,
+  };
 }
 
 export function toGitAnalysis(repository: string, body: BackendActivity): RepositoryAnalysis {
@@ -156,6 +173,7 @@ export function toGitAnalysis(repository: string, body: BackendActivity): Reposi
 
   return {
     source: "git",
+    activity: toActivity(body),
     repository,
     commit: body.commit_sha ? body.commit_sha.slice(0, 7) : null,
     branches: branchNames(body),
@@ -177,7 +195,7 @@ export function toGitAnalysis(repository: string, body: BackendActivity): Reposi
       recentPrs: prs,
       punchCard: body.punch_card ?? null,
       contributors,
-      contributorsNote: contributors ? contributorsNote(body, contributors.length) : undefined,
+      contributorsNote: contributors ? contributorsNote(body, body.contributors ?? [], contributors.length) : undefined,
       activeContributors: body.contributors_window.complete ? String(body.active_contributors) : `At least ${body.active_contributors}`,
       timeZone: "UTC",
     },

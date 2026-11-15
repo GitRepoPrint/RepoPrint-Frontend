@@ -33,7 +33,7 @@ const BODY: BackendActivity= {
   punch_card: Array.from({ length: 7 }, () => Array(24).fill(0)),
   recent_prs: [{ number: 7, hours: 3 }],
   contributors: [
-    { login: "ana-dev", commits: 40, last_commit_at: "2026-11-14T09:00:00Z" },
+    { login: "ana-dev", commits: 40, last_commit_at: "2026-11-14T09:00:00Z", review_participation: 66.7 },
     { login: null, commits: 12, last_commit_at: "2026-11-02T18:30:00Z" },
   ],
   code_owners: null,
@@ -63,6 +63,24 @@ describe("team tab with GitHub data", () => {
     expect(page).toContain("<td>40</td>");
     expect(page).toContain("Top 2 of at least 7 contributors. Commits since 1 Oct 2026, from the 500 most recent commits. Bots are excluded.");
     expect(page).not.toContain("secret");
+  });
+
+  it("shows the review participation bar when it exists", () => {
+    expect(page).toContain("<strong>67%</strong>");
+    expect(page).toContain("width:67%");
+  });
+
+  it("explains how the numbers are measured, in UTC", () => {
+    expect(page).toContain("GIT DATA");
+    expect(page).toContain("data-notes-panel");
+    expect(page).toContain("How these numbers are measured");
+    expect(page).toContain("Commits / month");
+    expect(page).toContain("Code Owners coverage");
+    expect(page).toContain("Read at 10:30 UTC");
+  });
+
+  it("does not show the measurement box in the demo dashboard", () => {
+    expect(renderToStaticMarkup(<TeamTab analysis={{ ...toGitAnalysis("org/repo", BODY), activity: undefined }} />)).not.toContain("How these numbers are measured");
   });
 
   it("says Not available where GitHub gives nothing", () => {

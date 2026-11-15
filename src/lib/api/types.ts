@@ -37,9 +37,9 @@ export interface Finding {
 // ---------- Análise instantânea ----------
 
 export interface InstantSummary {
-  stride: { findings: number; high: number; medium: number; detail: string };
-  privacy: { highRisks: number; labels: string; detail: string };
-  git: { prMergeHours: number | null; commitsPerMonth: number; codeOwnersCoverage: number };
+  stride: { findings: number; high: number; medium: number; detail: string } | null;
+  privacy: { highRisks: number; labels: string; detail: string } | null;
+  git: { prMergeHours: number | null; commitsPerMonth: number; codeOwnersCoverage: number | null };
 }
 
 export interface ActivityInfo {
@@ -53,8 +53,9 @@ export interface ActivityInfo {
 }
 
 export interface InstantReport {
+  source: AnalysisSource;
   repository: string;        // "org/repo"
-  commit: string;
+  commit: string | null;
   branch: string;
   analyzedAt: string;        // ISO 8601
   summary: InstantSummary;
@@ -160,6 +161,7 @@ export interface LoadFailure {
 
 export interface RepositoryAnalysis {
   source: AnalysisSource;
+  activity?: ActivityInfo;
   repository: string;
   commit: string | null;
   branches: string[];

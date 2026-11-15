@@ -9,10 +9,29 @@ export interface NoteRow {
 
 const plural= (count: number, word: string) => `${count} ${word}${count === 1 ? "" : "s"}`;
 
-export function activityNotes(activity: ActivityInfo, commitsPerMonth: number, mergeHours: number | null): NoteRow[] {
+export const DATA_TIME_ZONE= "UTC";
+
+export interface NoteOptions {
+  timeZone?: string;
+  codeOwners?: { coverage: number | null; status: string | null };
+}
+
+export function activityNotes(activity: ActivityInfo, commitsPerMonth: number, mergeHours: number | null, options: NoteOptions= {}): NoteRow[] {
+  const clock= (iso: string) => formatClock(iso, options.timeZone);
   const contributors= activity.contributorsWindow;
   const bots= activity.botsExcluded > 0 ? `Bots are not counted (${activity.botsExcluded} excluded).` : "Bots are not counted.";
   const minutes= Math.round((Date.parse(activity.refreshAvailableAt) - Date.parse(activity.fetchedAt)) / 60000);
+
+  const owners= options.codeOwners;
+  const ownersRows: NoteRow[]= owners
+    ? [{
+        metric: "Code Owners coverage",
+        value: owners.coverage === null ? "N/A" : `${owners.coverage}%`,
+        rule: owners.coverage === null
+          ? "The file tree is too large to read, so the coverage cannot be calculated."
+          : "Share of the files on the default branch matched by a rule with an owner in the CODEOWNERS file. 0% when the repository has no CODEOWNERS file. Owners are not checked against GitHub.",
+      }]
+    : [];
 
   return [
     {
@@ -32,11 +51,12 @@ export function activityNotes(activity: ActivityInfo, commitsPerMonth: number, m
       value: mergeHours === null ? "N/A" : `${formatHours(mergeHours)} (${plural(activity.mergeSampleSize, "PR")})`,
       rule: "Median time from opening to merge, over the merged pull requests among the last 100 closed. N/A when none was merged.",
     },
+    ...ownersRows,
     {
       metric: "Data",
-      value: activity.cached ? `Saved at ${formatClock(activity.fetchedAt)}` : `Read at ${formatClock(activity.fetchedAt)}`,
+      value: activity.cached ? `Saved at ${clock(activity.fetchedAt)}` : `Read at ${clock(activity.fetchedAt)}`,
       rule: activity.cached
-        ? `This result was read earlier. Fresh data is available after ${formatClock(activity.refreshAvailableAt)}.`
+        ? `This result was read earlier. Fresh data is available after ${clock(activity.refreshAvailableAt)}.`
         : `Read from GitHub just now. Analyzing the same repository again within ${minutes} minutes shows this result.`,
     },
   ];

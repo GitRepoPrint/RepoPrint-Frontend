@@ -32,9 +32,10 @@ const BODY: BackendActivity= {
   punch_card: PUNCH,
   recent_prs: [{ number: 431, hours: 2.1 }, { number: 434, hours: 5.5 }],
   contributors: [
-    { login: "ana-dev", commits: 40, last_commit_at: "2026-11-14T09:00:00Z" },
-    { login: null, commits: 12, last_commit_at: "2026-11-02T18:30:00Z" },
+    { login: "ana-dev", commits: 40, last_commit_at: "2026-11-14T09:00:00Z", review_participation: 66.7 },
+    { login: null, commits: 12, last_commit_at: "2026-11-02T18:30:00Z", review_participation: null },
   ],
+  reviews_sampled: 50,
   code_owners: { file: ".github/CODEOWNERS", coverage: 62.5, files_total: 200, files_owned: 125 },
 };
 
@@ -70,7 +71,7 @@ describe("toGitAnalysis", () => {
     const { team, hygiene, findings, scans, executiveSummary }= toGitAnalysis("org/repo", BODY);
 
     expect(team.commitsStatus).toBeNull();
-    expect(team.contributors?.every((person) => person.reviewParticipation === null && person.ownership === null)).toBe(true);
+    expect(team.contributors?.every((person) => person.ownership === null)).toBe(true);
     expect(hygiene.languages).toBeNull();
     expect(hygiene.quality.coverage).toBeNull();
     expect(hygiene.license.osiApproved).toBeNull();
@@ -176,7 +177,7 @@ describe("contributors", () => {
     const { contributors }= toGitAnalysis("org/repo", BODY).team;
 
     expect(contributors).toEqual([
-      { initials: "AN", name: "ana-dev", role: "Last commit 14 Nov 2026", commits: 40, reviewParticipation: null, ownership: null, color: "lavender" },
+      { initials: "AN", name: "ana-dev", role: "Last commit 14 Nov 2026", commits: 40, reviewParticipation: 67, ownership: null, color: "lavender" },
       { initials: "?", name: "Unlinked author", role: "Last commit 2 Nov 2026", commits: 12, reviewParticipation: null, ownership: null, color: "peach" },
     ]);
   });
@@ -189,8 +190,9 @@ describe("contributors", () => {
       contributors_window: { complete: false, commits_read: 500, since: "2026-10-30T00:00:00Z" },
     }).team.contributorsNote;
 
-    expect(complete).toBe("Top 2 of 7 contributors. Commits in the last 90 days. Bots are excluded.");
-    expect(partial).toBe("Top 2 of at least 49 contributors. Commits since 30 Oct 2026, from the 500 most recent commits. Bots are excluded.");
+    const reviews= " Review participation is the share of the last 50 merged pull requests by other people that the person reviewed.";
+    expect(complete).toBe(`Top 2 of 7 contributors. Commits in the last 90 days. Bots are excluded.${reviews}`);
+    expect(partial).toBe(`Top 2 of at least 49 contributors. Commits since 30 Oct 2026, from the 500 most recent commits. Bots are excluded.${reviews}`);
   });
 
   it("has no table when GitHub returned no commits or the backend is older", () => {
@@ -202,7 +204,16 @@ describe("contributors", () => {
     expect(toGitAnalysis("org/repo", old).team.contributorsNote).toBeUndefined();
   });
 
+  it("leaves review participation empty and does not explain it when GitHub gave none", () => {
+    const body= { ...BODY, reviews_sampled: 0, contributors: [{ login: "ana-dev", commits: 40, last_commit_at: "2026-11-14T09:00:00Z", review_participation: null }] };
+    const { team }= toGitAnalysis("org/repo", body);
+
+    expect(team.contributors?.[0].reviewParticipation).toBeNull();
+    expect(team.contributorsNote).not.toContain("Review participation");
+  });
+
   it.each([
+    ["a review share above 100", [{ login: "a", commits: 3, last_commit_at: "2026-11-14T09:00:00Z", review_participation: 140 }]],
     ["a text commit count", [{ login: "a", commits: "3", last_commit_at: "2026-11-14T09:00:00Z" }]],
     ["a bad date", [{ login: "a", commits: 3, last_commit_at: "yesterday" }]],
     ["a numeric login", [{ login: 5, commits: 3, last_commit_at: "2026-11-14T09:00:00Z" }]],

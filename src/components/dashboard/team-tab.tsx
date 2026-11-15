@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { HygieneChart } from "@/components/dashboard/hygiene-chart";
 import { Icon } from "@/components/ui/icon";
+import { DataNotes } from "@/components/instant/data-notes";
+import { DATA_TIME_ZONE } from "@/lib/activity-notes";
 import { hygieneGrade } from "@/lib/score";
 import type { RepositoryAnalysis } from "@/lib/api/types";
 
@@ -158,6 +160,15 @@ export function TeamTab({ analysis }: { analysis: RepositoryAnalysis }) {
           </Check>
         </div>
       </section>
+
+      {analysis.activity && (
+        <DataNotes
+          activity={analysis.activity}
+          commitsPerMonth={team.commits30d}
+          mergeHours={team.prMergeHours}
+          options={{ timeZone: DATA_TIME_ZONE, codeOwners: { coverage: team.codeOwnersCoverage, status: team.codeOwnersStatus } }}
+        />
+      )}
     </section>
   );
 }
