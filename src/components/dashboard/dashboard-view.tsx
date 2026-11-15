@@ -12,6 +12,7 @@ import type { Finding, RepositoryAnalysis } from "@/lib/api/types";
 import { DashboardHeader } from "./dashboard-header";
 import { DfdTab } from "./dfd-tab";
 import { FalsePositiveModal } from "./false-positive-modal";
+import { NotAvailableCard } from "./not-available-card";
 import { TeamTab } from "./team-tab";
 import { ThreatsTab } from "./threats-tab";
 
@@ -32,7 +33,8 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
   const { notify } = useToast();
 
   const rawTab = searchParams.get("tab");
-  const tab: Tab = isTab(rawTab) ? rawTab : "threats";
+  const tab: Tab = isTab(rawTab) ? rawTab : analysis.source === "git" ? "team" : "threats";
+  const codeReason = "The code of this repository has not been analyzed, so there is nothing to show here.";
 
   const [branch, setBranch] = useState(analysis.defaultBranch);
   const [scanId, setScanId] = useState(analysis.scans[0]?.id ?? "");
@@ -97,7 +99,9 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
 
         <div className="dashboard-tab-content">
           <div id={`${tab}-panel`} className="dashboard-tab-panel" role="tabpanel" aria-labelledby={`${tab}-tab`}>
-            {tab === "threats" && (
+            {tab === "threats" && analysis.source === "git" && <NotAvailableCard title="Threat Modeling and Architectural Posture" reason={codeReason} />}
+            {tab === "dfd" && analysis.source === "git" && <NotAvailableCard title="Inferred Architecture and Data Flow Diagram" reason={codeReason} />}
+            {tab === "threats" && analysis.source === "demo" && (
               <ThreatsTab
                 analysis={analysis}
                 risks={risks}
@@ -108,7 +112,7 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
                 onShowInDiagram={(id) => openNode("dfd", id)}
               />
             )}
-            {tab === "dfd" && (
+            {tab === "dfd" && analysis.source === "demo" && (
               <DfdTab
                 model={analysis.dfd}
                 risks={risks}

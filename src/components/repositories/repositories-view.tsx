@@ -17,12 +17,9 @@ function RepositoryRow({ item, onOpen }: { item: SavedRepository; onOpen: (item:
     <button type="button" className="repository-row" onClick={() => onOpen(item)}>
       <span className="repo-identity">
         <span className="repo-icon"><Icon name={item.isPrivate ? "lock" : "github"} size={19} /></span>
-        <span>
-          <strong>{item.name}</strong>
-          <small>{item.isPrivate ? "Private" : "Public"}{item.defaultBranch ? ` · ${item.defaultBranch}` : ""}</small>
-        </span>
+        <span><strong>{item.name}</strong></span>
       </span>
-      <span className="repo-score"><span className="score-unavailable">Code analysis not available yet</span></span>
+      <span className="repo-score"><span className="pending-score">Pending analysis</span></span>
       <span className="repo-updated"><Icon name="clock" size={14} /> Added {formatAdded(item.addedAt)}</span>
       <Icon name="arrowRight" size={17} className="row-arrow" />
     </button>
@@ -88,7 +85,7 @@ export function RepositoriesView({ githubStatus }: { githubStatus?: string }) {
     <>
       <main className="repositories-main" aria-busy={state.status === "loading"}>
         <div className="repositories-intro">
-          <div><h1>Your repositories<span>.</span></h1></div>
+          <div><h1>Your repositories</h1></div>
           <button type="button" className="button button-primary" onClick={() => setModalOpen(true)}>
             <Icon name="plus" size={17} /> Associate repository
           </button>
@@ -120,7 +117,7 @@ export function RepositoriesView({ githubStatus }: { githubStatus?: string }) {
 
         {state.status === "ready" && repositories.length > 0 && (
           <>
-            <RepositoryHealth repositories={repositories} />
+            <RepositoryHealth repositories={repositories.map(({ name }) => ({ name, score: null }))} />
 
             <div className="repository-list-heading">
               <div><h2>Repository overview <span>{repositories.length}</span></h2></div>
@@ -131,7 +128,7 @@ export function RepositoriesView({ githubStatus }: { githubStatus?: string }) {
             </div>
 
             <div className="repository-list">
-              <div className="repository-list-columns"><span>REPOSITORY</span><span>CODE ANALYSIS</span><span>ADDED</span><span /></div>
+              <div className="repository-list-columns"><span>REPOSITORY</span><span>SECURITY SCORE</span><span>ADDED</span><span /></div>
               {filtered.length
                 ? filtered.map((item) => <RepositoryRow key={item.id} item={item} onOpen={open} />)
                 : <div className="repo-empty">No repositories match your search.</div>}

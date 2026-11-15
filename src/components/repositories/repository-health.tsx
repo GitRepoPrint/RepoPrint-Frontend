@@ -3,7 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { AnimationEvent, CSSProperties } from "react";
 import { Icon } from "@/components/ui/icon";
-import type { SavedRepository } from "@/lib/api/types";
+import type { Repository } from "@/lib/api/types";
+
+type Scored = Pick<Repository, "name" | "score">;
+
+export const HEALTHY_SCORE = 80;
 
 const ZOOM_CHANCE = 0.001;
 const ZOOM_CHECK_MS = 1000;
@@ -17,13 +21,20 @@ const HANDLE_START = LENS_RADIUS + 5;
 const HANDLE_END = LENS_RADIUS + 64;
 const handlePoint = (distance: number) => CENTER + distance * Math.SQRT1_2;
 
-type Kind = "public" | "private";
+type Kind = "healthy" | "attention" | "pending";
 
-const kindOf = (repository: SavedRepository): Kind => (repository.isPrivate ? "private" : "public");
+const kindOf = (repository: Scored): Kind =>
+  repository.score === null ? "pending" : repository.score >= HEALTHY_SCORE ? "healthy" : "attention";
 
 function Mark({ kind }: { kind: Kind }) {
-  if (kind === "public") return <circle className="lupa-public" r={8} />;
-  return <rect className="lupa-private" x={-7.5} y={-7.5} width={15} height={15} rx={2} />;
+  if (kind === "healthy") return <circle className="lupa-healthy" r={8} />;
+  if (kind === "pending") return <rect className="lupa-pending" x={-7.5} y={-7.5} width={15} height={15} rx={2} />;
+  return (
+    <>
+      <circle className="lupa-orbit" r={19} />
+      <path className="lupa-attention" d="M0 -10L9.5 7.5L-9.5 7.5Z" />
+    </>
+  );
 }
 
 const RING_BANDS = [
@@ -106,7 +117,7 @@ function LupaParticles() {
 const vars = (values: Record<string, string>) => values as CSSProperties;
 
 const WALL_RADIUS = LENS_RADIUS - 5; 
-const SHAPE_RADIUS: Record<Kind, number> = { public: 8, private: 10 };
+const SHAPE_RADIUS: Record<Kind, number> = { healthy: 8, attention: 11, pending: 10 };
 const SPEED_MIN = 30;
 const SPEED_RANGE = 22;
 const SPEED_FLOOR = 24;
@@ -115,7 +126,7 @@ const COLLISION_LIMIT = 20;
 
 type Body = { x: number; y: number; vx: number; vy: number; radius: number };
 
-function createBodies(repositories: SavedRepository[]): Body[] {
+function createBodies(repositories: Scored[]): Body[] {
   const step = Math.min(18, 58 / Math.sqrt(Math.max(repositories.length, 1)));
   return repositories.map((repository, index) => {
     const spiralRadius = step * Math.sqrt(index + 0.6);
@@ -197,10 +208,11 @@ function useLupaZoom() {
   return { zooming, onAnimationEnd };
 }
 
-function Lupa({ repositories }: { repositories: SavedRepository[] }) {
+function Lupa({ repositories }: { repositories: Scored[] }) {
   const { zooming, onAnimationEnd } = useLupaZoom();
-  const privateCount = repositories.filter((r) => r.isPrivate).length;
-  const publicCount = repositories.length - privateCount;
+  const healthy = repositories.filter((r) => kindOf(r) === "healthy").length;
+  const attention = repositories.filter((r) => kindOf(r) === "attention").length;
+  const pending = repositories.length - healthy - attention;
   const svgRef = useRef<SVGSVGElement>(null);
   const shapeRefs = useRef<(SVGGElement | null)[]>([]);
   const start = useMemo(() => createBodies(repositories), [repositories]);
@@ -246,7 +258,7 @@ function Lupa({ repositories }: { repositories: SavedRepository[] }) {
         className="lupa"
         viewBox="12 12 232 232"
         role="img"
-        aria-label={`${publicCount} public, ${privateCount} private`}
+        aria-label={`${healthy} healthy, ${attention} needing attention${pending ? `, ${pending} pending analysis` : ""}`}
       >
         <defs>
           <clipPath id="lupa-lens"><circle cx={CENTER} cy={CENTER} r={LENS_RADIUS} /></clipPath>
@@ -259,11 +271,11 @@ function Lupa({ repositories }: { repositories: SavedRepository[] }) {
             {repositories.map((repository, index) => {
               return (
                 <g
-                  key={repository.id}
+                  key={repository.name}
                   ref={(node) => { shapeRefs.current[index] = node; }}
                   transform={`translate(${CENTER + start[index].x} ${CENTER + start[index].y})`}
                 >
-                  <title>{`${repository.name} · ${repository.isPrivate ? "private" : "public"}`}</title>
+                  <title>{repository.score === null ? `${repository.name} · pending analysis` : `${repository.name} · ${repository.score}/100`}</title>
                   <g className="lupa-pop" style={vars({ "--in": `${index * 50}ms` })}>
                     <Mark kind={kindOf(repository)} />
                   </g>
@@ -279,34 +291,38 @@ function Lupa({ repositories }: { repositories: SavedRepository[] }) {
   );
 }
 
-type Props = { repositories: SavedRepository[] };
+type Props = { repositories: Scored[] };
 
 export function RepositoryHealth({ repositories }: Props) {
-  const privateCount = repositories.filter((r) => r.isPrivate).length;
-  const publicCount = repositories.length - privateCount;
+  const healthy = repositories.filter((r) => kindOf(r) === "healthy").length;
+  const attention = repositories.filter((r) => kindOf(r) === "attention").length;
+  const pending = repositories.length - healthy - attention;
 
   return (
-    <section className="repository-health" aria-label="Repository visibility">
+    <section className="repository-health" aria-label="Portfolio health">
       <div className="repository-health-stats">
         <div>
-          <span className="stat-icon info-icon"><Icon name="github" size={19} /></span>
-          <span className="stat-label">PUBLIC</span>
-          <strong>{pad(publicCount)}</strong>
-          <small>Visible to anyone on GitHub</small>
+          <span className="stat-icon green-icon"><Icon name="shield" size={19} /></span>
+          <span className="stat-label">HEALTHY PROJECTS</span>
+          <strong>{pad(healthy)}</strong>
+          <small>Security score of {HEALTHY_SCORE} or higher</small>
         </div>
         <div>
-          <span className="stat-icon accent-icon"><Icon name="lock" size={19} /></span>
-          <span className="stat-label">PRIVATE</span>
-          <strong>{pad(privateCount)}</strong>
-          <small>Only visible to accounts with access</small>
+          <span className="stat-icon orange-icon"><Icon name="warning" size={19} /></span>
+          <span className="stat-label">NEEDS ATTENTION</span>
+          <strong>{pad(attention)}</strong>
+          <small>Opportunity to improve</small>
         </div>
       </div>
 
       <Lupa repositories={repositories} />
 
       <ul className="lupa-legend" aria-label="Legend">
-        <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle className="lupa-public" cx="8" cy="8" r="6" /></svg>Public</li>
-        <li><svg viewBox="0 0 16 16" aria-hidden="true"><rect className="lupa-private" x="2.5" y="2.5" width="11" height="11" rx="2" /></svg>Private</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><circle className="lupa-healthy" cx="8" cy="8" r="6" /></svg>Healthy</li>
+        <li><svg viewBox="0 0 16 16" aria-hidden="true"><path className="lupa-attention" d="M8 2L14 13H2Z" /></svg>Needs attention</li>
+        {pending > 0 && (
+          <li><svg viewBox="0 0 16 16" aria-hidden="true"><rect className="lupa-pending" x="2.5" y="2.5" width="11" height="11" rx="2" /></svg>Pending analysis</li>
+        )}
       </ul>
     </section>
   );

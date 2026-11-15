@@ -468,6 +468,12 @@
   border-bottom: 1px solid var(--c-border-strong);
 }
 
+.chart-unavailable {
+  align-items: center;
+  justify-content: center;
+  color: var(--c-text-2);
+}
+
 .chart-line {
   position: absolute;
   left: 0;
