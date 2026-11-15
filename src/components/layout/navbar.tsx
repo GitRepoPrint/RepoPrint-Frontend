@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { DeleteAccountModal } from "@/components/layout/delete-account-modal";
 import { ThemeToggle } from "@/components/theme";
 import { Icon } from "@/components/ui/icon";
 import { ThemedLogo } from "@/components/ui/themed-logo";
@@ -21,8 +23,16 @@ export default function Navbar() {
   const router = useRouter();
   const { authenticated, ready } = useAuth();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [modalHost, setModalHost] = useState<Element | null>(null);
+  const header = useRef<HTMLElement>(null);
+  const closeDeleteModal = useCallback(() => setModalHost(null), []);
 
-  return <header className="topbar app-navbar">
+  function openDeleteModal() {
+    setProfileMenuOpen(false);
+    setModalHost(header.current?.closest(".app-shell") ?? document.body);
+  }
+
+  return <header className="topbar app-navbar" ref={header}>
     <div className="nav-inner">
       <div className="nav-left"><Logo href={authenticated ? "/repositories" : "/"} /></div>
       <div className="nav-actions">
@@ -39,6 +49,8 @@ export default function Navbar() {
             </svg>
           </button>
           {profileMenuOpen && <div className="profile-menu" role="menu">
+            <button type="button" role="menuitem" onClick={() => window.location.assign("/api/backend/me/export")}>Download my data</button>
+            <button type="button" role="menuitem" onClick={openDeleteModal}>Delete account</button>
             <form method="post" action="/api/auth/logout" role="none">
               <button type="submit" role="menuitem">Sign out</button>
             </form>
@@ -46,5 +58,6 @@ export default function Navbar() {
         </div> : <button className="button button-outline login-button" type="button" onClick={() => router.push("/login")}>Sign In <Icon name="arrowRight" size={15} /></button>)}
       </div>
     </div>
+    {modalHost && createPortal(<DeleteAccountModal onClose={closeDeleteModal} />, modalHost)}
   </header>;
 }

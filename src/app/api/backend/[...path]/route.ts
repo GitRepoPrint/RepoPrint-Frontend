@@ -32,10 +32,10 @@ async function forward(request: NextRequest, context: { params: Promise<{ path: 
   }
   if (upstream.status === 401) await clearSession();
 
-  return new Response(upstream.body, {
-    status: upstream.status,
-    headers: { "Content-Type": upstream.headers.get("content-type") ?? "application/json" },
-  });
+  const responseHeaders= new Headers({ "Content-Type": upstream.headers.get("content-type") ?? "application/json" });
+  const disposition= upstream.headers.get("content-disposition");
+  if (disposition) responseHeaders.set("Content-Disposition", disposition);
+  return new Response(upstream.body, { status: upstream.status, headers: responseHeaders });
 }
 
 export { forward as GET, forward as POST, forward as PUT, forward as PATCH, forward as DELETE };

@@ -74,6 +74,32 @@
   margin-top: 23px;
 }
 
+.modal-card .modal-error {
+  color: var(--c-danger);
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+.button-danger {
+  background: #ff8da1;
+  border: 1px solid #ff8da1;
+  color: #1a0b10;
+}
+
+.button-danger:hover {
+  background: #ffa3b3;
+}
+
+.theme-light .button-danger {
+  background: #be123c;
+  border-color: #be123c;
+  color: #fff;
+}
+
+.theme-light .button-danger:hover {
+  background: #a30f35;
+}
+
 .app-shell .modal-card.rating-guide {
   display: flex;
   flex-direction: column;
