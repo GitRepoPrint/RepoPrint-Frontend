@@ -34,27 +34,42 @@ describe("instant analysis markup", () => {
   const page= renderToStaticMarkup(<InstantReport report={report} />);
   const printed= renderToStaticMarkup(<InstantReportDocument report={report} />);
 
-  it("shows only the Git numbers and how they are measured", () => {
+  it("keeps the whole layout, with N/A where the code would be analyzed", () => {
     expect(page).toMatchSnapshot();
-    expect(page).toContain("pallets/click");
-    expect(page).toContain("GIT DATA");
-    expect(page).toContain("How these numbers are measured");
-    expect(page).toContain("Commits / month");
+    expect(page).toContain("SHA <b>N/A</b>");
+    expect(page.match(/N\/A <small>Findings<\/small>/g)?.length).toBe(2);
+    expect(page).toContain("THREAT MODELING");
+    expect(page).toContain("PRIVACY");
+    expect(page).toContain("GIT INTELLIGENCE");
+    expect(page).toContain("SEMI-AUTOMATED DFD");
+    expect(page).toContain("N/A FINDINGS");
+    expect(page).toContain("Grade 91 out of 100");
+    expect(page).not.toContain("Code Owners");
+    expect(page.match(/Not available/g)?.length).toBe(2);
+  });
+
+  it("keeps the real Git numbers in the grade card", () => {
+    expect(page).toContain("<strong>31</strong> commits / month");
     expect(page).toContain("17.5");
   });
 
-  it("has nothing that needs the code analysis", () => {
-    for (const text of ["SHA", "THREAT MODELING", "PRIVACY", "GIT INTELLIGENCE", "SEMI-AUTOMATED DFD", "FINDINGS", "Not available", "Code Owners"]) {
-      expect(page).not.toContain(text);
-    }
-    for (const text of ["a3f89c1", "92%", "Auth Gateway", "Spoofing", "Payment Engine", "Linkability"]) expect(page).not.toContain(text);
+  it("has no GIT DATA box", () => {
+    for (const text of ["GIT DATA", "How these numbers are measured", "data-notes"]) expect(page).not.toContain(text);
+    expect(printed).not.toContain("Methodology");
   });
 
-  it("prints only the Git sections", () => {
+  it("has no mock content", () => {
+    for (const text of ["a3f89c1", "92%", "Auth Gateway", "Spoofing", "Payment Engine", "Linkability"]) {
+      expect(page).not.toContain(text);
+      expect(printed).not.toContain(text);
+    }
+  });
+
+  it("prints Not available in every section that needs the code", () => {
     expect(printed).toMatchSnapshot();
-    expect(printed).toContain("Git Activity");
-    expect(printed).toContain("Git Data Methodology");
-    expect(printed).toContain("<td>31</td>");
-    for (const text of ["Commit Hash", "STRIDE", "LINDDUN", "Data Flow Diagram", "Mitigations", "Not available", "Auth Gateway"]) expect(printed).not.toContain(text);
+    expect(printed.match(/>Not available</g)?.length).toBeGreaterThanOrEqual(7);
+    expect(printed).toContain("Grade 91");
+    expect(printed).not.toContain("Code Owners");
+    expect(printed).toContain("<dd>Not available</dd>");
   });
 });
