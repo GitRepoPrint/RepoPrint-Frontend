@@ -46,16 +46,6 @@
   grid-row: span 3;
 }
 
-.stat-icon.green-icon {
-  color: #91dbb5;
-  background: #284337;
-}
-
-.stat-icon.orange-icon {
-  color: #eeb78b;
-  background: #47362e;
-}
-
 .repository-list-heading {
   display: flex;
   align-items: end;
@@ -212,42 +202,10 @@
   gap: 11px;
 }
 
-.score-indicator {
-  font-family: "IBM Plex Mono", monospace;
+.score-unavailable {
+  color: var(--c-text-2);
   font-size: 13px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-}
-
-.score-indicator.healthy {
-  color: #91d8b1;
-}
-
-.score-indicator.attention {
-  color: #efb184;
-}
-
-.mini-progress {
-  width: 45px;
-  height: 4px;
-  border-radius: 5px;
-  background: #3a3e49;
-  overflow: hidden;
-}
-
-.mini-progress i {
-  height: 100%;
-  display: block;
-  background: #a591f3;
-  border-radius: 5px;
-}
-
-.pending-score {
-  font-size: 13px;
-  color: #b0a0db;
+  line-height: 1.4;
 }
 
 .repo-updated {
@@ -262,8 +220,28 @@
 .repo-empty {
   padding: 40px;
   text-align: center;
-  color: #8a8f9e;
+  color: var(--c-text-2);
   font-size: 14px;
+}
+
+.repositories-intro + .repository-list {
+  margin-top: 34px;
+}
+
+.repo-empty strong {
+  display: block;
+  color: var(--c-text);
+  font-size: 16px;
+}
+
+.repo-empty p {
+  max-width: 460px;
+  margin: 8px auto 0;
+  line-height: 1.5;
+}
+
+.repo-empty .button {
+  margin-top: 20px;
 }
 
 .repository-bottom {
@@ -333,16 +311,6 @@
   box-shadow: 0 10px 32px #3239560b;
 }
 
-.theme-light .stat-icon.green-icon {
-  color: #368962;
-  background: #e4f6ec;
-}
-
-.theme-light .stat-icon.orange-icon {
-  color: #b97a3c;
-  background: #fff0e3;
-}
-
 .theme-light .repository-list-heading h2 span {
   color: #7054b3;
   background: #f3efff;
@@ -385,19 +353,6 @@
   color: #747b89;
 }
 
-.theme-light .score-indicator.healthy {
-  color: #28845c;
-}
-
-.theme-light .score-indicator.attention {
-  color: #ad6937;
-}
-
-.theme-light .mini-progress {
-  background: #e7e5ed;
-}
-
-.theme-light .pending-score,
 .theme-light .repository-bottom button {
   color: #6c50ba;
 }
@@ -476,14 +431,14 @@
   border-radius: 12px;
 }
 
-.repository-health-stats .green-icon {
-  background: var(--c-good-soft);
-  color: var(--c-good);
+.repository-health-stats .info-icon {
+  background: var(--c-info-soft);
+  color: var(--c-info);
 }
 
-.repository-health-stats .orange-icon {
-  background: var(--c-warn-soft);
-  color: var(--c-warn);
+.repository-health-stats .accent-icon {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
 }
 
 .repository-health-stats .stat-label {
@@ -537,9 +492,8 @@
   height: 200px;
   --lupa-ink: var(--c-text);
   --lupa-lens: var(--c-lens);
-  --lupa-good: var(--c-good);
-  --lupa-warn: var(--c-warn);
-  --lupa-pend: var(--c-text-3);
+  --lupa-public: var(--c-info);
+  --lupa-private: var(--c-accent);
   --lupa-dot: var(--c-dot);
 }
 
@@ -574,36 +528,20 @@
   opacity: 0.28;
 }
 
-.lupa-healthy {
-  fill: var(--lupa-good);
+.lupa-public {
+  fill: var(--lupa-public);
 }
 
-.lupa-attention {
-  fill: var(--lupa-warn);
-  stroke: var(--lupa-warn);
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-
-.lupa-orbit {
-  fill: none;
-  stroke: var(--lupa-warn);
-  stroke-width: 1.8;
-  stroke-dasharray: 3 3;
-}
-
-.lupa-pending {
-  fill: var(--lupa-pend);
+.lupa-private {
+  fill: var(--lupa-private);
   fill-opacity: 0.3;
-  stroke: var(--lupa-pend);
+  stroke: var(--lupa-private);
   stroke-width: 2;
-  stroke-dasharray: 3.5 3;
 }
 
 .lupa-legend {
-  --lupa-good: var(--c-good);
-  --lupa-warn: var(--c-warn);
-  --lupa-pend: var(--c-text-3);
+  --lupa-public: var(--c-info);
+  --lupa-private: var(--c-accent);
   grid-column: 1;
   grid-row: 2;
   align-self: end;
@@ -644,15 +582,6 @@
   animation-delay: var(--in, 0s);
 }
 
-.lupa .lupa-orbit {
-  transform-origin: 0 0;
-  animation: lupa-orbit 3.2s linear infinite;
-}
-
-.lupa .lupa-pending {
-  animation: lupa-march 0.55s linear infinite;
-}
-
 .lupa-body {
   transform-origin: 110px 110px;
 }
@@ -673,18 +602,6 @@
   }
   to {
     transform: scale(1);
-  }
-}
-
-@keyframes lupa-orbit {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes lupa-march {
-  to {
-    stroke-dashoffset: -13;
   }
 }
 

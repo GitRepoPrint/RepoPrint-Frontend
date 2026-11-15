@@ -72,6 +72,14 @@ export interface Repository {
   updated: string;           // texto livre no mock ("2 hours ago")
 }
 
+export interface SavedRepository {
+  id: string;
+  name: string;
+  isPrivate: boolean;
+  defaultBranch: string | null;
+  addedAt: string;
+}
+
 // ---------- Dashboard ----------
 
 export type DfdNodeKind = "external" | "process" | "store";

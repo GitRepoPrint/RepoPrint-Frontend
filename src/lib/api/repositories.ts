@@ -1,7 +1,7 @@
-import { demoRepositories } from "./mock/repositories";
-import type { Repository } from "./types";
+import { ApiError } from "./errors";
+import type { SavedRepository } from "./types";
 
-const STORAGE_KEY = "repoprint-repositories"; // mesma chave do mockup
+const LEGACY_STORAGE_KEY= "repoprint-repositories";
 
 // Aceita "https://github.com/org/repo", "github.com/org/repo", ".git" no fim e links para páginas
 // dentro do repositório ("/tree/main", "?tab=readme"...). Usado na análise instantânea e no modal "Associate repository".
@@ -31,34 +31,98 @@ export function repoFromSlug(slug: string): string | null {
   return /^[\w.-]+\/[\w.-]+$/.test(name) && !name.split("/").some((part) => part === "." || part === "..") ? name : null;
 }
 
-function isRepository(value: unknown): value is Repository {
-  const v = value as Partial<Repository> | null;
+type Fetcher= (input: string, init?: RequestInit) => Promise<Response>;
+
+type BackendRepository= {
+  id: string;
+  name: string;
+  is_private: boolean;
+  default_branch: string | null;
+  created_at: string;
+};
+
+const SESSION_EXPIRED= "Your session expired. Sign in again.";
+const GITHUB_DOWN= "GitHub did not respond. Please try again.";
+const UNREACHABLE= "Could not reach RepoPrint. Check your connection and try again.";
+
+const ASSOCIATE_MESSAGES: Record<number, string> = {
+  400: "Enter a valid GitHub repository URL.",
+  401: SESSION_EXPIRED,
+  404: "Repository not found, or your GitHub account has no access to it.",
+  429: "GitHub rate limit reached. Try again in a while.",
+};
+
+export function associateErrorMessage(status: number, detail?: string): string {
+  if (status === 409) {
+    return /github/i.test(detail ?? "")
+      ? "Your GitHub connection is no longer valid. Connect GitHub again from the profile menu."
+      : "This repository is already associated.";
+  }
+  return ASSOCIATE_MESSAGES[status] ?? GITHUB_DOWN;
+}
+
+export function listErrorMessage(status: number): string {
+  return status === 401 ? SESSION_EXPIRED : "Could not load your repositories. Please try again.";
+}
+
+function isBackendRepository(value: unknown): value is BackendRepository {
+  const v= value as Partial<BackendRepository> | null;
   return (
     typeof v === "object" && v !== null &&
-    typeof v.name === "string" && typeof v.description === "string" &&
-    typeof v.language === "string" && typeof v.updated === "string" &&
-    (v.score === null || typeof v.score === "number")
+    typeof v.id === "string" && typeof v.name === "string" &&
+    typeof v.is_private === "boolean" &&
+    (v.default_branch === null || typeof v.default_branch === "string") &&
+    typeof v.created_at === "string" && !Number.isNaN(Date.parse(v.created_at))
   );
 }
 
-/** Lê do localStorage (só no cliente); se não houver nada válido, devolve os repositórios de demonstração. */
-export function loadRepositories(): Repository[] {
+export function toSavedRepository(value: BackendRepository): SavedRepository {
+  return { id: value.id, name: value.name, isPrivate: value.is_private, defaultBranch: value.default_branch, addedAt: value.created_at };
+}
+
+async function request(path: string, init: RequestInit | undefined, fetcher: Fetcher): Promise<Response> {
   try {
-    const saved: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
-    return Array.isArray(saved) && saved.every(isRepository) ? saved : demoRepositories;
+    return await fetcher(path, init);
   } catch {
-    return demoRepositories;
+    throw new ApiError(UNREACHABLE);
   }
 }
 
-export function saveRepositories(repositories: Repository[]) {
+async function detailOf(response: Response): Promise<string | undefined> {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(repositories));
+    const body: unknown= await response.json();
+    const detail= (body as { detail?: unknown } | null)?.detail;
+    return typeof detail === "string" ? detail : undefined;
   } catch {
-    /* storage cheio ou indisponível: a lista só dura até recarregar */
+    return undefined;
   }
 }
 
-export function newRepository(name: string): Repository {
-  return { name, description: "Newly associated repository · analysis pending", language: "—", score: null, updated: "Just added" };
+export async function listRepositories(fetcher: Fetcher= fetch): Promise<SavedRepository[]> {
+  const response= await request("/api/backend/repositories", undefined, fetcher);
+  if (!response.ok) throw new ApiError(listErrorMessage(response.status), response.status);
+  const body: unknown= await response.json().catch(() => null);
+  if (!Array.isArray(body) || !body.every(isBackendRepository)) throw new ApiError(listErrorMessage(500), 500);
+  return body.map(toSavedRepository);
+}
+
+export async function associateRepository(name: string, fetcher: Fetcher= fetch): Promise<SavedRepository> {
+  const init= { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: `https://github.com/${name}` }) };
+  const response= await request("/api/backend/repositories", init, fetcher);
+  if (!response.ok) throw new ApiError(associateErrorMessage(response.status, await detailOf(response)), response.status);
+  const body: unknown= await response.json().catch(() => null);
+  if (!isBackendRepository(body)) throw new ApiError(GITHUB_DOWN, 502);
+  return toSavedRepository(body);
+}
+
+export function forgetLegacyRepositories() {
+  try {
+    localStorage.removeItem(LEGACY_STORAGE_KEY);
+  } catch {
+    return;
+  }
+}
+
+export function formatAdded(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
 }
