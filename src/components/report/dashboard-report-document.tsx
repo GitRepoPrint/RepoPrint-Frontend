@@ -1,10 +1,10 @@
 import { StaticDfd } from "@/components/dfd/static-dfd";
 import { formatReportDate } from "@/lib/format";
-import type { RepositoryAnalysis } from "@/lib/api/types";
+import type { DemoAnalysis } from "@/lib/api/types";
 import { ReportFooter, ReportHeader, ReportSection } from "./report-parts";
 import { ExposureTable, LinddunTable, PrintMitigations, StrideTable } from "./report-tables";
 
-type Props = { analysis: RepositoryAnalysis; branch: string };
+type Props = { analysis: DemoAnalysis; branch: string };
 
 /** Relatório formal completo do dashboard. Escondido no ecrã; aparece só ao imprimir ("Export PDF Report"). */
 export function DashboardReportDocument({ analysis, branch }: Props) {

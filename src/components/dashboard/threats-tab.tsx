@@ -6,10 +6,10 @@ import { Icon } from "@/components/ui/icon";
 import { useEscapeKey } from "@/hooks/use-escape-key";
 import { byFramework, countBySeverity, SEVERITY_LABEL } from "@/lib/findings";
 import type { NodeRisk } from "@/lib/findings";
-import type { Finding, RepositoryAnalysis, Severity } from "@/lib/api/types";
+import type { DemoAnalysis, Finding, Severity } from "@/lib/api/types";
 
 type ThreatsTabProps = {
-  analysis: RepositoryAnalysis;
+  analysis: DemoAnalysis;
   risks: NodeRisk[];
   nodeId: string;
   reasons: Record<string, string>;                 // id do finding -> justificação de falso positivo

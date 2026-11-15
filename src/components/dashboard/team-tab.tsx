@@ -2,15 +2,15 @@ import type { ReactNode } from "react";
 import { HygieneChart } from "@/components/dashboard/hygiene-chart";
 import { Icon } from "@/components/ui/icon";
 import { hygieneGrade } from "@/lib/score";
-import type { RepositoryAnalysis } from "@/lib/api/types";
+import type { DemoAnalysis } from "@/lib/api/types";
 
 type Tone = "good" | "warn" | "neutral";
 
-function Chip({ tone, children }: { tone: Tone; children: ReactNode }) {
+export function Chip({ tone, children }: { tone: Tone; children: ReactNode }) {
   return <span className={`team-chip ${tone}`}>{children}</span>;
 }
 
-function Stat({ label, value, status }: { label: string; value: string; status: ReactNode }) {
+export function Stat({ label, value, status }: { label: string; value: string; status: ReactNode }) {
   return (
     <div className="team-stat">
       <span className="team-stat-label">{label}</span>
@@ -20,7 +20,7 @@ function Stat({ label, value, status }: { label: string; value: string; status: 
   );
 }
 
-function Check({ title, status, children, tall }: { title: string; status?: ReactNode; children: ReactNode; tall?: boolean }) {
+export function Check({ title, status, children, tall }: { title: string; status?: ReactNode; children: ReactNode; tall?: boolean }) {
   return (
     <article className={tall ? "hygiene-check tall" : "hygiene-check"}>
       <header className="hygiene-check-header">
@@ -32,7 +32,7 @@ function Check({ title, status, children, tall }: { title: string; status?: Reac
   );
 }
 
-export function TeamTab({ analysis }: { analysis: RepositoryAnalysis }) {
+export function TeamTab({ analysis }: { analysis: DemoAnalysis }) {
   const { team, hygiene } = analysis;
   const { quality, branches, license } = hygiene;
   const activity = { prMergeHours: team.prMergeHours, commitsPerMonth: team.commits30d, codeOwnersCoverage: team.codeOwnersCoverage };
