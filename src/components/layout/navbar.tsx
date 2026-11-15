@@ -8,6 +8,7 @@ import { DeleteAccountModal } from "@/components/layout/delete-account-modal";
 import { ThemeToggle } from "@/components/theme";
 import { Icon } from "@/components/ui/icon";
 import { ThemedLogo } from "@/components/ui/themed-logo";
+import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth/auth-provider";
 
 function Logo({ href }: { href: string }) {
@@ -21,11 +22,24 @@ function Logo({ href }: { href: string }) {
 
 export default function Navbar() {
   const router = useRouter();
-  const { authenticated, ready } = useAuth();
+  const { authenticated, ready, user } = useAuth();
+  const { notify } = useToast();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [modalHost, setModalHost] = useState<Element | null>(null);
   const header = useRef<HTMLElement>(null);
   const closeDeleteModal = useCallback(() => setModalHost(null), []);
+  const githubLogin = user?.githubLogin ?? null;
+
+  async function disconnectGithub() {
+    setProfileMenuOpen(false);
+    try {
+      const response = await fetch("/api/backend/github/connection", { method: "DELETE" });
+      if (response.ok) { window.location.reload(); return; }
+    } catch {
+      /* cai na mensagem abaixo */
+    }
+    notify("Could not disconnect GitHub. Please try again.");
+  }
 
   function openDeleteModal() {
     setProfileMenuOpen(false);
@@ -49,6 +63,9 @@ export default function Navbar() {
             </svg>
           </button>
           {profileMenuOpen && <div className="profile-menu" role="menu">
+            {githubLogin
+              ? <button type="button" role="menuitem" onClick={disconnectGithub}>Disconnect GitHub ({githubLogin})</button>
+              : <button type="button" role="menuitem" onClick={() => window.location.assign("/api/github/connect")}>Connect GitHub</button>}
             <button type="button" role="menuitem" onClick={() => window.location.assign("/api/backend/me/export")}>Download my data</button>
             <button type="button" role="menuitem" onClick={openDeleteModal}>Delete account</button>
             <form method="post" action="/api/auth/logout" role="none">

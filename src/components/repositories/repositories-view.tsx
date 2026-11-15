@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AssociateModal } from "@/components/repositories/associate-modal";
 import { HEALTHY_SCORE, RepositoryHealth } from "@/components/repositories/repository-health";
 import { Icon } from "@/components/ui/icon";
@@ -9,6 +9,8 @@ import { useToast } from "@/components/ui/toast";
 import { useRepositories } from "@/hooks/use-repositories";
 import { newRepository, parseGithubRepository, repoSlug } from "@/lib/api/repositories";
 import type { Repository } from "@/lib/api/types";
+import { useAuth } from "@/lib/auth/auth-provider";
+import { verifyRepositoryAccess } from "@/lib/github/verify-access";
 
 function RepositoryRow({ item, onOpen }: { item: Repository; onOpen: (item: Repository) => void }) {
   return (
@@ -35,13 +37,29 @@ function RepositoryRow({ item, onOpen }: { item: Repository; onOpen: (item: Repo
   );
 }
 
-export function RepositoriesView() {
+const GITHUB_MESSAGES: Record<string, string> = {
+  connected: "GitHub connected. You can now add your private repositories.",
+  denied: "GitHub access was not granted. Your account is not connected.",
+  taken: "That GitHub account is already connected to another RepoPrint account.",
+  unavailable: "The GitHub connection is not set up on this server yet.",
+  error: "Could not connect GitHub. Please try again.",
+};
+
+export function RepositoriesView({ githubStatus }: { githubStatus?: string }) {
   const router = useRouter();
   const { notify } = useToast();
+  const { user } = useAuth();
   const { repositories, add } = useRepositories();
   const [search, setSearch] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const closeModal = useCallback(() => setModalOpen(false), []);
+
+  useEffect(() => {
+    const message = githubStatus ? GITHUB_MESSAGES[githubStatus] : undefined;
+    if (!message) return;
+    notify(message);
+    window.history.replaceState(null, "", "/repositories");
+  }, [githubStatus, notify]);
 
   // Enquanto a lista não é lida no cliente, não se mostram números que depois mudariam.
   if (!repositories) return <main className="repositories-main" aria-busy="true" />;
@@ -54,12 +72,16 @@ export function RepositoriesView() {
     router.push(`/repositories/${repoSlug(item.name)}`);
   }
 
-  function associate(url: string): boolean {
+  async function associate(url: string): Promise<boolean> {
     const name = parseGithubRepository(url);
     if (!name) { notify("Enter a valid GitHub repository URL."); return false; }
     if (repositories!.some((r) => r.name.toLowerCase() === name.toLowerCase())) {
       notify("This repository is already associated.");
       return false;
+    }
+    if (user?.githubLogin) {
+      const access = await verifyRepositoryAccess(name);
+      if (!access.ok) { notify(access.message); return false; }
     }
     add(newRepository(name));
     notify(`${name} added to your repositories.`);

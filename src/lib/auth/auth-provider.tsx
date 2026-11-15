@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
-export type AuthUser= { email: string; name: string | null; role: string | null };
+export type AuthUser= { email: string; name: string | null; role: string | null; githubLogin: string | null };
 
 type AuthContextValue= {
   user: AuthUser | null;
