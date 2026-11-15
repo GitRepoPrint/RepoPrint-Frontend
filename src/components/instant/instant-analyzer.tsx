@@ -6,7 +6,7 @@ import { InstantReportDocument } from "@/components/report/instant-report-docume
 import { useToast } from "@/components/ui/toast";
 import { cachedMessage } from "@/lib/activity-notes";
 import { errorMessage } from "@/lib/api/errors";
-import { analyzeInstant, DEFAULT_REPOSITORY } from "@/lib/api/instant";
+import { analyzeInstant } from "@/lib/api/instant";
 import { parseGithubRepository } from "@/lib/api/repositories";
 import type { InstantReport as Report } from "@/lib/api/types";
 import { InstantForm } from "./instant-form";
@@ -24,7 +24,7 @@ export function InstantAnalyzer({ children }: { children: ReactNode }) {
 
   async function run(input: string) {
     const trimmed = input.trim();
-    const repository = trimmed ? parseGithubRepository(trimmed) : DEFAULT_REPOSITORY;
+    const repository = trimmed ? parseGithubRepository(trimmed) : null;
     if (!repository) {
       notify("Enter a valid public GitHub repository URL.");
       return; // como no mockup: o estado atual mantém-se
@@ -34,7 +34,7 @@ export function InstantAnalyzer({ children }: { children: ReactNode }) {
     try {
       const report= await analyzeInstant(repository);
       setState({ status: "done", report });
-      if (report.activity?.cached) notify(cachedMessage(report.activity));
+      if (report.activity.cached) notify(cachedMessage(report.activity));
     } catch (error) {
       // Rede em baixo, timeout ou resposta de erro do backend: não fica preso em "loading".
       // Volta ao que estava antes (o relatório anterior, se existia) e avisa o utilizador.
@@ -59,7 +59,7 @@ export function InstantAnalyzer({ children }: { children: ReactNode }) {
             <span className="analysis-spinner large" />
             <div>
               <strong>Analyzing repository</strong>
-              <span>Mapping threats, privacy risks, Git activity, and architecture...</span>
+              <span>Reading the Git activity from GitHub...</span>
             </div>
           </div>
         )}

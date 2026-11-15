@@ -1,114 +1,39 @@
-import { StaticDfd } from "@/components/dfd/static-dfd";
 import { activityNotes } from "@/lib/activity-notes";
 import { formatHours, formatReportDate } from "@/lib/format";
-import { hygieneGrade } from "@/lib/score";
 import type { InstantReport } from "@/lib/api/types";
 import { ReportFooter, ReportHeader, ReportSection } from "./report-parts";
-import { LinddunTable, PrintMitigations, StrideTable } from "./report-tables";
 
-/** Relatório formal da análise instantânea: só mostra o que a análise instantânea já apresenta. */
+/** Relatório formal da análise instantânea: só os números do Git. */
 export function InstantReportDocument({ report }: { report: InstantReport }) {
-  const { summary, findings } = report;
   const date = formatReportDate(report.analyzedAt);
-  const highCount = findings.filter((f) => f.severity === "high").length;
-  const grade = hygieneGrade(summary.git);
-  const real = report.source === "git";
-  const owners = summary.git.codeOwnersCoverage === null ? "Not available" : `${summary.git.codeOwnersCoverage}%`;
-
-  if (real) {
-    return (
-      <main className="report-document hidden! print:block!" aria-labelledby="formal-report-title">
-        <ReportHeader repository={report.repository} branch={report.branch} date={date} />
-
-        <ReportSection number="01" title="Git Activity">
-          <table className="formal-table">
-            <tbody>
-              <tr><th>Commits / month</th><td>{summary.git.commitsPerMonth}</td></tr>
-              <tr><th>Median PR merge time</th><td>{formatHours(summary.git.prMergeHours)}</td></tr>
-              {report.activity && (
-                <tr><th>Active contributors</th><td>{report.activity.contributorsWindow.complete ? report.activity.activeContributors : `At least ${report.activity.activeContributors}`}</td></tr>
-              )}
-            </tbody>
-          </table>
-        </ReportSection>
-
-        {report.activity && (
-          <ReportSection number="02" title="Git Data Methodology">
-            <table className="formal-table">
-              <tbody>
-                {activityNotes(report.activity, summary.git.commitsPerMonth, summary.git.prMergeHours).map((row) => (
-                  <tr key={row.metric}>
-                    <th>{row.metric}</th>
-                    <td>{row.value} · {row.rule}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </ReportSection>
-        )}
-
-        <ReportFooter date={date} />
-      </main>
-    );
-  }
+  const { activity } = report;
 
   return (
     <main className="report-document hidden! print:block!" aria-labelledby="formal-report-title">
-      <ReportHeader repository={report.repository} branch={report.branch} commit={report.commit ?? "Not available"} date={date} />
+      <ReportHeader repository={report.repository} branch={report.branch} date={date} />
 
-      <ReportSection number="01" title="Executive Summary & Risk Overview">
-        <p className="report-lead">
-          {findings.length} findings identified across STRIDE threat modeling and LINDDUN privacy analysis, {highCount} of them rated High.
-        </p>
+      <ReportSection number="01" title="Git Activity">
         <table className="formal-table">
           <tbody>
-            <tr>
-              <th>Threat modeling (STRIDE)</th>
-              <td>{summary.stride ? `${summary.stride.findings} findings (${summary.stride.high} High, ${summary.stride.medium} Medium) · ${summary.stride.detail}` : "Not available"}</td>
-            </tr>
-            <tr>
-              <th>Privacy (LINDDUN / GDPR)</th>
-              <td>{summary.privacy ? `${summary.privacy.highRisks} high risks (${summary.privacy.labels}) · ${summary.privacy.detail}` : "Not available"}</td>
-            </tr>
-            <tr>
-              <th>Git intelligence &amp; hygiene</th>
-              <td>Grade {grade.total === null ? "N/A" : `${grade.total}/100`} · median PR merge time {formatHours(summary.git.prMergeHours)} · {summary.git.commitsPerMonth} commits / month · {owners} Code Owners coverage</td>
-            </tr>
+            <tr><th>Commits / month</th><td>{report.commitsPerMonth}</td></tr>
+            <tr><th>Median PR merge time</th><td>{formatHours(report.prMergeHours)}</td></tr>
+            <tr><th>Active contributors</th><td>{activity.contributorsWindow.complete ? activity.activeContributors : `At least ${activity.activeContributors}`}</td></tr>
           </tbody>
         </table>
       </ReportSection>
 
-      <ReportSection number="02" title="Threat Modeling Findings (STRIDE)">
-        <StrideTable findings={findings} />
+      <ReportSection number="02" title="Git Data Methodology">
+        <table className="formal-table">
+          <tbody>
+            {activityNotes(activity, report.commitsPerMonth, report.prMergeHours).map((row) => (
+              <tr key={row.metric}>
+                <th>{row.metric}</th>
+                <td>{row.value} · {row.rule}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </ReportSection>
-
-      <ReportSection number="03" title="Privacy Risk Assessment (LINDDUN)">
-        <LinddunTable findings={findings} />
-      </ReportSection>
-
-      <ReportSection number="04" title="Inferred Architecture & Data Flow Diagram (DFD)" className="formal-dfd-section">
-        <p>Primary payment and identity flows inferred from repository structure and analysis findings.</p>
-        <StaticDfd variant="formal" />
-      </ReportSection>
-
-      <ReportSection number="05" title="Recommended Mitigations" className="formal-mitigations">
-        <PrintMitigations findings={findings} />
-      </ReportSection>
-
-      {report.activity && (
-        <ReportSection number="06" title="Git Data Methodology">
-          <table className="formal-table">
-            <tbody>
-              {activityNotes(report.activity, summary.git.commitsPerMonth, summary.git.prMergeHours).map((row) => (
-                <tr key={row.metric}>
-                  <th>{row.metric}</th>
-                  <td>{row.value} · {row.rule}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </ReportSection>
-      )}
 
       <ReportFooter date={date} />
     </main>

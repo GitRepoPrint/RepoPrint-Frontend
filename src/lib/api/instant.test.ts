@@ -25,41 +25,32 @@ beforeEach(() => {
   getActivity.mockResolvedValue(RESULT);
 });
 
-describe("analyzeInstant for a real repository", () => {
-  it("keeps only the GitHub numbers and leaves everything else empty", async () => {
+describe("analyzeInstant", () => {
+  it("returns only the GitHub numbers", async () => {
     const report= await analyzeInstant("pallets/click");
 
-    expect(report.source).toBe("git");
-    expect(report.repository).toBe("pallets/click");
-    expect(report.branch).toBe("main");
-    expect(report.commit).toBeNull();
-    expect(report.findings).toEqual([]);
-    expect(report.summary.stride).toBeNull();
-    expect(report.summary.privacy).toBeNull();
-    expect(report.summary.git).toEqual({ prMergeHours: 17.5, commitsPerMonth: 31, codeOwnersCoverage: null });
-    expect(report.activity?.mergeSampleSize).toBe(43);
+    expect(report).toEqual({
+      repository: "pallets/click",
+      branch: "main",
+      analyzedAt: RESULT.fetchedAt,
+      commitsPerMonth: 31,
+      prMergeHours: 17.5,
+      activity: {
+        fetchedAt: RESULT.fetchedAt,
+        refreshAvailableAt: RESULT.refreshAvailableAt,
+        cached: false,
+        activeContributors: 4,
+        botsExcluded: 0,
+        contributorsWindow: RESULT.activity.contributorsWindow,
+        mergeSampleSize: 43,
+      },
+    });
+    expect(getActivity).toHaveBeenCalledWith("pallets", "click");
   });
 
-  it("never carries mock values into a real report", async () => {
-    const text= JSON.stringify(await analyzeInstant("pallets/click"));
+  it("asks GitHub even for the old demo repository name", async () => {
+    await analyzeInstant("deti-org/payment-service");
 
-    expect(text).not.toContain("a3f89c1");
-    expect(text).not.toContain("92");
-    expect(text).not.toContain("Spoofing");
-  });
-});
-
-describe("analyzeInstant for the demo", () => {
-  it("still returns the full mock without calling GitHub", async () => {
-    vi.useFakeTimers();
-    const pending= analyzeInstant("deti-org/payment-service");
-    await vi.advanceTimersByTimeAsync(1500);
-    const report= await pending;
-    vi.useRealTimers();
-
-    expect(report.source).toBe("demo");
-    expect(report.findings.length).toBeGreaterThan(0);
-    expect(report.summary.git.codeOwnersCoverage).toBe(92);
-    expect(getActivity).not.toHaveBeenCalled();
+    expect(getActivity).toHaveBeenCalledWith("deti-org", "payment-service");
   });
 });
