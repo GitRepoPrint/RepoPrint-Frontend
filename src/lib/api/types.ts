@@ -36,12 +36,6 @@ export interface Finding {
 
 // ---------- Análise instantânea ----------
 
-export interface InstantSummary {
-  stride: { findings: number; high: number; medium: number; detail: string };
-  privacy: { highRisks: number; labels: string; detail: string };
-  git: { prMergeHours: number | null; commitsPerMonth: number; codeOwnersCoverage: number };
-}
-
 export interface ActivityInfo {
   fetchedAt: string;
   refreshAvailableAt: string;
@@ -54,12 +48,11 @@ export interface ActivityInfo {
 
 export interface InstantReport {
   repository: string;        // "org/repo"
-  commit: string;
   branch: string;
   analyzedAt: string;        // ISO 8601
-  summary: InstantSummary;
-  findings: Finding[];
-  activity?: ActivityInfo;
+  commitsPerMonth: number;
+  prMergeHours: number | null;
+  activity: ActivityInfo;
 }
 
 // ---------- Repositórios ----------
@@ -72,6 +65,14 @@ export interface Repository {
   updated: string;           // texto livre no mock ("2 hours ago")
   /** Quando se inferiu a arquitetura deste repositório (ISO 8601). Sem isto, a análise ainda não foi feita. */
   analyzedAt?: string;
+}
+
+export interface SavedRepository {
+  id: string;
+  name: string;
+  isPrivate: boolean;
+  defaultBranch: string | null;
+  addedAt: string;
 }
 
 // ---------- Dashboard ----------
@@ -130,31 +131,34 @@ export interface DfdModel {
 export interface Contributor {
   initials: string;
   name: string;
-  role: string;
+  role: string | null;
   commits: number;           // total no repositório
-  reviewParticipation: number; // 0-100
-  ownership: string;
+  reviewParticipation: number | null; // 0-100
+  ownership: string | null;
   color: "lavender" | "peach" | "mint" | "blue";
 }
 
 export interface TeamStats {
   commits30d: number;
-  commitsStatus: string;
-  prMergeHours: number;
-  prMergeStatus: string;
-  codeOwnersCoverage: number;
-  codeOwnersStatus: string;
-  weeklyCommits: number[];
-  recentPrs: { number: number; hours: number }[];
-  punchCard: number[][];
-  contributors: Contributor[];
+  commitsStatus: string | null;
+  prMergeHours: number | null;
+  prMergeStatus: string | null;
+  codeOwnersCoverage: number | null;
+  codeOwnersStatus: string | null;
+  weeklyCommits: number[] | null;
+  recentPrs: { number: number; hours: number }[] | null;
+  punchCard: number[][] | null;
+  contributors: Contributor[] | null;
+  activeContributors?: string;
+  contributorsNote?: string;
+  timeZone?: string;
 }
 
 export interface Hygiene {
-  languages: { name: string; percent: number }[];
-  branches: { defaultBranch: string; protected: boolean; rules: string[]; protectedBranches: string[]; total: number };
-  quality: { coverage: number; ci: { provider: string; passing: boolean; lastRun: string } };
-  license: { name: string; osiApproved: boolean; commercialUseCompliant: boolean };
+  languages: { name: string; percent: number }[] | null;
+  branches: { defaultBranch: string; protected: boolean | null; rules: string[] | null; protectedBranches: string[]; total: number | null };
+  quality: { coverage: number | null; ci: { provider: string; passing: boolean | null; lastRun: string } | null };
+  license: { name: string | null; osiApproved: boolean | null; commercialUseCompliant: boolean | null };
 }
 
 export interface ScanSummary {
@@ -162,14 +166,24 @@ export interface ScanSummary {
   label: string;
 }
 
+export type AnalysisSource= "demo" | "git";
+
+export interface LoadFailure {
+  title: string;
+  message: string;
+  retryable: boolean;
+}
+
 export interface RepositoryAnalysis {
+  source: AnalysisSource;
+  activity?: ActivityInfo;
   repository: string;
-  commit: string;
+  commit: string | null;
   branches: string[];
   defaultBranch: string;
   analyzedAt: string;        // ISO 8601
   lastScanned: string;       // "2 hours ago"
-  executiveSummary: string;
+  executiveSummary: string | null;
   scans: ScanSummary[];
   findings: Finding[];
   dfd: DfdModel;

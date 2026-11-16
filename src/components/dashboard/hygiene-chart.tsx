@@ -30,7 +30,7 @@ function Bars({ values, labels, lineAt, limit, warnAbove, caption, unit }: {
   caption: string;
   unit: string;
 }) {
-  const top = Math.max(limit, ...values) * 1.18;
+  const top = Math.max(limit, 1, ...values) * 1.18;
   return (
     <figure className="chart-figure">
       <div className="chart-plot" role="img" aria-label={`${caption}: ${values.join(", ")} ${unit}`}>
@@ -48,6 +48,14 @@ function Bars({ values, labels, lineAt, limit, warnAbove, caption, unit }: {
       </div>
       <div className="chart-axis"><span>{labels[0]}</span><span>{labels[1]}</span></div>
       <figcaption className="chart-legend"><span className="chart-legend-line" aria-hidden="true" />{caption}</figcaption>
+    </figure>
+  );
+}
+
+function Unavailable({ label }: { label: string }) {
+  return (
+    <figure className="chart-figure">
+      <div className="chart-plot chart-unavailable" role="img" aria-label={`${label}: not available`}>Not available</div>
     </figure>
   );
 }
@@ -94,18 +102,23 @@ function Heatmap({ punchCard }: { punchCard: number[][] }) {
 function summarize(view: View, team: TeamStats) {
   if (view === "commits") {
     const weeks = team.weeklyCommits;
+    if (!weeks?.length) return null;
     const average = Math.round(weeks.reduce((sum, n) => sum + n, 0) / weeks.length);
     return `Average of ${average} commits per week over the last ${weeks.length} weeks. Busiest week: ${Math.max(...weeks)} commits.`;
   }
   if (view === "merge") {
     const prs = team.recentPrs;
+    if (!prs?.length) return null;
     const average = prs.reduce((sum, pr) => sum + pr.hours, 0) / prs.length;
     const slow = prs.filter((pr) => pr.hours > MERGE_TARGET_HOURS).length;
     return `Average of ${average.toFixed(1)}h from opened to merged. ${slow} of the last ${prs.length} pull requests took more than ${MERGE_TARGET_HOURS}h.`;
   }
-  const perDay = team.punchCard.map((hours) => hours.reduce((sum, n) => sum + n, 0));
-  const perHour = Array.from({ length: 24 }, (_, hour) => team.punchCard.reduce((sum, day) => sum + day[hour], 0));
-  return `Most commits land on ${DAY_NAMES[perDay.indexOf(Math.max(...perDay))]}s, around ${formatHour(perHour.indexOf(Math.max(...perHour)))}.`;
+  const card = team.punchCard;
+  if (!card) return null;
+  const perDay = card.map((hours) => hours.reduce((sum, n) => sum + n, 0));
+  const perHour = Array.from({ length: 24 }, (_, hour) => card.reduce((sum, day) => sum + day[hour], 0));
+  const zone = team.timeZone ? ` ${team.timeZone}` : "";
+  return `Most commits land on ${DAY_NAMES[perDay.indexOf(Math.max(...perDay))]}s, around ${formatHour(perHour.indexOf(Math.max(...perHour)))}${zone}.`;
 }
 
 export function HygieneChart({ team }: { team: TeamStats }) {
@@ -120,9 +133,10 @@ export function HygieneChart({ team }: { team: TeamStats }) {
     document.getElementById(`chart-tab-${next}`)?.focus();
   }
 
-  const average = Math.round(team.weeklyCommits.reduce((sum, n) => sum + n, 0) / team.weeklyCommits.length);
-  const firstPr = team.recentPrs[0].number;
-  const lastPr = team.recentPrs[team.recentPrs.length - 1].number;
+  const weeks = team.weeklyCommits?.length ? team.weeklyCommits : null;
+  const prs = team.recentPrs?.length ? team.recentPrs : null;
+  const average = weeks ? Math.round(weeks.reduce((sum, n) => sum + n, 0) / weeks.length) : 0;
+  const summary = summarize(view, team);
 
   return (
     <section className="hygiene-chart" aria-labelledby="hygiene-chart-title">
@@ -148,20 +162,22 @@ export function HygieneChart({ team }: { team: TeamStats }) {
       </header>
 
       <div id="hygiene-chart-panel" role="tabpanel" aria-labelledby={`chart-tab-${view}`}>
-        {view === "commits" && (
+        {view === "commits" && !weeks && <Unavailable label="Commits per week" />}
+        {view === "commits" && weeks && (
           <Bars
-            values={team.weeklyCommits}
-            labels={[`${team.weeklyCommits.length} weeks ago`, "This week"]}
+            values={weeks}
+            labels={[`${weeks.length} weeks ago`, "This week"]}
             lineAt={average}
             limit={average}
             caption={`Average, ${average} commits per week`}
             unit="commits"
           />
         )}
-        {view === "merge" && (
+        {view === "merge" && !prs && <Unavailable label="PR merge time" />}
+        {view === "merge" && prs && (
           <Bars
-            values={team.recentPrs.map((pr) => pr.hours)}
-            labels={[`PR #${firstPr}`, `PR #${lastPr}`]}
+            values={prs.map((pr) => pr.hours)}
+            labels={[`PR #${prs[0].number}`, `PR #${prs[prs.length - 1].number}`]}
             lineAt={MERGE_TARGET_HOURS}
             limit={MERGE_TARGET_HOURS}
             warnAbove={MERGE_TARGET_HOURS}
@@ -169,8 +185,9 @@ export function HygieneChart({ team }: { team: TeamStats }) {
             unit="hours"
           />
         )}
-        {view === "activity" && <Heatmap punchCard={team.punchCard} />}
-        <p className="chart-summary">{summarize(view, team)}</p>
+        {view === "activity" && !team.punchCard && <Unavailable label="Activity by day and hour" />}
+        {view === "activity" && team.punchCard && <Heatmap punchCard={team.punchCard} />}
+        {summary && <p className="chart-summary">{summary}</p>}
       </div>
     </section>
   );

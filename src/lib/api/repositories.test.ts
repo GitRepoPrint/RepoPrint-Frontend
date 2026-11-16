@@ -1,93 +1,126 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { ANALYZED_DESCRIPTION, PENDING_DESCRIPTION, isDemoRepository, loadRepositories, newRepository, parseGithubRepository, repoFromSlug, repoSlug, saveRepositories, stageOf, timeAgo } from "./repositories";
-import type { Repository } from "./types";
+import { describe, expect, it, vi } from "vitest";
+import { ApiError } from "./errors";
+import { associateErrorMessage, associateRepository, formatAdded, listRepositories, parseGithubRepository, repoFromSlug, repoSlug } from "./repositories";
 
-const repo = (patch: Partial<Repository> = {}): Repository => ({ name: "o/r", description: "d", language: "—", score: null, updated: "Just added", ...patch });
+const row= { id: "r1", name: "Octo/Repo", url: "https://github.com/octo/repo", provider: "github", is_private: true, default_branch: "main", created_at: "2026-11-15T10:30:00Z" };
 
-describe("stageOf", () => {
-  it("is 'pending' for a repository that was only added", () => {
-    expect(stageOf(newRepository("pallets/flask"))).toBe("pending");
-  });
-  it("is 'analyzed' once the architecture was inferred, even without a score", () => {
-    expect(stageOf(repo({ analyzedAt: "2026-11-14T12:00:00.000Z" }))).toBe("analyzed");
-  });
-  it("is 'scored' when there is a score, whatever else it has", () => {
-    expect(stageOf(repo({ score: 84 }))).toBe("scored");
-    expect(stageOf(repo({ score: 0 }))).toBe("scored"); // 0 é uma pontuação, não ausência dela
-    expect(stageOf(repo({ score: 84, analyzedAt: "2026-11-14T12:00:00.000Z" }))).toBe("scored");
-  });
-});
+const answer= (status: number, body: unknown) => vi.fn(async () => new Response(JSON.stringify(body), { status }));
 
-describe("timeAgo", () => {
-  const NOW = Date.parse("2026-11-14T12:00:00Z");
-  const ago = (ms: number) => timeAgo(new Date(NOW - ms).toISOString(), NOW);
-  const MIN = 60_000;
+describe("listRepositories", () => {
+  it("asks the backend through the session proxy and maps the rows", async () => {
+    const fetcher= answer(200, [row]);
+
+    const result= await listRepositories(fetcher);
+
+    expect(fetcher).toHaveBeenCalledWith("/api/backend/repositories", undefined);
+    expect(result).toEqual([{ id: "r1", name: "Octo/Repo", isPrivate: true, defaultBranch: "main", addedAt: "2026-11-15T10:30:00Z" }]);
+  });
+
+  it("returns an empty list for a new user", async () => {
+    expect(await listRepositories(answer(200, []))).toEqual([]);
+  });
+
+  it("accepts a repository without a default branch", async () => {
+    const result= await listRepositories(answer(200, [{ ...row, default_branch: null }]));
+
+    expect(result[0].defaultBranch).toBeNull();
+  });
+
+  it("rejects an answer with the wrong shape", async () => {
+    await expect(listRepositories(answer(200, [{ id: "x" }]))).rejects.toThrow("Could not load your repositories");
+    await expect(listRepositories(answer(200, { rows: [] }))).rejects.toBeInstanceOf(ApiError);
+  });
 
   it.each([
-    [0, "Just now"], [59_000, "Just now"], [MIN, "1 min ago"], [59 * MIN, "59 min ago"], [60 * MIN, "1 hour ago"],
-    [5 * 60 * MIN, "5 hours ago"], [24 * 60 * MIN, "1 day ago"], [3 * 24 * 60 * MIN, "3 days ago"],
-  ])("%i ms ago -> %s", (ms, label) => expect(ago(ms)).toBe(label));
-
-  it("gives the date once it is more than a month ago", () => {
-    expect(ago(45 * 24 * 60 * MIN)).toMatch(/^\d{2}\/\d{2}\/\d{4}$/);
+    [401, "Your session expired. Sign in again."],
+    [500, "Could not load your repositories. Please try again."],
+    [503, "Could not load your repositories. Please try again."],
+  ])("explains a %i answer", async (status, message) => {
+    await expect(listRepositories(answer(status, { detail: "x" }))).rejects.toMatchObject({ message, status });
   });
 
-  it("does not show a negative age for a clock that is ahead", () => {
-    expect(timeAgo(new Date(NOW + 5 * MIN).toISOString(), NOW)).toBe("Just now");
-  });
+  it("explains a network failure", async () => {
+    const down= vi.fn(async () => { throw new TypeError("fetch failed"); });
 
-  it("shows a dash for something that is not a date", () => {
-    expect(timeAgo("yesterday-ish", NOW)).toBe("—");
-    expect(timeAgo("", NOW)).toBe("—");
+    await expect(listRepositories(down)).rejects.toThrow("Could not reach RepoPrint");
   });
 });
 
-describe("saved repositories", () => {
-  const store = new Map<string, string>();
-  const stub = () => vi.stubGlobal("localStorage", { getItem: (k: string) => store.get(k) ?? null, setItem: (k: string, v: string) => void store.set(k, v) });
-  afterEach(() => { vi.unstubAllGlobals(); store.clear(); });
+describe("associateRepository", () => {
+  it("posts the GitHub URL and returns the saved repository", async () => {
+    const fetcher= answer(201, row);
 
-  it("still loads a repository saved before analysis existed (no analyzedAt), as pending", () => {
-    stub();
-    store.set("repoprint-repositories", JSON.stringify([{ name: "pallets/flask", description: "Newly associated repository · analysis pending", language: "—", score: null, updated: "Just added" }]));
-    const [flask] = loadRepositories();
-    expect(flask.name).toBe("pallets/flask");
-    expect(stageOf(flask)).toBe("pending");
+    const saved= await associateRepository("octo/repo", fetcher);
+
+    const [path, init]= fetcher.mock.calls[0] as unknown as [string, RequestInit];
+    expect(path).toBe("/api/backend/repositories");
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body as string)).toEqual({ url: "https://github.com/octo/repo" });
+    expect(saved).toMatchObject({ id: "r1", name: "Octo/Repo", isPrivate: true });
   });
 
-  it("keeps the analysis date through a save and a load", () => {
-    stub();
-    saveRepositories([repo({ analyzedAt: "2026-11-14T12:00:00.000Z" })]);
-    expect(loadRepositories()[0].analyzedAt).toBe("2026-11-14T12:00:00.000Z");
+  it.each([
+    [400, "Enter a valid GitHub repository URL."],
+    [401, "Your session expired. Sign in again."],
+    [404, "Repository not found, or your GitHub account has no access to it."],
+    [429, "GitHub rate limit reached. Try again in a while."],
+    [502, "GitHub did not respond. Please try again."],
+    [503, "GitHub did not respond. Please try again."],
+  ])("explains a %i answer", async (status, message) => {
+    await expect(associateRepository("o/r", answer(status, { detail: "erro" }))).rejects.toMatchObject({ message, status });
   });
 
-  it("falls back to the demo list when what was saved is not valid, rather than breaking the page", () => {
-    stub();
-    store.set("repoprint-repositories", JSON.stringify([{ name: "x/y", description: "d", language: "—", score: null, updated: "u", analyzedAt: 42 }]));
-    expect(loadRepositories().some((r) => r.name === "deti-org/payment-service")).toBe(true);
-    store.set("repoprint-repositories", "{ not json");
-    expect(loadRepositories().length).toBeGreaterThan(0);
+  it("tells a duplicate from a broken GitHub connection by the 409 detail", async () => {
+    await expect(associateRepository("o/r", answer(409, { detail: "Este repositório já está associado" })))
+      .rejects.toThrow("This repository is already associated.");
+    await expect(associateRepository("o/r", answer(409, { detail: "A ligação ao GitHub deixou de ser válida. Liga a conta outra vez." })))
+      .rejects.toThrow("Your GitHub connection is no longer valid. Connect GitHub again from the profile menu.");
+  });
+
+  it("copes with an error body that is not JSON", async () => {
+    const broken= vi.fn(async () => new Response("<html>", { status: 409 }));
+
+    await expect(associateRepository("o/r", broken)).rejects.toThrow("already associated");
+  });
+
+  it("rejects a success answer with the wrong shape", async () => {
+    await expect(associateRepository("o/r", answer(201, { id: 1 }))).rejects.toBeInstanceOf(ApiError);
+  });
+
+  it("explains a network failure", async () => {
+    const down= vi.fn(async () => { throw new TypeError("fetch failed"); });
+
+    await expect(associateRepository("o/r", down)).rejects.toThrow("Could not reach RepoPrint");
   });
 });
 
-describe("descriptions", () => {
-  it("a new repository says it is waiting, and the text after the analysis does not say so", () => {
-    expect(newRepository("o/r").description).toBe(PENDING_DESCRIPTION);
-    expect(PENDING_DESCRIPTION).toMatch(/pending/);
-    expect(ANALYZED_DESCRIPTION).not.toMatch(/pending/i);
+describe("associateErrorMessage", () => {
+  it("falls back to the GitHub message for unknown statuses", () => {
+    expect(associateErrorMessage(418)).toBe("GitHub did not respond. Please try again.");
   });
 });
 
-describe("names", () => {
-  it("recognises the demo repositories, whatever the case", () => {
-    expect(isDemoRepository("deti-org/payment-service")).toBe(true);
-    expect(isDemoRepository("DETI-ORG/Payment-Service")).toBe(true);
-    expect(isDemoRepository("pallets/flask")).toBe(false);
+describe("formatAdded", () => {
+  it("shows the day, short month and year in UTC", () => {
+    expect(formatAdded("2026-11-15T23:30:00Z")).toBe("15 Nov 2026");
   });
-  it("parses GitHub addresses and round-trips slugs", () => {
-    expect(parseGithubRepository("https://github.com/pallets/flask/tree/main")).toBe("pallets/flask");
-    expect(parseGithubRepository("github.com/pallets/flask.git")).toBe("pallets/flask");
-    expect(parseGithubRepository("https://example.com/pallets/flask")).toBeNull();
-    expect(repoFromSlug(repoSlug("pallets/flask"))).toBe("pallets/flask");
+});
+
+describe("repository names", () => {
+  it.each([
+    ["https://github.com/Octo/Repo", "Octo/Repo"],
+    ["github.com/octo/repo.git", "octo/repo"],
+    ["  https://www.github.com/octo/repo/tree/main?tab=x ", "octo/repo"],
+    ["https://gitlab.com/octo/repo", null],
+    ["https://github.com/octo", null],
+    ["https://github.com/a--b/repo", null],
+  ])("parses %s", (input, expected) => {
+    expect(parseGithubRepository(input)).toBe(expected);
+  });
+
+  it("round-trips a name through its slug", () => {
+    expect(repoSlug("octo/repo")).toBe("octo--repo");
+    expect(repoFromSlug("octo--repo")).toBe("octo/repo");
+    expect(repoFromSlug("octo")).toBeNull();
   });
 });

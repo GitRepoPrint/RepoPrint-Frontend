@@ -3,6 +3,7 @@ import { findings } from "./findings";
 
 // Mock da análise de um repositório associado. `repository` é preenchido em getRepositoryAnalysis().
 export const mockAnalysis: Omit<RepositoryAnalysis, "repository"> = {
+  source: "demo",
   commit: "a3f89c1",
   branches: ["main", "develop", "release/v2"],
   defaultBranch: "main",

@@ -1,9 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { AssociateModal } from "@/components/repositories/associate-modal";
-import { HEALTHY_SCORE, RepositoryHealth } from "@/components/repositories/repository-health";
+import { RepositoryHealth } from "@/components/repositories/repository-health";
 import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
 import { useRepositories } from "@/hooks/use-repositories";
@@ -38,14 +39,19 @@ function ScoreCell({ item, busy }: { item: Repository; busy: boolean }) {
 
 export function RepositoryRow({ item, busy = false, onOpen }: { item: Repository; busy?: boolean; onOpen: (item: Repository) => void }) {
   const stage = stageOf(item);
+import { errorMessage } from "@/lib/api/errors";
+import { associateRepository, formatAdded, parseGithubRepository, repoSlug } from "@/lib/api/repositories";
+import type { SavedRepository } from "@/lib/api/types";
+
+function RepositoryRow({ item, onOpen }: { item: SavedRepository; onOpen: (item: SavedRepository) => void }) {
   return (
     <button type="button" className="repository-row" onClick={() => onOpen(item)} disabled={busy} aria-busy={busy}>
       <span className="repo-identity">
-        <span className="repo-icon"><Icon name="github" size={19} /></span>
-        <span><strong>{item.name}</strong><small>{item.description}</small></span>
+        <span className="repo-icon"><Icon name={item.isPrivate ? "lock" : "github"} size={19} /></span>
+        <span><strong>{item.name}</strong></span>
       </span>
-      <span className="repo-score"><ScoreCell item={item} busy={busy} /></span>
-      <span className="repo-updated"><Icon name="clock" size={14} /> {stage === "analyzed" ? timeAgo(item.analyzedAt as string) : item.updated}</span>
+      <span className="repo-score"><span className="pending-score">Pending analysis</span></span>
+      <span className="repo-updated"><Icon name="clock" size={14} /> Added {formatAdded(item.addedAt)}</span>
       <Icon name="arrowRight" size={17} className="row-arrow" />
     </button>
   );
@@ -66,12 +72,42 @@ export function RepositoriesView() {
   }, []);
   const [modalOpen, setModalOpen] = useState(false);
   const closeModal = useCallback(() => setModalOpen(false), []);
+const GITHUB_MESSAGES: Record<string, string> = {
+  connected: "GitHub connected. You can now add your private repositories.",
+  denied: "GitHub access was not granted. Your account is not connected.",
+  taken: "That GitHub account is already connected to another RepoPrint account.",
+  unavailable: "The GitHub connection is not set up on this server yet.",
+  error: "Could not connect GitHub. Please try again.",
+};
 
-  // Enquanto a lista não é lida no cliente, não se mostram números que depois mudariam.
-  if (!repositories) return <main className="repositories-main" aria-busy="true" />;
+function StatePanel({ title, message, role, children }: { title: string; message: string; role?: "status" | "alert"; children?: ReactNode }) {
+  return (
+    <div className="repo-empty" role={role}>
+      <strong>{title}</strong>
+      <p>{message}</p>
+      {children}
+    </div>
+  );
+}
 
-  const query = search.toLowerCase();
-  const filtered = repositories.filter((r) => `${r.name} ${r.description}`.toLowerCase().includes(query));
+export function RepositoriesView({ githubStatus }: { githubStatus?: string }) {
+  const router= useRouter();
+  const { notify }= useToast();
+  const { state, add, retry }= useRepositories();
+  const [search, setSearch]= useState("");
+  const [modalOpen, setModalOpen]= useState(false);
+  const closeModal= useCallback(() => setModalOpen(false), []);
+
+  useEffect(() => {
+    const message= githubStatus ? GITHUB_MESSAGES[githubStatus] : undefined;
+    if (!message) return;
+    notify(message);
+    window.history.replaceState(null, "", "/repositories");
+  }, [githubStatus, notify]);
+
+  const repositories= state.status === "ready" ? state.repositories : [];
+  const query= search.toLowerCase();
+  const filtered= repositories.filter((r) => r.name.toLowerCase().includes(query));
 
   const markAnalyzing = (name: string, on: boolean) =>
     setAnalyzing((current) => {
@@ -100,13 +136,20 @@ export function RepositoriesView() {
     } finally {
       if (alive.current) markAnalyzing(item.name, false);
     }
+  function open(item: SavedRepository) {
+    router.push(`/repositories/${repoSlug(item.name)}`);
   }
 
-  function associate(url: string): boolean {
-    const name = parseGithubRepository(url);
+  async function associate(url: string): Promise<boolean> {
+    const name= parseGithubRepository(url);
     if (!name) { notify("Enter a valid GitHub repository URL."); return false; }
-    if (repositories!.some((r) => r.name.toLowerCase() === name.toLowerCase())) {
-      notify("This repository is already associated.");
+    try {
+      const saved= await associateRepository(name);
+      add(saved);
+      notify(`${saved.name} added to your repositories.`);
+      return true;
+    } catch (error) {
+      notify(errorMessage(error, "Could not add the repository. Please try again."));
       return false;
     }
     add(newRepository(name));
@@ -116,23 +159,27 @@ export function RepositoriesView() {
 
   return (
     <>
-      <main className="repositories-main">
+      <main className="repositories-main" aria-busy={state.status === "loading"}>
         <div className="repositories-intro">
-          <div><h1>Your repositories<span>.</span></h1></div>
+          <div><h1>Your repositories</h1></div>
           <button type="button" className="button button-primary" onClick={() => setModalOpen(true)}>
             <Icon name="plus" size={17} /> Associate repository
           </button>
         </div>
 
-        <RepositoryHealth repositories={repositories} />
+        {state.status === "loading" && (
+          <div className="repository-list">
+            <StatePanel title="Loading your repositories" message="This takes a moment." role="status" />
+          </div>
+        )}
 
-        <div className="repository-list-heading">
-          <div><h2>Repository overview <span>{repositories.length}</span></h2></div>
-          <label className="repository-search">
-            <Icon name="search" size={17} />
-            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search repositories..." aria-label="Search repositories" />
-          </label>
-        </div>
+        {state.status === "failed" && (
+          <div className="repository-list">
+            <StatePanel title="Your repositories did not load" message={state.message} role="alert">
+              <button type="button" className="button button-primary" onClick={retry}>Try again</button>
+            </StatePanel>
+          </div>
+        )}
 
         <div className="repository-list">
           <div className="repository-list-columns"><span>REPOSITORY</span><span>SECURITY SCORE</span><span>LAST ANALYSIS</span><span /></div>
@@ -142,8 +189,40 @@ export function RepositoriesView() {
           <div className="repository-bottom">
             <span>Showing {filtered.length} of {repositories.length} {repositories.length === 1 ? "repository" : "repositories"}</span>
             <button type="button" onClick={() => setModalOpen(true)}>Add another repository <Icon name="plus" size={14} /></button>
+        {state.status === "ready" && repositories.length === 0 && (
+          <div className="repository-list">
+            <StatePanel title="No repositories yet" message="Associate a GitHub repository to open its dashboard. Private ones need your GitHub account connected from the profile menu.">
+              <button type="button" className="button button-primary" onClick={() => setModalOpen(true)}>
+                <Icon name="plus" size={17} /> Associate repository
+              </button>
+            </StatePanel>
           </div>
-        </div>
+        )}
+
+        {state.status === "ready" && repositories.length > 0 && (
+          <>
+            <RepositoryHealth repositories={repositories.map(({ name }) => ({ name, score: null }))} />
+
+            <div className="repository-list-heading">
+              <div><h2>Repository overview <span>{repositories.length}</span></h2></div>
+              <label className="repository-search">
+                <Icon name="search" size={17} />
+                <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search repositories..." aria-label="Search repositories" />
+              </label>
+            </div>
+
+            <div className="repository-list">
+              <div className="repository-list-columns"><span>REPOSITORY</span><span>SECURITY SCORE</span><span>ADDED</span><span /></div>
+              {filtered.length
+                ? filtered.map((item) => <RepositoryRow key={item.id} item={item} onOpen={open} />)
+                : <div className="repo-empty">No repositories match your search.</div>}
+              <div className="repository-bottom">
+                <span>Showing {filtered.length} of {repositories.length} {repositories.length === 1 ? "repository" : "repositories"}</span>
+                <button type="button" onClick={() => setModalOpen(true)}>Add another repository <Icon name="plus" size={14} /></button>
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
       {modalOpen && <AssociateModal onClose={closeModal} onAssociate={associate} />}

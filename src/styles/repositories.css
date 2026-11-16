@@ -298,6 +298,26 @@
   font-size: 14px;
 }
 
+.repositories-intro + .repository-list {
+  margin-top: 34px;
+}
+
+.repo-empty strong {
+  display: block;
+  color: var(--c-text);
+  font-size: 16px;
+}
+
+.repo-empty p {
+  max-width: 460px;
+  margin: 8px auto 0;
+  line-height: 1.5;
+}
+
+.repo-empty .button {
+  margin-top: 20px;
+}
+
 .repository-bottom {
   display: flex;
   align-items: center;

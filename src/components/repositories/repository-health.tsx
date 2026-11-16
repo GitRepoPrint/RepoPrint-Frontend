@@ -5,6 +5,8 @@ import type { AnimationEvent, CSSProperties } from "react";
 import { Icon } from "@/components/ui/icon";
 import type { Repository } from "@/lib/api/types";
 
+type Scored = Pick<Repository, "name" | "score">;
+
 export const HEALTHY_SCORE = 80;
 
 const ZOOM_CHANCE = 0.001;
@@ -21,7 +23,7 @@ const handlePoint = (distance: number) => CENTER + distance * Math.SQRT1_2;
 
 type Kind = "healthy" | "attention" | "pending";
 
-const kindOf = (repository: Repository): Kind =>
+const kindOf = (repository: Scored): Kind =>
   repository.score === null ? "pending" : repository.score >= HEALTHY_SCORE ? "healthy" : "attention";
 
 function Mark({ kind }: { kind: Kind }) {
@@ -124,7 +126,7 @@ const COLLISION_LIMIT = 20;
 
 type Body = { x: number; y: number; vx: number; vy: number; radius: number };
 
-function createBodies(repositories: Repository[]): Body[] {
+function createBodies(repositories: Scored[]): Body[] {
   const step = Math.min(18, 58 / Math.sqrt(Math.max(repositories.length, 1)));
   return repositories.map((repository, index) => {
     const spiralRadius = step * Math.sqrt(index + 0.6);
@@ -206,7 +208,7 @@ function useLupaZoom() {
   return { zooming, onAnimationEnd };
 }
 
-function Lupa({ repositories }: { repositories: Repository[] }) {
+function Lupa({ repositories }: { repositories: Scored[] }) {
   const { zooming, onAnimationEnd } = useLupaZoom();
   const healthy = repositories.filter((r) => kindOf(r) === "healthy").length;
   const attention = repositories.filter((r) => kindOf(r) === "attention").length;
@@ -289,7 +291,7 @@ function Lupa({ repositories }: { repositories: Repository[] }) {
   );
 }
 
-type Props = { repositories: Repository[] };
+type Props = { repositories: Scored[] };
 
 export function RepositoryHealth({ repositories }: Props) {
   const healthy = repositories.filter((r) => kindOf(r) === "healthy").length;

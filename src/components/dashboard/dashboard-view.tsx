@@ -13,6 +13,7 @@ import type { Finding, RepositoryAnalysis } from "@/lib/api/types";
 import { DashboardHeader } from "./dashboard-header";
 import { DfdTab } from "./dfd-tab";
 import { FalsePositiveModal } from "./false-positive-modal";
+import { NotAvailableCard } from "./not-available-card";
 import { TeamTab } from "./team-tab";
 import { ThreatsTab } from "./threats-tab";
 
@@ -35,7 +36,8 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
   // Num repositório real só o diagrama é verdadeiro (as ameaças e as métricas ainda são exemplos): é por aí que se começa.
   const demo = isDemoRepository(analysis.repository);
   const rawTab = searchParams.get("tab");
-  const tab: Tab = isTab(rawTab) ? rawTab : demo ? "threats" : "dfd";
+  const tab: Tab = isTab(rawTab) ? rawTab : analysis.source === "git" ? "team" : "threats";
+  const codeReason = "The code of this repository has not been analyzed, so there is nothing to show here.";
 
   const [branch, setBranch] = useState(analysis.defaultBranch);
   const [scanId, setScanId] = useState(analysis.scans[0]?.id ?? "");
@@ -108,6 +110,9 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
               </p>
             )}
             {tab === "threats" && (
+            {tab === "threats" && analysis.source === "git" && <NotAvailableCard title="Threat Modeling and Architectural Posture" reason={codeReason} />}
+            {tab === "dfd" && analysis.source === "git" && <NotAvailableCard title="Inferred Architecture and Data Flow Diagram" reason={codeReason} />}
+            {tab === "threats" && analysis.source === "demo" && (
               <ThreatsTab
                 analysis={analysis}
                 risks={risks}
@@ -118,7 +123,7 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
                 onShowInDiagram={(id) => openNode("dfd", id)}
               />
             )}
-            {tab === "dfd" && (
+            {tab === "dfd" && analysis.source === "demo" && (
               <DfdTab
                 repository={analysis.repository}
                 demoModel={analysis.dfd}

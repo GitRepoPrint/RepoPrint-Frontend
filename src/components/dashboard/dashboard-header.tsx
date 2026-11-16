@@ -83,7 +83,7 @@ export function DashboardHeader(p: DashboardHeaderProps) {
           <label>
             <span>Analysis history</span>
             <select aria-label="Recent analysis history" value={p.scanId} onChange={(event) => p.onScanChange(event.target.value)}>
-              {p.scans.map((scan) => <option key={scan.id} value={scan.id}>{scan.label}</option>)}
+              {p.scans.length ? p.scans.map((scan) => <option key={scan.id} value={scan.id}>{scan.label}</option>) : <option value="">Not available</option>}
             </select>
           </label>
         </div>
