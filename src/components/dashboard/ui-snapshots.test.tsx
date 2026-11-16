@@ -82,7 +82,7 @@ describe("demo dashboard markup", () => {
 
   it("dfd tab", () => {
     const html= renderToStaticMarkup(
-      <DfdTab model={analysis.dfd} risks={risks} nodeId={risks[0].node.id} onSelectNode={noop} onOpenThreats={noop} onEdit={noop} />,
+      <DfdTab repository={analysis.repository} demoModel={analysis.dfd} findings={analysis.findings} nodeId={risks[0].node.id} onSelectNode={noop} onOpenThreats={noop} onEdit={noop} />,
     );
     expect(html).toMatchSnapshot();
   });

@@ -3,9 +3,8 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { DashboardReportDocument } from "@/components/report/dashboard-report-document";
-import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
-import { isDemoRepository, repoSlug } from "@/lib/api/repositories";
+import { repoSlug } from "@/lib/api/repositories";
 import { risksByNode } from "@/lib/findings";
 import { fileBaseName } from "@/lib/download";
 import { printReport } from "@/lib/print";
@@ -33,8 +32,6 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
   const searchParams = useSearchParams();
   const { notify } = useToast();
 
-  // Num repositório real só o diagrama é verdadeiro (as ameaças e as métricas ainda são exemplos): é por aí que se começa.
-  const demo = isDemoRepository(analysis.repository);
   const rawTab = searchParams.get("tab");
   const tab: Tab = isTab(rawTab) ? rawTab : analysis.source === "git" ? "team" : "threats";
   const codeReason = "The code of this repository has not been analyzed, so there is nothing to show here.";
@@ -71,7 +68,6 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
       <main className="dashboard-main print:hidden!">
         <DashboardHeader
           repository={analysis.repository}
-          demo={demo}
           lastScanned={analysis.lastScanned}
           branches={analysis.branches}
           branch={branch}
@@ -103,15 +99,7 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
 
         <div className="dashboard-tab-content">
           <div id={`${tab}-panel`} className="dashboard-tab-panel" role="tabpanel" aria-labelledby={`${tab}-tab`}>
-            {!demo && tab !== "dfd" && (
-              <p className="dfd-notice" role="note">
-                <Icon name="info" size={16} />
-                <span>Threat modeling and team metrics are not computed for this repository yet. What this tab shows is sample data; only the architecture diagram is real.</span>
-              </p>
-            )}
-            {tab === "threats" && (
             {tab === "threats" && analysis.source === "git" && <NotAvailableCard title="Threat Modeling and Architectural Posture" reason={codeReason} />}
-            {tab === "dfd" && analysis.source === "git" && <NotAvailableCard title="Inferred Architecture and Data Flow Diagram" reason={codeReason} />}
             {tab === "threats" && analysis.source === "demo" && (
               <ThreatsTab
                 analysis={analysis}
@@ -123,7 +111,7 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
                 onShowInDiagram={(id) => openNode("dfd", id)}
               />
             )}
-            {tab === "dfd" && analysis.source === "demo" && (
+            {tab === "dfd" && (
               <DfdTab
                 repository={analysis.repository}
                 demoModel={analysis.dfd}
