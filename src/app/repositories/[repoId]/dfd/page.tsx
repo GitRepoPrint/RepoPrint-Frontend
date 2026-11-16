@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CanvasLoader } from "@/components/canvas/canvas-loader";
+import { LoadFailureView } from "@/components/repositories/load-failure";
 import { getRepositoryAnalysis } from "@/lib/api/analysis";
 import { repoFromSlug } from "@/lib/api/repositories";
 
@@ -20,8 +21,10 @@ export default async function DfdCanvasPage({ params, searchParams }: PageProps)
   const name = repoFromSlug(repoId);
   if (!name) notFound();
 
-  const analysis = await getRepositoryAnalysis(name);
-  if (!analysis) notFound();
+  const load = await getRepositoryAnalysis(name, `/repositories/${repoId}/dfd`);
+  if (load.status === "not-found") notFound();
+  if (load.status === "failed") return <LoadFailureView failure={load.failure} />;
+  const analysis = load.analysis;
 
   // O branch vem do dashboard (?branch=); se faltar ou não existir, usa o branch por defeito.
   const requested = (await searchParams).branch;

@@ -3,11 +3,12 @@ import { LoginCard } from "@/components/login/login-card";
 
 export const metadata: Metadata = { title: "Sign in · RepoPrint" };
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error }= await searchParams;
   return (
     <main className="login-main">
       <div className="login-glow" />
-      <LoginCard />
+      <LoginCard error={error} />
     </main>
   );
 }

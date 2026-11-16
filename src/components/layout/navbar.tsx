@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { DeleteAccountModal } from "@/components/layout/delete-account-modal";
 import { ThemeToggle } from "@/components/theme";
 import { Icon } from "@/components/ui/icon";
 import { ThemedLogo } from "@/components/ui/themed-logo";
+import { useToast } from "@/components/ui/toast";
 import { useAuth } from "@/lib/auth/auth-provider";
 
 function Logo({ href }: { href: string }) {
@@ -19,16 +22,31 @@ function Logo({ href }: { href: string }) {
 
 export default function Navbar() {
   const router = useRouter();
-  const { authenticated, ready, signOut } = useAuth();
+  const { authenticated, ready, user } = useAuth();
+  const { notify } = useToast();
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [modalHost, setModalHost] = useState<Element | null>(null);
+  const header = useRef<HTMLElement>(null);
+  const closeDeleteModal = useCallback(() => setModalHost(null), []);
+  const githubLogin = user?.githubLogin ?? null;
 
-  function handleSignOut() {
+  async function disconnectGithub() {
     setProfileMenuOpen(false);
-    signOut();
-    router.push("/");
+    try {
+      const response = await fetch("/api/backend/github/connection", { method: "DELETE" });
+      if (response.ok) { window.location.reload(); return; }
+    } catch {
+      /* cai na mensagem abaixo */
+    }
+    notify("Could not disconnect GitHub. Please try again.");
   }
 
-  return <header className="topbar app-navbar">
+  function openDeleteModal() {
+    setProfileMenuOpen(false);
+    setModalHost(header.current?.closest(".app-shell") ?? document.body);
+  }
+
+  return <header className="topbar app-navbar" ref={header}>
     <div className="nav-inner">
       <div className="nav-left"><Logo href={authenticated ? "/repositories" : "/"} /></div>
       <div className="nav-actions">
@@ -45,10 +63,18 @@ export default function Navbar() {
             </svg>
           </button>
           {profileMenuOpen && <div className="profile-menu" role="menu">
-            <button type="button" role="menuitem" onClick={handleSignOut}>Sign out</button>
+            {githubLogin
+              ? <button type="button" role="menuitem" onClick={disconnectGithub}>Disconnect GitHub ({githubLogin})</button>
+              : <button type="button" role="menuitem" onClick={() => window.location.assign("/api/github/connect")}>Connect GitHub</button>}
+            <button type="button" role="menuitem" onClick={() => window.location.assign("/api/backend/me/export")}>Download my data</button>
+            <button type="button" role="menuitem" onClick={openDeleteModal}>Delete account</button>
+            <form method="post" action="/api/auth/logout" role="none">
+              <button type="submit" role="menuitem">Sign out</button>
+            </form>
           </div>}
         </div> : <button className="button button-outline login-button" type="button" onClick={() => router.push("/login")}>Sign In <Icon name="arrowRight" size={15} /></button>)}
       </div>
     </div>
+    {modalHost && createPortal(<DeleteAccountModal onClose={closeDeleteModal} />, modalHost)}
   </header>;
 }

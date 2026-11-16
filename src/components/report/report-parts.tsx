@@ -7,7 +7,7 @@ import lightLogo from "@/assets/logos/logo_final.png";
 type ReportHeaderProps = {
   repository: string;
   branch: string;
-  commit: string;
+  commit?: string;
   date: string;
 };
 
@@ -21,7 +21,7 @@ export function ReportHeader({ repository, branch, commit, date }: ReportHeaderP
       <dl className="report-metadata">
         <div><dt>Repository</dt><dd>{repository}</dd></div>
         <div><dt>Branch</dt><dd>{branch}</dd></div>
-        <div><dt>Commit Hash</dt><dd>{commit}</dd></div>
+        {commit !== undefined && <div><dt>Commit Hash</dt><dd>{commit}</dd></div>}
         <div><dt>Analysis Date</dt><dd>{date}</dd></div>
       </dl>
     </header>
