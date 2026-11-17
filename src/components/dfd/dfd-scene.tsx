@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { KeyboardEvent } from "react";
 import { Icon } from "@/components/ui/icon";
+import { titleLines } from "@/lib/dfd/labels";
 import type { DfdModel, DfdNodeData, DfdNodeKind, Severity } from "@/lib/api/types";
 
 export const KIND_LABEL: Record<DfdNodeKind, string> = { external: "external entity", process: "process", store: "data store" };
@@ -13,11 +14,6 @@ export type NodeRiskSummary = { severity: Severity | null; count: number };
 function storePath(cx: number, cy: number) {
   const top = cy - 35, ellipseY = cy - 20, bottom = cy + 35;
   return `M${cx - 73} ${ellipseY} C${cx - 73} ${cy - 29} ${cx - 41} ${top} ${cx} ${top} C${cx + 41} ${top} ${cx + 73} ${cy - 29} ${cx + 73} ${ellipseY} V${cy + 20} C${cx + 73} ${cy + 29} ${cx + 41} ${bottom} ${cx} ${bottom} C${cx - 41} ${bottom} ${cx - 73} ${cy + 29} ${cx - 73} ${cy + 20} Z`;
-}
-
-function titleLines(title: string) {
-  const space = title.indexOf(" ");
-  return title.length < 12 || space < 0 ? [title] : [title.slice(0, space), title.slice(space + 1)];
 }
 
 function ProcessLabel({ node }: { node: DfdNodeData }) {
@@ -33,13 +29,16 @@ function ProcessLabel({ node }: { node: DfdNodeData }) {
   );
 }
 
+/** Um título mais largo do que a forma é espremido até caber (um endereço como "maxcdn.bootstrapcdn.com" não se parte bem). */
+const fitTo = (title: string, width: number) => (title.length * 7.4 > width ? { textLength: width, lengthAdjust: "spacingAndGlyphs" as const } : {});
+
 function NodeShape({ node }: { node: DfdNodeData }) {
   const { x, y } = node;
   if (node.kind === "external") {
     return (
       <>
         <rect x={x - 66} y={y - 27} width="132" height="54" rx="5" />
-        <text className="dfd-node-title" x={x} y={y - 4} textAnchor="middle">{node.title}</text>
+        <text className="dfd-node-title" x={x} y={y - 4} textAnchor="middle" {...fitTo(node.title, 116)}>{node.title}</text>
         <text className="dfd-node-type" x={x} y={y + 13} textAnchor="middle">{node.subtitle}</text>
       </>
     );
@@ -56,10 +55,17 @@ function NodeShape({ node }: { node: DfdNodeData }) {
     <>
       <path d={storePath(x, y)} />
       <ellipse cx={x} cy={y - 20} rx="73" ry="15" />
-      <text className="dfd-node-title" x={x} y={y + 5} textAnchor="middle">{node.title}</text>
+      <text className="dfd-node-title" x={x} y={y + 5} textAnchor="middle" {...fitTo(node.title, 128)}>{node.title}</text>
       <text className="dfd-node-type" x={x} y={y + 21} textAnchor="middle">{node.subtitle}</text>
     </>
   );
+}
+
+/** Onde fica a marca "+n" de um componente que se pode abrir: no canto de baixo, do lado oposto ao dos findings. */
+function expandBadgePosition(node: DfdNodeData) {
+  if (node.kind === "external") return { x: node.x + 62, y: node.y + 25 };
+  if (node.kind === "process") return { x: node.x + 31, y: node.y + 31 };
+  return { x: node.x + 66, y: node.y + 28 };
 }
 
 function badgePosition(node: DfdNodeData) {
@@ -78,7 +84,7 @@ type DfdSceneProps = {
 /** Prévia interativa (zoom e seleção de nós) do DFD no dashboard. O canvas editável será outro componente. */
 export function DfdScene({ model, risk, selected, onSelect }: DfdSceneProps) {
   const [zoom, setZoom] = useState(100);
-  const { boundary } = model;
+  const { boundary, viewBox } = model;
 
   function onKey(event: KeyboardEvent, id: string) {
     if (event.key === "Enter" || event.key === " ") {
@@ -89,19 +95,26 @@ export function DfdScene({ model, risk, selected, onSelect }: DfdSceneProps) {
 
   return (
     <div className="dfd-preview">
-      <div className="dfd-preview-viewport">
-        <div className="dfd-preview-scene" style={{ transform: `scale(${zoom / 100})` }}>
-          <svg className="dfd-preview-svg" viewBox="0 0 1000 320" role="img" aria-label="Interactive data flow diagram with external entities, backend processes, data stores and the findings on each component">
+      <div className={`dfd-preview-viewport${viewBox ? " dfd-preview-viewport-fit" : ""}`}>
+        <div className={`dfd-preview-scene${viewBox ? " dfd-preview-scene-fit" : ""}`} style={{ transform: `scale(${zoom / 100})` }}>
+          <svg className="dfd-preview-svg" viewBox={`0 0 ${viewBox?.width ?? 1000} ${viewBox?.height ?? 320}`} role="img" aria-label="Interactive data flow diagram with external entities, backend processes, data stores and the findings on each component">
             <defs>
               <marker id="dfd-preview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#85859a" /></marker>
             </defs>
-            <rect className="dfd-trust-boundary" x={boundary.x} y={boundary.y} width={boundary.width} height={boundary.height} rx="13" />
-            <text className="dfd-boundary-label" x={boundary.x + 20} y={boundary.y + 22}>{boundary.label}</text>
-            {model.flows.map((d) => <path key={d} className="dfd-flow-link" d={d} markerEnd="url(#dfd-preview-arrow)" />)}
+            {boundary && (
+              <>
+                <rect className="dfd-trust-boundary" x={boundary.x} y={boundary.y} width={boundary.width} height={boundary.height} rx="13" />
+                <text className="dfd-boundary-label" x={boundary.x + 20} y={boundary.y + 22}>{boundary.label}</text>
+              </>
+            )}
+            {model.containment?.map((d, index) => <path key={`c${index}:${d}`} className="dfd-contain-link" d={d} />)}
+            {model.flows.map((d, index) => <path key={`${index}:${d}`} className="dfd-flow-link" d={d} markerEnd="url(#dfd-preview-arrow)" />)}
             {model.nodes.map((node) => {
               const { severity, count } = risk[node.id] ?? { severity: null, count: 0 };
               const badge = badgePosition(node);
-              const label = count ? `${count} ${count === 1 ? "finding" : "findings"}, highest ${severity}` : "no findings";
+              const findingsLabel = count ? `${count} ${count === 1 ? "finding" : "findings"}, highest ${severity}` : "no findings";
+              const label = node.expandable ? `${findingsLabel}, ${node.expanded ? "showing" : "has"} ${node.expandable} ${node.expandable === 1 ? "part" : "parts"}` : findingsLabel;
+              const more = expandBadgePosition(node);
               return (
                 <g
                   key={node.id}
@@ -114,6 +127,12 @@ export function DfdScene({ model, risk, selected, onSelect }: DfdSceneProps) {
                   onKeyDown={(event) => onKey(event, node.id)}
                 >
                   <NodeShape node={node} />
+                  {node.expandable && !node.expanded ? (
+                    <g className="dfd-node-expand" aria-hidden="true">
+                      <circle cx={more.x} cy={more.y} r="11" />
+                      <text x={more.x} y={more.y + 4} textAnchor="middle">+{node.expandable}</text>
+                    </g>
+                  ) : null}
                   {count > 0 && (
                     <g className="dfd-node-badge" aria-hidden="true">
                       <circle cx={badge.x} cy={badge.y} r="11" />

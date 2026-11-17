@@ -41,7 +41,7 @@ const THEME_VARS = [
   "[.theme-light_&]:[--xy-minimap-mask-background-color:#f6f7fccc]",
 ].join(" ");
 
-type CanvasViewProps = { analysis: RepositoryAnalysis; branch: string };
+type CanvasViewProps = { analysis: RepositoryAnalysis; branch: string; /** O diagrama é o inferido do repositório (e não o de demonstração). */ live: boolean };
 
 export function CanvasView(props: CanvasViewProps) {
   // O Provider deixa a barra de ferramentas (fora do <ReactFlow>) usar zoom e viewport.
@@ -52,7 +52,7 @@ export function CanvasView(props: CanvasViewProps) {
   );
 }
 
-function CanvasWorkspace({ analysis, branch }: CanvasViewProps) {
+function CanvasWorkspace({ analysis, branch, live }: CanvasViewProps) {
   const router = useRouter();
   const { notify } = useToast();
   const { resolvedTheme } = useTheme();
@@ -62,7 +62,7 @@ function CanvasWorkspace({ analysis, branch }: CanvasViewProps) {
   // Este componente só corre no browser (ver canvas-loader.tsx), por isso o diagrama guardado no localStorage
   // pode ser lido logo no estado inicial; se não houver nenhum, usa o da análise.
   // useNodesState/useEdgesState só usam o valor inicial na primeira vez; depois o estado é do React Flow.
-  const [initial] = useState(() => loadDiagram(analysis.repository) ?? diagramFromModel(analysis.dfd));
+  const [initial] = useState(() => loadDiagram(analysis.repository, live) ?? diagramFromModel(analysis.dfd));
   const [nodes, setNodes, onNodesChange] = useNodesState<DfdFlowNode>(useMemo(() => toFlowNodes(initial), [initial]));
   const [edges, setEdges, onEdgesChange] = useEdgesState<DfdFlowEdge>(useMemo(() => toFlowEdges(initial), [initial]));
   const [savedSerial, setSavedSerial] = useState(() => serializeDiagram(initial));
@@ -123,7 +123,7 @@ function CanvasWorkspace({ analysis, branch }: CanvasViewProps) {
   }
 
   function save() {
-    if (saveDiagram(analysis.repository, diagram)) {
+    if (saveDiagram(analysis.repository, diagram, live)) {
       setSavedSerial(serializeDiagram(diagram));
       notify("Diagram saved locally.");
     } else {

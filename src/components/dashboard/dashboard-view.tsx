@@ -100,7 +100,6 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
         <div className="dashboard-tab-content">
           <div id={`${tab}-panel`} className="dashboard-tab-panel" role="tabpanel" aria-labelledby={`${tab}-tab`}>
             {tab === "threats" && analysis.source === "git" && <NotAvailableCard title="Threat Modeling and Architectural Posture" reason={codeReason} />}
-            {tab === "dfd" && analysis.source === "git" && <NotAvailableCard title="Inferred Architecture and Data Flow Diagram" reason={codeReason} />}
             {tab === "threats" && analysis.source === "demo" && (
               <ThreatsTab
                 analysis={analysis}
@@ -112,10 +111,11 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
                 onShowInDiagram={(id) => openNode("dfd", id)}
               />
             )}
-            {tab === "dfd" && analysis.source === "demo" && (
+            {tab === "dfd" && (
               <DfdTab
-                model={analysis.dfd}
-                risks={risks}
+                repository={analysis.repository}
+                demoModel={analysis.dfd}
+                findings={analysis.findings}
                 nodeId={nodeId}
                 onSelectNode={setNodeId}
                 onOpenThreats={(id) => openNode("threats", id)}

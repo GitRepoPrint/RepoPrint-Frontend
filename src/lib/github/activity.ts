@@ -62,7 +62,7 @@ function rateLimitMessage(response: Response): string {
   return `GitHub rate limit reached for your network. ${suffix}`;
 }
 
-function errorFor(response: Response): ApiError {
+export function errorFor(response: Response): ApiError {
   if (response.status=== 404) return new ApiError("Repository not found. It may not exist or may be private.", 404);
   if (response.status=== 409) return new ApiError("This repository is empty.", 422);
   const limited= response.headers.get("x-ratelimit-remaining")=== "0" || response.headers.has("retry-after");

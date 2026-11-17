@@ -1,7 +1,9 @@
 import type { Diagram } from "@/lib/dfd/graph";
 
 // Mock da persistência do diagrama: localStorage por repositório. Com backend, isto passa a ser GET/PUT.
-const key = (repository: string) => `repoprint-diagram:${repository}`;
+// O diagrama inferido do repositório (`live`) guarda-se à parte do de demonstração: um diagrama gravado do mock
+// não pode tapar o que se inferiu agora.
+const key = (repository: string, live: boolean) => (live ? `repoprint-diagram:overview:${repository}` : `repoprint-diagram:${repository}`);
 
 const KINDS = ["external", "process", "store"];
 const isNumber = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
@@ -29,9 +31,9 @@ function isDiagram(value: unknown): value is Diagram {
 }
 
 /** Diagrama guardado, ou null se não existir / estiver corrompido (o canvas usa então o da análise). */
-export function loadDiagram(repository: string): Diagram | null {
+export function loadDiagram(repository: string, live = false): Diagram | null {
   try {
-    const raw = window.localStorage.getItem(key(repository));
+    const raw = window.localStorage.getItem(key(repository, live));
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     return isDiagram(parsed) ? parsed : null;
@@ -40,9 +42,9 @@ export function loadDiagram(repository: string): Diagram | null {
   }
 }
 
-export function saveDiagram(repository: string, diagram: Diagram): boolean {
+export function saveDiagram(repository: string, diagram: Diagram, live = false): boolean {
   try {
-    window.localStorage.setItem(key(repository), JSON.stringify(diagram));
+    window.localStorage.setItem(key(repository, live), JSON.stringify(diagram));
     return true;
   } catch {
     return false;

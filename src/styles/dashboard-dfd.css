@@ -43,6 +43,21 @@
   transition: transform 0.2s ease;
 }
 
+/* DFD inferido do repositório: a altura vem da proporção do desenho (um grafo alto desliza em vez de encolher) */
+.dfd-preview-viewport-fit {
+  height: auto;
+  min-height: 340px;
+  max-height: 640px;
+}
+
+.dfd-preview-scene-fit {
+  height: auto;
+}
+
+.dfd-preview-scene-fit .dfd-preview-svg {
+  height: auto;
+}
+
 .dfd-preview-svg {
   display: block;
   width: 100%;
@@ -68,6 +83,34 @@
   fill: none;
   stroke: #85859a;
   stroke-width: 1.6;
+}
+
+/* "contém": de um componente aberto para as suas partes (pontilhado, sem seta) */
+.dfd-contain-link {
+  fill: none;
+  stroke: #85859a;
+  stroke-width: 1.3;
+  stroke-dasharray: 2 6;
+  stroke-linecap: round;
+  opacity: 0.8;
+}
+
+.theme-light .dfd-contain-link {
+  stroke: #71717a;
+}
+
+.app-shell .dfd-node .dfd-node-expand circle {
+  stroke-width: 1.5;
+  fill: var(--c-surface);
+  stroke: #8056cf;
+}
+
+.app-shell .dfd-node .dfd-node-expand text {
+  fill: var(--c-text);
+  font:
+    700 9px "DM Sans",
+    sans-serif;
+  pointer-events: none;
 }
 
 .dfd-node {
@@ -303,7 +346,36 @@
 
 .app-shell .dfd-tab-header {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: flex-end;
+  gap: 10px;
+}
+
+.dfd-detail-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+  color: var(--c-text-2);
+  font-size: 14px;
+}
+
+.dfd-detail-controls .button {
+  height: 36px;
+  padding: 0 13px;
+  font-size: 13px;
+}
+
+.dfd-detail-controls .button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.dfd-detail-error {
+  color: #c0506a;
 }
 
 .app-shell .dfd-edit-button {
@@ -549,4 +621,104 @@
     600 14px "IBM Plex Mono",
     monospace;
   overflow-wrap: anywhere;
+}
+
+/* DFD inferido do repositório: estados, aviso e proveniência */
+.dfd-state {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 28px;
+  border: 1px solid var(--c-border);
+  border-radius: 12px;
+  background: var(--c-surface-2);
+  color: var(--c-text);
+}
+
+.dfd-state > div {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dfd-state span:not(.analysis-spinner) {
+  color: var(--c-text-2);
+  font-size: 14px;
+}
+
+.dfd-state-error {
+  border-color: #9b3d49;
+}
+
+.dfd-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-surface-2);
+  color: var(--c-text-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.dfd-notice svg {
+  flex: none;
+  margin-top: 2px;
+}
+
+.dfd-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dfd-evidence li {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-surface);
+}
+
+.dfd-evidence a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.dfd-evidence a:hover code {
+  border-color: #8056cf;
+}
+
+.dfd-evidence li > span {
+  color: var(--c-text-2);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.dfd-confidence {
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.dfd-confidence.high {
+  color: #3fa56b;
+}
+
+.dfd-confidence.medium {
+  color: #c98a1a;
+}
+
+.dfd-confidence.low {
+  color: #c0506a;
 }

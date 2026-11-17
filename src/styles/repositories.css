@@ -250,6 +250,38 @@
   color: #b0a0db;
 }
 
+/* Repositório por analisar: um convite, não uma pontuação */
+.analyze-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 11px;
+  border: 1px solid #6a58b8;
+  border-radius: 999px;
+  background: #241f3d;
+  color: #cbbff5;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.analyze-action .analysis-spinner {
+  width: 12px;
+  height: 12px;
+  border-width: 2px;
+}
+
+.repository-row:disabled {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+.theme-light .analyze-action {
+  border-color: #b9a9ee;
+  background: #f1ecff;
+  color: #5b3fb5;
+}
+
 .repo-updated {
   color: #898e9e;
   font-size: 13px;

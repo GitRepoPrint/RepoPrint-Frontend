@@ -1,4 +1,5 @@
 import { ApiError } from "./errors";
+import { demoRepositories } from "./mock/repositories";
 import type { SavedRepository } from "./types";
 
 const LEGACY_STORAGE_KEY= "repoprint-repositories";
@@ -30,6 +31,8 @@ export function repoFromSlug(slug: string): string | null {
   // Só aceita nomes que o modal também aceitaria (evita /repositories/<lixo> chegar ao dashboard).
   return /^[\w.-]+\/[\w.-]+$/.test(name) && !name.split("/").some((part) => part === "." || part === "..") ? name : null;
 }
+
+export const isDemoRepository= (name: string) => demoRepositories.some((repository) => repository.name.toLowerCase() === name.toLowerCase());
 
 type Fetcher= (input: string, init?: RequestInit) => Promise<Response>;
 
