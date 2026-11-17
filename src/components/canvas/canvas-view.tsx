@@ -147,7 +147,7 @@ function CanvasWorkspace({ analysis, branch, live, topSlot, fresh = false }: Can
   }
 
   return (
-    <div className="canvas-app h-[calc(100vh-72px)]!">
+    <div className="canvas-app h-[calc(100vh-var(--nav-h))]!">
       <CanvasToolbar
         repository={analysis.repository}
         branch={branch}

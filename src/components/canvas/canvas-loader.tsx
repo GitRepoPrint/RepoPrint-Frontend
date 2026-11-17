@@ -20,7 +20,7 @@ import type { CanvasView as CanvasViewType } from "./canvas-view";
 // `ssr: false` só é permitido num Client Component, por isso este ficheiro existe (a página é um Server Component).
 const CanvasView = dynamic(() => import("./canvas-view").then((m) => m.CanvasView), {
   ssr: false,
-  loading: () => <div className="canvas-app h-[calc(100vh-72px)]!" aria-busy="true" />,
+  loading: () => <div className="canvas-app h-[calc(100vh-var(--nav-h))]!" aria-busy="true" />,
 });
 
 type CanvasLoaderProps = Omit<ComponentProps<typeof CanvasViewType>, "live">;
@@ -58,7 +58,7 @@ function LiveCanvas({ analysis, branch }: CanvasLoaderProps) {
 
   const reading = dfd.status === "ready";
   return (
-    <div className="canvas-app h-[calc(100vh-72px)]!" aria-busy={dfd.status === "loading" || waitingForCode}>
+    <div className="canvas-app h-[calc(100vh-var(--nav-h))]!" aria-busy={dfd.status === "loading" || waitingForCode}>
       <div className="m-6">
         {dfd.status === "error" ? (
           <div className="dfd-state" role="alert">

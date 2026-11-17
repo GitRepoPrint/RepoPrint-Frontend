@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { DetailLevel, DfdFocus } from "@/hooks/use-dfd-focus";
 import { DEFAULT_LEVELS } from "@/hooks/use-dfd-focus";
 import type { FocusMode, FocusSort } from "@/lib/dfd/focus";
@@ -46,7 +47,7 @@ const parseLevels = (value: string): DetailLevel => (value === "all" ? "all" : (
  * Controla o que se vê na vista completa do diagrama: o fluxo principal (sem limite de componentes), componentes escolhidos à
  * mão ou o diagrama inteiro; filtra por tipo, escolhe quantos níveis de pastas se veem e se entram testes e documentação.
  */
-export function FocusBar({ focus }: { focus: DfdFocus }) {
+export function FocusBar({ focus, loading = false }: { focus: DfdFocus; loading?: boolean }) {
   const id = useId();
   const { state } = focus;
   const changed = state.mode !== "main" || state.kinds.size < KINDS.length || state.levels !== DEFAULT_LEVELS || state.includeAuxiliary;
@@ -94,7 +95,8 @@ export function FocusBar({ focus }: { focus: DfdFocus }) {
         {changed && <button type="button" className="dfd-focus-reset" onClick={focus.reset}>Reset</button>}
       </div>
 
-      <p className="dfd-focus-summary" role="status">{summary(focus)}</p>
+      {/* `loading`: o esqueleto da página usa esta mesma barra e só troca a frase, que ainda não se sabe */}
+      <p className="dfd-focus-summary" role={loading ? undefined : "status"}>{loading ? <Skeleton inline width={260} height={14} /> : summary(focus)}</p>
       {state.mode === "main" && (
         <details className="dfd-focus-help">
           <summary>How is the main flow chosen?</summary>

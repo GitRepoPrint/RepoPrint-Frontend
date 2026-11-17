@@ -95,9 +95,14 @@
 .skeleton {
   display: block;
   border-radius: 8px;
-  background: linear-gradient(90deg, var(--c-surface-2, #1e232f) 25%, var(--c-border, #323847) 37%, var(--c-surface-2, #1e232f) 63%);
+  /* Translúcido e cinzento: lê-se em qualquer fundo (a página, um cartão, um cartão mais claro) e nos dois temas */
+  background: linear-gradient(90deg, rgba(128, 134, 160, 0.17) 25%, rgba(128, 134, 160, 0.3) 37%, rgba(128, 134, 160, 0.17) 63%);
   background-size: 400% 100%;
   animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+.skeleton-chip {
+  border-radius: 999px;
 }
 
 .skeleton-circle {
@@ -171,5 +176,150 @@
 
   .sk-canvas > div:not(:nth-child(2)) {
     display: none;
+  }
+}
+
+/*
+ * Máscara de esqueleto (.sk-mask): os esqueletos usam o código verdadeiro das páginas, para terem exatamente as mesmas medidas, mas não
+ * se lê nada. Todo o texto fica invisível e cada pedaço de texto passa a ser um bloco do tamanho que o texto tem; ícones, pontos
+ * de estado e cores de botões desaparecem. O que se vê são só formas.
+ */
+.sk-mask {
+  /* rede de segurança: se alguma cor da página verdadeira escapar às regras de baixo, sai a cinzento */
+  filter: grayscale(1);
+  --sk-bar: rgba(128, 134, 160, 0.2);
+  --sk-gradient: linear-gradient(90deg, rgba(128, 134, 160, 0.17) 25%, rgba(128, 134, 160, 0.3) 37%, rgba(128, 134, 160, 0.17) 63%);
+  user-select: none;
+  pointer-events: none;
+}
+
+.sk-mask,
+.sk-mask * {
+  color: transparent !important;
+  text-shadow: none !important;
+  box-shadow: none !important;
+  caret-color: transparent;
+}
+
+/* um bloco do esqueleto é sempre só um bloco: o CSS da página (por exemplo o "h2 span" das etiquetas roxas) não lhe mexe */
+.sk-mask .skeleton {
+  background: var(--sk-gradient) 100% 0 / 400% 100% !important;
+  border: 0 !important;
+  padding: 0 !important;
+}
+
+/* as linhas por baixo dos separadores e dos cabeçalhos: cinzentas e discretas, não a linha clara da página */
+.sk-mask .dashboard-tabs,
+.sk-mask .dashboard-heading,
+.sk-mask .canvas-toolbar {
+  border-color: rgba(128, 134, 160, 0.22) !important;
+}
+
+/* os pedaços de texto: elementos que só têm texto lá dentro (e não são células de tabela, que têm de manter a largura da coluna) */
+.sk-mask :not(:empty):not(:has(*)):not(th):not(td):not(option):not(.skeleton) {
+  width: fit-content;
+  max-width: 100%;
+  background: var(--sk-gradient) 100% 0 / 400% 100% !important;
+  border-color: transparent !important;
+  border-radius: 6px;
+  box-shadow: none !important;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+/* cabeçalhos de tabela: uma barra curta, não a célula toda */
+.sk-mask th {
+  background-image: linear-gradient(var(--sk-bar), var(--sk-bar)) !important;
+  background-repeat: no-repeat !important;
+  background-position: left center !important;
+  background-size: 62px 12px !important;
+  background-origin: content-box !important;
+}
+
+.sk-mask svg,
+.sk-mask img,
+.sk-mask canvas,
+.sk-mask i {
+  visibility: hidden;
+}
+
+/* botões: um bloco, sem a cor nem a borda */
+.sk-mask button,
+.sk-mask .button,
+.sk-mask [role="radio"] {
+  background: var(--sk-gradient) 100% 0 / 400% 100% !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+.sk-mask select,
+.sk-mask input {
+  appearance: none;
+  background: var(--sk-gradient) 100% 0 / 400% 100% !important;
+  border-color: transparent !important;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+}
+
+.sk-mask ::placeholder {
+  color: transparent !important;
+}
+
+.sk-mask .repository-search,
+.sk-mask .dfd-focus-kind,
+.sk-mask .dfd-focus-modes,
+.sk-mask .chart-tab,
+.sk-mask .canvas-branch,
+.sk-mask .live-badge,
+.sk-mask .branch-button {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+.sk-mask .tool-icon,
+.sk-mask .selected-node-icon,
+.sk-mask .stat-icon,
+.sk-mask .repo-icon,
+.sk-mask .status-dot {
+  background: var(--sk-bar) !important;
+  border-color: transparent !important;
+}
+
+/* cada separador é a sua caixa (sem fundo nem sublinhado) com uma barra do tamanho do nome lá dentro */
+.sk-mask .dashboard-tab,
+.sk-mask .dashboard-tab.active {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+/* o número ao lado de "Repository overview": a caixa roxa some, fica só a barra */
+.sk-mask .sk-count {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+.sk-mask .empty-findings {
+  background: var(--sk-gradient) 100% 0 / 400% 100% !important;
+  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  min-height: 78px;
+  border-radius: 8px;
+}
+
+.sk-mask button {
+  border-radius: 8px;
+}
+
+.sk-mask .empty-findings,
+.sk-mask .toolbox-tip,
+.sk-mask .dfd-notice {
+  border-color: transparent !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sk-mask :not(:empty):not(:has(*)),
+  .sk-mask button,
+  .sk-mask .button,
+  .sk-mask select,
+  .sk-mask input {
+    animation: none !important;
   }
 }

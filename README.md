@@ -151,7 +151,10 @@ Cada espera tem o sinal que lhe serve, sem exagero:
   diz em que fase vai e quantos ficheiros já foram, e `src/lib/progress.ts` junta isso num valor que nunca diminui. Se o backend ficar
   calado 90 s desiste-se.
 - **Páginas que o servidor constrói** (`loading.tsx` em `/repositories`, `/repositories/<repo>` e `.../dfd`) e a lista de repositórios a
-  carregar: esqueletos (`components/skeletons/page-skeletons.tsx`) com o desenho da página que vem aí, para nada saltar quando chega.
+  carregar: esqueletos (`components/skeletons/page-skeletons.tsx`). Usam o MESMO código e as MESMAS classes da página (o texto fixo é o verdadeiro; a Toolbox,
+  o Inspector e a barra do diagrama são os próprios componentes) e só o que depende de dados é um bloco que cintila, para nada saltar quando
+  a página chega. `skeletons.test.tsx` compara-os com as páginas a sério (textos fixos e classes): se mudares uma página, o teste diz-te que o
+  esqueleto ficou para trás. Só o tamanho de listas (contribuidores, repositórios) depende dos dados.
 - **Esperas curtas** (ler a configuração, a análise instantânea): só a roda a girar.
 
 Num repositório enorme o backend lê uma amostra; o aviso por cima do diagrama diz-o ("a sample of 2,500 of 75,317 source files…").

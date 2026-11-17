@@ -817,7 +817,7 @@
 }
 
 .canvas-app {
-  height: calc(100vh - 72px);
+  height: calc(100vh - var(--nav-h, 72px));
   min-height: 0;
 }
 

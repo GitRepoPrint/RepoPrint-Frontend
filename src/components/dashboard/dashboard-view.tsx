@@ -18,7 +18,7 @@ import { ThreatsTab } from "./threats-tab";
 
 type Tab = "threats" | "dfd" | "team";
 
-const TABS: { id: Tab; label: string }[] = [
+export const TABS: { id: Tab; label: string }[] = [
   { id: "threats", label: "Threat Modeling & Architectural Posture" },
   { id: "dfd", label: "Inferred Architecture & Data Flow Diagram" },
   { id: "team", label: "Team Dynamics & Repository Hygiene" },
