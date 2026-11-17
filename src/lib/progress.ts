@@ -50,9 +50,3 @@ export function describeProgress(progress: LoadProgress): string {
   if (progress.total <= 0) return label;
   return `${label} · ${NUMBER.format(progress.done)} of ${NUMBER.format(progress.total)} files`;
 }
-
-/** As fases, cada uma feita, a decorrer ou por fazer, para a lista de passos do painel de espera. */
-export function stepStates(current: LoadStage | undefined): { label: string; state: "done" | "active" | "todo" }[] {
-  const index = current ? STAGES.indexOf(current) : -1;
-  return STAGES.map((stage, i) => ({ label: STAGE_LABEL[stage], state: i < index ? "done" : i === index ? "active" : "todo" }));
-}

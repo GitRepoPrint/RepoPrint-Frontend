@@ -142,17 +142,17 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 
 No backend, `CORS_ORIGINS` tem de incluir a origem do frontend (por defeito `http://localhost:3000`).
 
-### Progresso das esperas
+### Esperas
 
-Nenhuma espera fica sem sinal. `ProgressRing` (`src/components/ui/progress-ring.tsx`) é a roda que se enche (como a da App Store); sem
-valor é uma roda a girar. `LoadingPanel` junta-lhe o título, o que se está a fazer e as fases. Onde há progresso a sério, a roda sobe:
+Cada espera tem o sinal que lhe serve, sem exagero:
 
-- **Análise do código** (tab DFD e canvas): usa `GET /dfd/stream` (`src/lib/dfd/detail.ts`). O backend avisa em que fase vai (listar,
-  descarregar, analisar, montar) e quantos ficheiros já foram; `src/lib/progress.ts` junta isso numa só percentagem que nunca diminui.
-  Se o backend ficar calado 90 s desiste-se.
-- **Configuração** (overview, lido no navegador): sobe com os ficheiros lidos (`onProgress` em `fetchOverviewFiles`).
-- **Páginas do servidor** (`loading.tsx` em `/repositories`, `/repositories/<repo>` e `.../dfd`) e a análise instantânea: uma roda a
-  girar com o tempo que já passou (não se sabe quanto falta); passados 8 s avisa que um repositório grande demora mais.
+- **Análise do código** (tab DFD e canvas): a única com progresso a sério. `ProgressRing` é um anel que se enche (como o da App Store), sem
+  número, com uma linha por baixo ("Downloading the code · 1,200 of 2,500 files"). Vem de `GET /dfd/stream` (`src/lib/dfd/detail.ts`): o backend
+  diz em que fase vai e quantos ficheiros já foram, e `src/lib/progress.ts` junta isso num valor que nunca diminui. Se o backend ficar
+  calado 90 s desiste-se.
+- **Páginas que o servidor constrói** (`loading.tsx` em `/repositories`, `/repositories/<repo>` e `.../dfd`) e a lista de repositórios a
+  carregar: esqueletos (`components/skeletons/page-skeletons.tsx`) com o desenho da página que vem aí, para nada saltar quando chega.
+- **Esperas curtas** (ler a configuração, a análise instantânea): só a roda a girar.
 
 Num repositório enorme o backend lê uma amostra; o aviso por cima do diagrama diz-o ("a sample of 2,500 of 75,317 source files…").
 

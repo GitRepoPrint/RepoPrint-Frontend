@@ -11,8 +11,7 @@ import { overallFraction, rising } from "@/lib/progress";
 import type { LoadProgress } from "@/lib/progress";
 
 export type RepositoryDfd =
-  /** `fraction` (0 a 1) é quanto da configuração já se leu; `files` é a contagem, se já se sabe. */
-  | { status: "loading"; fraction: number; files?: { done: number; total: number } }
+  | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ready"; model: DfdModel; graph: DfdGraph; partial: boolean; cached: boolean; fetchedAt: string };
 
@@ -32,7 +31,7 @@ export type DetailState =
  * do código, para juntar ao anterior (ver combineGraphs).
  */
 export function useRepositoryDfd(repository: string) {
-  const [dfd, setDfd] = useState<RepositoryDfd>({ status: "loading", fraction: 0 });
+  const [dfd, setDfd] = useState<RepositoryDfd>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [detail, setDetail] = useState<DetailState>(() => {
     const [owner, repo] = repository.split("/");
@@ -64,13 +63,7 @@ export function useRepositoryDfd(repository: string) {
   useEffect(() => {
     let cancelled = false;
     const [owner, repo] = repository.split("/");
-    // Ler a configuração é a primeira metade da espera: a roda sobe à medida que os ficheiros chegam (a lista conta 10%)
-    const onProgress = (done: number, total: number) => {
-      if (cancelled) return;
-      const fraction = total > 0 ? 0.1 + 0.9 * (done / total) : 0.1;
-      setDfd((current) => (current.status === "loading" ? { status: "loading", files: { done, total }, fraction: rising(current.fraction, fraction) } : current));
-    };
-    getOverview(owner, repo, { onProgress })
+    getOverview(owner, repo)
       .then((data) => {
         if (cancelled) return;
         setDfd({ status: "ready", model: graphToDfdModel(overviewView(data.graph)), graph: data.graph, partial: data.partial, cached: data.cached, fetchedAt: data.fetchedAt });
@@ -89,7 +82,7 @@ export function useRepositoryDfd(repository: string) {
   }, [repository, attempt, startDetail]);
 
   const retry = useCallback(() => {
-    setDfd({ status: "loading", fraction: 0 });
+    setDfd({ status: "loading" });
     setAttempt((n) => n + 1);
   }, []);
 

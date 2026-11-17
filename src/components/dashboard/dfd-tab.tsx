@@ -13,7 +13,7 @@ import { combineGraphs } from "@/lib/dfd/combine";
 import { applyOverview, withoutAuxiliary } from "@/lib/dfd/focus";
 import { project } from "@/lib/dfd/project";
 import { graphToDfdModel } from "@/lib/dfd/to-model";
-import { describeProgress, stepStates } from "@/lib/progress";
+import { describeProgress } from "@/lib/progress";
 import { isDemoRepository } from "@/lib/api/repositories";
 import { risksByNode, SEVERITY_LABEL } from "@/lib/findings";
 import type { DfdEvidence, DfdModel, DfdNodeData, Finding } from "@/lib/api/types";
@@ -55,15 +55,7 @@ function LiveDfdTab({ repository, findings, onOpenThreats, onEdit }: Pick<DfdTab
   const focused = useMemo(() => (view ? applyOverview(view, { boost }) : null), [view, boost]);
   const model = useMemo(() => (focused ? graphToDfdModel(focused.view) : null), [focused]);
 
-  if (dfd.status === "loading") {
-    return (
-      <LoadingPanel
-        title="Inferring the architecture"
-        detail={dfd.files ? `Reading the configuration · ${dfd.files.done} of ${dfd.files.total} files` : `Looking at the files of ${repository}…`}
-        progress={dfd.files ? dfd.fraction : undefined}
-      />
-    );
-  }
+  if (dfd.status === "loading") return <LoadingPanel title="Inferring the architecture" detail="Reading the configuration…" />;
 
   if (dfd.status === "error") {
     return (
@@ -83,15 +75,7 @@ function LiveDfdTab({ repository, findings, onOpenThreats, onEdit }: Pick<DfdTab
   // Sem compose nem Dockerfiles o overview é um só componente: enquanto se lê o código não há nada de útil para mostrar,
   // por isso mostra-se o avanço (e não um desenho de um nó que depois muda)
   if (detail.status === "loading" && dfd.graph.meta.fallback === "application") {
-    return (
-      <LoadingPanel
-        title="Reading the source code"
-        detail={detail.progress ? describeProgress(detail.progress) : "Starting the code analysis…"}
-        progress={detail.fraction}
-        steps={stepStates(detail.progress?.stage)}
-        note="Large repositories can take a minute or two. Only a sample of very large ones is read."
-      />
-    );
+    return <LoadingPanel title="Reading the source code" detail={detail.progress ? describeProgress(detail.progress) : "Starting…"} progress={detail.fraction} />;
   }
 
   const toggle = (id: string) =>
@@ -156,7 +140,7 @@ function DetailBar({ detail }: { detail: DetailControls }) {
       {state.status === "loading" && (
         <span role="status" className="dfd-detail-progress">
           <ProgressRing value={state.fraction} size={36} label="Reading the source code" />
-          {state.progress ? describeProgress(state.progress) : "Starting the code analysis…"}
+          {state.progress ? describeProgress(state.progress) : "Starting…"}
         </span>
       )}
       {state.status === "error" && (

@@ -23,36 +23,6 @@ function fakeRepo(tree: Entry[], contents: Record<string, string>, options: { tr
 
 const COMPOSE = "services:\n  api:\n    build: ./api\n  db:\n    image: postgres:16\n    ports: ['5432:5432']\n";
 
-describe("fetchOverviewFiles progress", () => {
-  const tree = [{ path: "docker-compose.yml" }, { path: "api/Dockerfile" }, { path: "web/Dockerfile" }, { path: "api/package.json" }];
-  const contents = { "docker-compose.yml": COMPOSE, "api/Dockerfile": "FROM node:20\n", "web/Dockerfile": "FROM nginx\n", "api/package.json": "{}" };
-
-  it("reports how many configuration files are done out of how many, ending complete", async () => {
-    const { fetcher } = fakeRepo(tree, contents);
-    const steps: [number, number][] = [];
-    await fetchOverviewFiles("acme", "shop", { fetcher, onProgress: (done, total) => steps.push([done, total]) });
-    expect(steps[0]).toEqual([0, 4]); // a lista já chegou: sabe-se quantos há para ler
-    expect(steps[steps.length - 1]).toEqual([4, 4]);
-    expect(steps.map(([d]) => d)).toEqual([...steps.map(([d]) => d)].sort((a, b) => a - b));
-    expect(steps.every(([, total]) => total === 4)).toBe(true);
-  });
-
-  it("counts a file it could not read as done too, so the bar still reaches the end", async () => {
-    const { fetcher } = fakeRepo(tree, contents, { failRaw: ["web/Dockerfile"] });
-    const steps: [number, number][] = [];
-    await fetchOverviewFiles("acme", "shop", { fetcher, onProgress: (done, total) => steps.push([done, total]) });
-    expect(steps[steps.length - 1]).toEqual([4, 4]);
-  });
-
-  it("works without a callback and when there is nothing to read", async () => {
-    const { fetcher } = fakeRepo([{ path: "README.md" }], {});
-    const steps: [number, number][] = [];
-    await fetchOverviewFiles("acme", "shop", { fetcher, onProgress: (d, t) => steps.push([d, t]) });
-    expect(steps).toEqual([[0, 0]]);
-    await expect(fetchOverviewFiles("acme", "shop", { fetcher })).resolves.toBeTruthy();
-  });
-});
-
 describe("fetchOverviewFiles", () => {
   it("asks for the file list once and then only for the configuration files, no source code", async () => {
     const { fetcher, requests } = fakeRepo(

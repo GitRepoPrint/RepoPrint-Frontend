@@ -10,7 +10,7 @@ import { useRepositoryDfd } from "@/hooks/use-repository-dfd";
 import { isDemoRepository } from "@/lib/api/repositories";
 import { combineGraphs } from "@/lib/dfd/combine";
 import { graphToDfdModel } from "@/lib/dfd/to-model";
-import { describeProgress, stepStates } from "@/lib/progress";
+import { describeProgress } from "@/lib/progress";
 import type { CanvasView as CanvasViewType } from "./canvas-view";
 
 // O canvas só é renderizado no browser (sem SSR):
@@ -69,17 +69,11 @@ function LiveCanvas({ analysis, branch }: CanvasLoaderProps) {
         ) : reading ? (
           <LoadingPanel
             title="Reading the source code"
-            detail={detail.status === "loading" && detail.progress ? describeProgress(detail.progress) : "Starting the code analysis…"}
+            detail={detail.status === "loading" && detail.progress ? describeProgress(detail.progress) : "Starting…"}
             progress={detail.status === "loading" ? detail.fraction : undefined}
-            steps={stepStates(detail.status === "loading" ? detail.progress?.stage : undefined)}
-            note="Large repositories can take a minute or two. Only a sample of very large ones is read."
           />
         ) : (
-          <LoadingPanel
-            title="Inferring the architecture"
-            detail={dfd.status === "loading" && dfd.files ? `Reading the configuration · ${dfd.files.done} of ${dfd.files.total} files` : `Looking at the files of ${analysis.repository}…`}
-            progress={dfd.status === "loading" && dfd.files ? dfd.fraction : undefined}
-          />
+          <LoadingPanel title="Inferring the architecture" detail="Reading the configuration…" />
         )}
       </div>
     </div>

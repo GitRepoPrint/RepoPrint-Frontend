@@ -1,5 +1,5 @@
-// A roda de progresso: um anel que se vai enchendo (como a da App Store). Sem `value` é uma roda a girar: quando não se sabe quanto
-// falta. Serve para qualquer espera; o que muda é o `value` (de 0 a 1) e o texto à volta.
+// A roda de progresso: um anel que se vai enchendo (como a da App Store), sem número: só o anel. Sem `value` é uma roda a girar:
+// quando não se sabe quanto falta. A percentagem só existe para quem usa um leitor de ecrã (aria-valuenow). Serve para qualquer espera; o que muda é o `value` (de 0 a 1) e o texto à volta.
 
 const RADIUS = 44;
 export const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
@@ -11,14 +11,12 @@ export type ProgressRingProps = {
   size?: number;
   /** O que se está a esperar, para quem usa um leitor de ecrã. */
   label: string;
-  /** Mostra a percentagem no meio (só quando se sabe o valor). */
-  showPercent?: boolean;
   className?: string;
 };
 
 const clamp = (value: number) => Math.min(Math.max(value, 0), 1);
 
-export function ProgressRing({ value, size = 64, label, showPercent = true, className = "" }: ProgressRingProps) {
+export function ProgressRing({ value, size = 64, label, className = "" }: ProgressRingProps) {
   const known = typeof value === "number" && Number.isFinite(value);
   const fraction = known ? clamp(value) : 0;
   const percent = Math.round(fraction * 100);
@@ -26,7 +24,7 @@ export function ProgressRing({ value, size = 64, label, showPercent = true, clas
   return (
     <div
       className={`progress-ring ${known ? "" : "indeterminate"} ${className}`.trim()}
-      style={{ width: size, height: size, fontSize: size }}
+      style={{ width: size, height: size }}
       role="progressbar"
       aria-label={label}
       aria-valuemin={0}
@@ -45,7 +43,6 @@ export function ProgressRing({ value, size = 64, label, showPercent = true, clas
           strokeDashoffset={known ? CIRCUMFERENCE * (1 - fraction) : CIRCUMFERENCE * 0.72}
         />
       </svg>
-      {known && showPercent && size >= 48 && <span className="progress-ring-value" aria-hidden="true">{percent}%</span>}
     </div>
   );
 }

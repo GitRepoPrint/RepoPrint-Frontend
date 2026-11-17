@@ -15,8 +15,6 @@ const CONCURRENCY = 6;
 export interface FetchOptions {
   fetcher?: Fetcher;
   maxFileBytes?: number;
-  /** Chamado quando se sabe quantos ficheiros há para ler (0 de N) e a cada um que acaba (lido ou não). */
-  onProgress?: (done: number, total: number) => void;
 }
 
 export interface FetchedRepo {
@@ -50,8 +48,6 @@ export async function fetchOverviewFiles(owner: string, repo: string, options: F
   const files: RepoFile[] = [];
   const skipped: string[] = [];
   let next = 0;
-  let finished = 0;
-  options.onProgress?.(0, wanted.length);
   const worker = async () => {
     while (next < wanted.length) {
       const path = wanted[next++];
@@ -62,7 +58,6 @@ export async function fetchOverviewFiles(owner: string, repo: string, options: F
       } catch {
         skipped.push(path);
       }
-      options.onProgress?.(++finished, wanted.length);
     }
   };
   await Promise.all(Array.from({ length: Math.min(CONCURRENCY, wanted.length) }, worker));

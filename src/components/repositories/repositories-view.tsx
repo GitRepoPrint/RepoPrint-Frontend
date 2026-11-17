@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import { AssociateModal } from "@/components/repositories/associate-modal";
 import { RepositoryHealth } from "@/components/repositories/repository-health";
 import { Icon } from "@/components/ui/icon";
-import { LoadingPanel } from "@/components/ui/loading-panel";
+import { RepositoryRowsSkeleton } from "@/components/skeletons/page-skeletons";
 import { useToast } from "@/components/ui/toast";
 import { useRepositories } from "@/hooks/use-repositories";
 import { errorMessage } from "@/lib/api/errors";
@@ -93,8 +93,9 @@ export function RepositoriesView({ githubStatus }: { githubStatus?: string }) {
         </div>
 
         {state.status === "loading" && (
-          <div className="repository-list">
-            <LoadingPanel title="Loading your repositories" detail="This takes a moment." className="repository-loading" />
+          <div className="repository-list" role="status">
+            <span className="sr-only">Loading your repositories</span>
+            <RepositoryRowsSkeleton />
           </div>
         )}
 

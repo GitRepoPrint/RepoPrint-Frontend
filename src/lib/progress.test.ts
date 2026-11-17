@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { STAGES, describeProgress, overallFraction, rising, stepStates } from "./progress";
+import { STAGES, describeProgress, overallFraction, rising } from "./progress";
 import type { LoadProgress } from "./progress";
 
 const at = (stage: LoadProgress["stage"], done = 0, total = 0): LoadProgress => ({ stage, done, total });
@@ -71,17 +71,5 @@ describe("describeProgress", () => {
 describe("STAGES", () => {
   it("are the four phases of the backend, in order", () => {
     expect([...STAGES]).toEqual(["listing", "downloading", "parsing", "building"]);
-  });
-});
-
-describe("stepStates", () => {
-  it("marks what is done, what is going on and what is left", () => {
-    expect(stepStates("parsing").map((s) => s.state)).toEqual(["done", "done", "active", "todo"]);
-    expect(stepStates("listing").map((s) => s.state)).toEqual(["active", "todo", "todo", "todo"]);
-    expect(stepStates("building").map((s) => s.state)).toEqual(["done", "done", "done", "active"]);
-  });
-
-  it("before anything has been reported nothing is done or active", () => {
-    expect(stepStates(undefined).every((s) => s.state === "todo")).toBe(true);
   });
 });

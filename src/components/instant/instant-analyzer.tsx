@@ -1,6 +1,5 @@
 "use client";
 
-import { ProgressRing } from "@/components/ui/progress-ring";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { InstantReportDocument } from "@/components/report/instant-report-document";
@@ -57,7 +56,7 @@ export function InstantAnalyzer({ children }: { children: ReactNode }) {
 
         {state.status === "loading" && (
           <div className="analysis-loading" role="status">
-            <ProgressRing size={56} label="Analyzing repository" />
+            <span className="analysis-spinner large" />
             <div>
               <strong>Analyzing repository</strong>
               <span>Reading the Git activity from GitHub...</span>

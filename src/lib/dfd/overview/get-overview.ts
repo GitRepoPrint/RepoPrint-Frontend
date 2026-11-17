@@ -13,7 +13,7 @@ export interface OverviewData {
   cached: boolean;
 }
 
-type Options = { fetcher?: Fetcher; storage?: KeyValueStorage | null; clock?: () => number; onProgress?: (done: number, total: number) => void };
+type Options = { fetcher?: Fetcher; storage?: KeyValueStorage | null; clock?: () => number };
 
 function browserStorage(): KeyValueStorage | null {
   try {
@@ -39,7 +39,7 @@ export async function getOverview(owner: string, repo: string, options: Options 
   const hit = storage ? readOverviewCache(storage, owner, repo, now) : null;
   if (hit) return result(hit.graph, false, hit.fetchedAt, true);
 
-  const { graph, partial } = await analyzeOverview(owner, repo, { fetcher: options.fetcher, onProgress: options.onProgress });
+  const { graph, partial } = await analyzeOverview(owner, repo, { fetcher: options.fetcher });
   // Um resultado incompleto não se guarda: voltar a pedir pode ir buscar o que faltou
   if (storage && !partial) writeOverviewCache(storage, owner, repo, graph, now);
   return result(graph, partial, now, false);
