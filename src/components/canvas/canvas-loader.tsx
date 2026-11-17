@@ -2,7 +2,9 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, type ComponentProps } from "react";
+import { FocusBar } from "@/components/dfd/focus-bar";
 import { Icon } from "@/components/ui/icon";
+import { useDfdFocus } from "@/hooks/use-dfd-focus";
 import { useRepositoryDfd } from "@/hooks/use-repository-dfd";
 import { isDemoRepository } from "@/lib/api/repositories";
 import { combineGraphs } from "@/lib/dfd/combine";
@@ -28,24 +30,32 @@ export function CanvasLoader(props: CanvasLoaderProps) {
   return <LiveCanvas {...props} />;
 }
 
-/** Para um repositório real, o diagrama é o que se infere da configuração dele (o mesmo do dashboard). */
+/** Para um repositório real, o diagrama é o inferido dele (configuração e, com o serviço de análise, código). */
 function LiveCanvas({ analysis, branch }: CanvasLoaderProps) {
   const { dfd, retry, detail, loadDetail, detailAvailable } = useRepositoryDfd(analysis.repository);
 
-  // Com o serviço de análise de código configurado, a vista completa é a de detalhe: o overview com tudo aberto.
+  // Com o serviço de análise de código configurado, a vista completa usa o detalhe: o overview com tudo aberto.
   // Sem ele (ou se falhar) fica o overview, que é o que a configuração mostra.
   useEffect(() => {
     if (dfd.status === "ready" && detailAvailable && detail.status === "idle") loadDetail();
   }, [dfd.status, detailAvailable, detail.status, loadDetail]);
 
-  const model = useMemo(() => {
+  const full = useMemo(() => {
     if (dfd.status !== "ready") return null;
-    if (detail.status !== "ready") return dfd.model;
-    return graphToDfdModel(project(combineGraphs(dfd.graph, detail.graph), { expanded: "all" }));
+    const graph = detail.status === "ready" ? combineGraphs(dfd.graph, detail.graph) : dfd.graph;
+    return project(graph, { expanded: "all" });
   }, [dfd, detail]);
 
+  // Tudo aberto pode ser centenas de componentes: por defeito vê-se o fluxo principal (no máximo 10), e os controlos deixam escolher outros.
+  const focus = useDfdFocus(full);
+  const model = useMemo(() => (full ? graphToDfdModel(focus.result.view) : null), [full, focus.result.view]);
+  // O React Flow só lê o diagrama inicial uma vez: quando o que se vê muda, desenha-se de novo
+  const viewKey = useMemo(() => `${focus.state.mode}:${focus.result.view.nodes.map((n) => n.id).join("|")}`, [focus.state.mode, focus.result.view]);
+
   const waitingForCode = dfd.status === "ready" && detailAvailable && (detail.status === "idle" || detail.status === "loading");
-  if (dfd.status === "ready" && model && !waitingForCode) return <CanvasView analysis={{ ...analysis, dfd: model }} branch={branch} live />;
+  if (dfd.status === "ready" && model && !waitingForCode) {
+    return <CanvasView key={viewKey} analysis={{ ...analysis, dfd: model }} branch={branch} live fresh={focus.touched} topSlot={<FocusBar focus={focus} />} />;
+  }
 
   return (
     <div className="canvas-app h-[calc(100vh-72px)]!" aria-busy={dfd.status === "loading" || waitingForCode}>

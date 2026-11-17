@@ -48,7 +48,7 @@ pnpm test        # Vitest: testes da análise do GitHub (sem rede, com respostas
 | `/login`, `/signup` | O login é simulado: **Continue with GitHub**, ou qualquer email válido com uma password de 8+ caracteres. A sessão é um cookie (`rp_session`) que dura 24 h. |
 | `/repositories` | Lista de repositórios de exemplo. **Associate repository** acrescenta um (fica guardado no `localStorage` do browser). |
 | `/repositories/<org>--<repo>` | Dashboard com 3 tabs (Threats, DFD, Team). **Export PDF Report** imprime o relatório formal. |
-| `/repositories/<org>--<repo>/dfd` | Editor do DFD: arrastar componentes, ligar nós, Auto Layout, **Save Diagram** (guarda no `localStorage`) e **Export SVG**. |
+| `/repositories/<org>--<repo>/dfd` | Editor do DFD: arrastar componentes, ligar nós, Auto Layout, **Save Diagram** (guarda no `localStorage`) e **Export SVG**. Por defeito mostra o fluxo principal (máx. 10 componentes); ver "O diagrama (DFD)". |
 
 Para voltar ao estado inicial basta limpar os dados do site no browser (cookies + localStorage).
 
@@ -141,3 +141,18 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 ```
 
 No backend, `CORS_ORIGINS` tem de incluir a origem do frontend (por defeito `http://localhost:3000`).
+
+### O que se vê de um diagrama grande (máximo de 10 componentes)
+
+Um repositório grande tem centenas de pastas (o FastAPI tem 229 componentes), por isso o diagrama nunca desenha mais de **10
+componentes ao mesmo tempo**, a não ser que se peça o diagrama inteiro. A barra por cima do diagrama (no dashboard e no canvas) tem:
+
+- **Main flow** (por defeito): os 10 componentes por onde os dados mais passam. Começa no mais importante e vai juntando o
+  melhor dos que se ligam ao que já lá está. Pesam mais as ligações de dados (lê, escreve, chama, pedidos HTTP) do que os
+  imports, e contam mais o cliente, as bases de dados e os sistemas de fora; testes, documentação, exemplos e scripts ficam para o fim.
+- **Choose components**: lista com pesquisa (nome, pasta ou tecnologia) e ordenação (mais ligados, nome, tipo); escolhem-se no máximo 10.
+- **Whole diagram**: tudo, sem limite.
+- Filtros por tipo (processos, bases de dados, externos) e **Back to main flow**.
+
+O código está em `src/lib/dfd/focus.ts` (`MAX_FOCUS_NODES`, testado em `focus.test.ts`), `src/hooks/use-dfd-focus.ts` e
+`src/components/dfd/focus-bar.tsx`. No canvas, mexer nos controlos desenha o diagrama de novo e ignora o guardado.

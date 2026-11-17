@@ -1,8 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import type { ReactNode } from "react";
 import { DfdScene, KIND_LABEL } from "@/components/dfd/dfd-scene";
+import { FocusBar } from "@/components/dfd/focus-bar";
 import { Icon } from "@/components/ui/icon";
+import { useDfdFocus } from "@/hooks/use-dfd-focus";
 import { useRepositoryDfd } from "@/hooks/use-repository-dfd";
 import type { DetailState } from "@/hooks/use-repository-dfd";
 import { combineGraphs } from "@/lib/dfd/combine";
@@ -42,7 +45,11 @@ function LiveDfdTab({ repository, findings, onOpenThreats, onEdit }: Pick<DfdTab
   const expanded = chosen ?? initiallyOpen;
   const graph = useMemo(() => (overview ? (detail.status === "ready" ? combineGraphs(overview, detail.graph) : overview) : null), [overview, detail]);
   const view = useMemo(() => (graph ? project(graph, { expanded }) : null), [graph, expanded]);
-  const model = useMemo(() => (view ? graphToDfdModel(view) : null), [view]);
+  // O diagrama inteiro pode ter centenas de componentes: por defeito vê-se o fluxo principal (no máximo 10) e o utilizador escolhe o resto.
+  // As partes de um componente aberto têm prioridade, para abrir um componente mostrar o que tem dentro.
+  const boost = useMemo<ReadonlySet<string>>(() => new Set((graph?.nodes ?? []).filter((n) => n.parent && expanded.has(n.parent)).map((n) => n.id)), [graph, expanded]);
+  const focus = useDfdFocus(view, { pinned: selected ?? undefined, boost });
+  const model = useMemo(() => (view ? graphToDfdModel(focus.result.view) : null), [view, focus.result.view]);
 
   if (dfd.status === "loading") {
     return (
@@ -91,6 +98,7 @@ function LiveDfdTab({ repository, findings, onOpenThreats, onEdit }: Pick<DfdTab
       onOpenThreats={onOpenThreats}
       onEdit={onEdit}
       onToggleExpand={toggle}
+      toolbar={<FocusBar focus={focus} />}
       detail={{
         available: detailAvailable,
         state: detail,
@@ -126,6 +134,8 @@ type PanelProps = Omit<DfdTabProps, "demoModel"> & {
   inferred?: { partial: boolean; files: number; fallback?: string; codeFiles?: number };
   detail?: DetailControls;
   onToggleExpand?: (id: string) => void;
+  /** Os controlos do que se vê (FocusBar), entre o aviso e o diagrama. */
+  toolbar?: ReactNode;
 };
 
 function DetailBar({ detail }: { detail: DetailControls }) {
@@ -174,11 +184,18 @@ function Evidence({ repository, node }: { repository: string; node: DfdNodeData 
   );
 }
 
-export function DfdPanel({ repository, model, findings, nodeId, onSelectNode, onOpenThreats, onEdit, inferred, detail, onToggleExpand }: PanelProps) {
+export function DfdPanel({ repository, model, findings, nodeId, onSelectNode, onOpenThreats, onEdit, inferred, detail, onToggleExpand, toolbar }: PanelProps) {
   const risks = risksByNode(model, findings);
   const current = risks.find((risk) => risk.node.id === nodeId) ?? risks[0];
   const summary = Object.fromEntries(risks.map((risk) => [risk.node.id, { severity: risk.severity, count: risk.findings.length }]));
-  if (!current) return <p className="dfd-node-empty">There is nothing to show for this repository yet.</p>;
+  if (!current) {
+    return (
+      <div className="dfd-tab">
+        {toolbar}
+        <p className="dfd-node-empty">{toolbar ? "No component is selected. Pick some above, or go back to the main flow." : "There is nothing to show for this repository yet."}</p>
+      </div>
+    );
+  }
   const { node, findings: nodeFindings } = current;
 
   return (
@@ -201,6 +218,7 @@ export function DfdPanel({ repository, model, findings, nodeId, onSelectNode, on
           </span>
         </p>
       )}
+      {toolbar}
       <section className="dfd-preview-section" aria-label="Inferred Architecture and Data Flow Diagram">
         <div className="dfd-layout">
           <DfdScene model={model} risk={summary} selected={node.id} onSelect={onSelectNode} />
