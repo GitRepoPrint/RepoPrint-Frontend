@@ -8,7 +8,6 @@ import { useDfdFocus } from "@/hooks/use-dfd-focus";
 import { useRepositoryDfd } from "@/hooks/use-repository-dfd";
 import { isDemoRepository } from "@/lib/api/repositories";
 import { combineGraphs } from "@/lib/dfd/combine";
-import { project } from "@/lib/dfd/project";
 import { graphToDfdModel } from "@/lib/dfd/to-model";
 import type { CanvasView as CanvasViewType } from "./canvas-view";
 
@@ -40,15 +39,13 @@ function LiveCanvas({ analysis, branch }: CanvasLoaderProps) {
     if (dfd.status === "ready" && detailAvailable && detail.status === "idle") loadDetail();
   }, [dfd.status, detailAvailable, detail.status, loadDetail]);
 
-  const full = useMemo(() => {
+  // O grafo completo (configuração e, com o serviço de análise, código). O que se vê dele decide-o o foco (use-dfd-focus.ts).
+  const graph = useMemo(() => {
     if (dfd.status !== "ready") return null;
-    const graph = detail.status === "ready" ? combineGraphs(dfd.graph, detail.graph) : dfd.graph;
-    return project(graph, { expanded: "all" });
+    return detail.status === "ready" ? combineGraphs(dfd.graph, detail.graph) : dfd.graph;
   }, [dfd, detail]);
-
-  // Tudo aberto pode ser centenas de componentes: por defeito vê-se o fluxo principal (no máximo 10), e os controlos deixam escolher outros.
-  const focus = useDfdFocus(full);
-  const model = useMemo(() => (full ? graphToDfdModel(focus.result.view) : null), [full, focus.result.view]);
+  const focus = useDfdFocus(graph);
+  const model = useMemo(() => (graph ? graphToDfdModel(focus.result.view) : null), [graph, focus.result.view]);
   // O React Flow só lê o diagrama inicial uma vez: quando o que se vê muda, desenha-se de novo
   const viewKey = useMemo(() => `${focus.state.mode}:${focus.result.view.nodes.map((n) => n.id).join("|")}`, [focus.state.mode, focus.result.view]);
 

@@ -67,6 +67,21 @@ function validParents(nodes: GraphNode[]): Map<string, string> {
   return parent;
 }
 
+/**
+ * Os componentes abertos para mostrar `levels` níveis de pastas: 1 = só as partes diretas de cada componente de topo,
+ * 2 = também as pastas dentro dessas, e assim por diante. O que está abaixo do limite fica fechado dentro do seu pai
+ * (as ligações sobem para ele), por isso é uma forma de encurtar o diagrama sem perder nenhum fluxo.
+ */
+export function expandToDepth(graph: DfdGraph, levels: number): ReadonlySet<string> {
+  const parent = validParents(graph.nodes);
+  const depthOf = (id: string) => {
+    let depth = 0;
+    for (let current = id; parent.has(current); current = parent.get(current)!) depth++;
+    return depth;
+  };
+  return new Set(graph.nodes.filter((n) => n.kind === "process" && depthOf(n.id) < levels).map((n) => n.id));
+}
+
 /** O nó que representa `id` na vista: o ancestral mais alto que está fechado, ou o próprio nó se todos os de cima estão abertos. */
 function representative(id: string, parent: Map<string, string>, isExpanded: (id: string) => boolean): string {
   const chain = [id];

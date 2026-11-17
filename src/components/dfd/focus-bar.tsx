@@ -1,7 +1,8 @@
 "use client";
 
 import { useId } from "react";
-import type { DfdFocus } from "@/hooks/use-dfd-focus";
+import type { DetailLevel, DfdFocus } from "@/hooks/use-dfd-focus";
+import { DEFAULT_LEVELS } from "@/hooks/use-dfd-focus";
 import type { FocusMode, FocusSort } from "@/lib/dfd/focus";
 import type { GraphNodeKind } from "@/lib/dfd/schema";
 
@@ -23,25 +24,32 @@ const SORTS: { id: FocusSort; label: string }[] = [
   { id: "kind", label: "Type" },
 ];
 
+const LEVELS: { id: DetailLevel; label: string }[] = [
+  { id: 1, label: "1 level of folders" },
+  { id: 2, label: "2 levels" },
+  { id: 3, label: "3 levels" },
+  { id: "all", label: "All levels" },
+];
+
 const KIND_LABEL: Record<GraphNodeKind, string> = { process: "Process", data_store: "Data store", external_entity: "External" };
 
 function summary(focus: DfdFocus): string {
-  const { shown, total, overflow } = focus.result;
-  if (focus.state.mode === "all") return `Showing the whole diagram: ${shown} of ${total} components.`;
-  if (focus.state.mode === "pick") {
-    return `${shown} of ${focus.max} components chosen${overflow ? ` (${overflow} more did not fit)` : ""}. The diagram has ${total}.`;
-  }
-  return total > shown ? `Showing the ${shown} components the data flows through most, out of ${total}.` : `Showing all ${total} components.`;
+  const { shown, total } = focus.result;
+  if (focus.state.mode === "all") return `Whole diagram: ${shown} components.`;
+  if (focus.state.mode === "pick") return `${shown} of ${total} components chosen.`;
+  return shown < total ? `Main data flow: ${shown} of ${total} components.` : `Showing all ${total} components: nothing to leave out.`;
 }
 
+const parseLevels = (value: string): DetailLevel => (value === "all" ? "all" : (Number(value) as 1 | 2 | 3));
+
 /**
- * Controla o que se vê de um diagrama grande: o fluxo principal (no máximo 10 componentes), componentes escolhidos à mão
- * (também no máximo 10) ou o diagrama inteiro. Filtra por tipo e por texto e ordena a lista de componentes.
+ * Controla o que se vê na vista completa do diagrama: o fluxo principal (sem limite de componentes), componentes escolhidos à
+ * mão ou o diagrama inteiro; filtra por tipo, escolhe quantos níveis de pastas se veem e se entram testes e documentação.
  */
 export function FocusBar({ focus }: { focus: DfdFocus }) {
   const id = useId();
   const { state } = focus;
-  const atLimit = state.picked.length >= focus.max;
+  const changed = state.mode !== "main" || state.kinds.size < KINDS.length || state.levels !== DEFAULT_LEVELS || state.includeAuxiliary;
 
   return (
     <section className="dfd-focus" aria-label="What the diagram shows">
@@ -73,12 +81,31 @@ export function FocusBar({ focus }: { focus: DfdFocus }) {
             </button>
           ))}
         </div>
-        {(state.mode !== "main" || state.kinds.size < KINDS.length) && (
-          <button type="button" className="dfd-focus-reset" onClick={focus.reset}>Back to main flow</button>
-        )}
+        <label htmlFor={`${id}-levels`} className="dfd-focus-sort">
+          <span>Detail</span>
+          <select id={`${id}-levels`} value={String(state.levels)} onChange={(event) => focus.setLevels(parseLevels(event.target.value))}>
+            {LEVELS.map((level) => <option key={String(level.id)} value={String(level.id)}>{level.label}</option>)}
+          </select>
+        </label>
+        <label className="dfd-focus-check">
+          <input type="checkbox" checked={state.includeAuxiliary} onChange={(event) => focus.setIncludeAuxiliary(event.target.checked)} />
+          <span>Include tests, docs and examples</span>
+        </label>
+        {changed && <button type="button" className="dfd-focus-reset" onClick={focus.reset}>Reset</button>}
       </div>
 
       <p className="dfd-focus-summary" role="status">{summary(focus)}</p>
+      {state.mode === "main" && (
+        <details className="dfd-focus-help">
+          <summary>How is the main flow chosen?</summary>
+          <p>
+            It follows the data. Where requests come in (code that receives calls from the client) and where data ends up (databases
+            and outside services, and the code that touches them) are the two ends; the main flow is every component on a path between
+            them. Utilities, configuration and models that are not on any such path are left out, and so are tests, documentation,
+            examples and scripts unless you include them.
+          </p>
+        </details>
+      )}
 
       {state.mode === "pick" && (
         <div className="dfd-focus-picker">
@@ -99,20 +126,16 @@ export function FocusBar({ focus }: { focus: DfdFocus }) {
               </select>
             </label>
           </div>
-          {atLimit && <p className="dfd-focus-limit" role="note">The diagram shows at most {focus.max} components at a time. Untick one to add another.</p>}
           <ul className="dfd-focus-list" aria-label="Components">
-            {focus.rows.map((row) => {
-              const checked = state.picked.includes(row.id);
-              return (
-                <li key={row.id}>
-                  <label className={!checked && atLimit ? "disabled" : ""}>
-                    <input type="checkbox" checked={checked} disabled={!checked && atLimit} onChange={() => focus.togglePicked(row.id)} />
-                    <span className="dfd-focus-name">{row.name}</span>
-                    <span className="dfd-focus-meta">{KIND_LABEL[row.kind]} · {row.connections} {row.connections === 1 ? "connection" : "connections"}</span>
-                  </label>
-                </li>
-              );
-            })}
+            {focus.rows.map((row) => (
+              <li key={row.id}>
+                <label>
+                  <input type="checkbox" checked={state.picked.includes(row.id)} onChange={() => focus.togglePicked(row.id)} />
+                  <span className="dfd-focus-name">{row.name}</span>
+                  <span className="dfd-focus-meta">{KIND_LABEL[row.kind]} · {row.connections} {row.connections === 1 ? "connection" : "connections"}</span>
+                </label>
+              </li>
+            ))}
             {focus.rows.length === 0 && <li className="dfd-focus-none">No component matches.</li>}
           </ul>
         </div>

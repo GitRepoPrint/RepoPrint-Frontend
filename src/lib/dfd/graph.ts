@@ -8,7 +8,8 @@ export const NODE_WIDTH = 170;
 export const NODE_HEIGHT = 104;
 export const GRID = 20;
 /** Limites de zoom do canvas (usados pelo React Flow e pelos botões +/- da toolbar). */
-export const MIN_ZOOM = 0.5;
+// Baixo o bastante para caber um fluxo principal grande (dezenas de componentes) sem cortar nada
+export const MIN_ZOOM = 0.15;
 export const MAX_ZOOM = 1.5;
 export const EDGE_COLOR = "#8176b1";
 

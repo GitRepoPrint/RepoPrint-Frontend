@@ -1,8 +1,13 @@
 import { useCallback, useMemo, useState } from "react";
-import { ALL_KINDS, MAX_FOCUS_NODES, applyFocus, listNodes } from "@/lib/dfd/focus";
+import { ALL_KINDS, applyFocus, listNodes, withoutAuxiliary } from "@/lib/dfd/focus";
 import type { FocusMode, FocusResult, FocusSort, NodeRow } from "@/lib/dfd/focus";
+import { expandToDepth, project } from "@/lib/dfd/project";
 import type { GraphView } from "@/lib/dfd/project";
-import type { GraphNodeKind } from "@/lib/dfd/schema";
+import type { DfdGraph, GraphNodeKind } from "@/lib/dfd/schema";
+
+/** Quantos níveis de pastas se mostram (1, 2, 3) ou todos. */
+export type DetailLevel = 1 | 2 | 3 | "all";
+export const DEFAULT_LEVELS: DetailLevel = 2;
 
 export interface FocusState {
   mode: FocusMode;
@@ -10,16 +15,18 @@ export interface FocusState {
   kinds: ReadonlySet<GraphNodeKind>;
   query: string;
   sort: FocusSort;
+  levels: DetailLevel;
+  /** Incluir testes, documentação, exemplos e scripts. */
+  includeAuxiliary: boolean;
 }
 
-const INITIAL: FocusState = { mode: "main", picked: [], kinds: new Set(ALL_KINDS), query: "", sort: "importance" };
+const INITIAL: FocusState = { mode: "main", picked: [], kinds: new Set(ALL_KINDS), query: "", sort: "importance", levels: DEFAULT_LEVELS, includeAuxiliary: false };
 
 export interface DfdFocus {
   state: FocusState;
   result: FocusResult;
-  /** Os componentes que se podem escolher (a vista inteira, filtrada e ordenada). */
+  /** Os componentes que se podem escolher (a vista antes do foco, filtrada e ordenada). */
   rows: NodeRow[];
-  max: number;
   /** O utilizador mexeu em alguma coisa (o canvas deixa de usar o diagrama guardado). */
   touched: boolean;
   setMode: (mode: FocusMode) => void;
@@ -27,25 +34,29 @@ export interface DfdFocus {
   toggleKind: (kind: GraphNodeKind) => void;
   setQuery: (query: string) => void;
   setSort: (sort: FocusSort) => void;
+  setLevels: (levels: DetailLevel) => void;
+  setIncludeAuxiliary: (include: boolean) => void;
   reset: () => void;
 }
 
+const EMPTY: GraphView = { nodes: [], edges: [], children: {} };
+
 /**
- * O que se vê de um diagrama grande: por defeito o fluxo principal (no máximo MAX_FOCUS_NODES componentes), e o utilizador
- * pode escolher outros componentes ou pedir o diagrama inteiro. `view` é a vista inteira (depois de abrir e fechar componentes).
+ * O que se vê na vista completa do diagrama. Por defeito é o fluxo principal (sem limite de componentes) de um diagrama sem
+ * testes, documentação nem exemplos e com 2 níveis de pastas; o utilizador pode escolher componentes, pedir o diagrama inteiro,
+ * filtrar por tipo, mudar quantos níveis de pastas se veem e voltar a incluir testes e documentação.
  */
-export function useDfdFocus(view: GraphView | null, options: { pinned?: string; boost?: ReadonlySet<string> } = {}): DfdFocus {
+export function useDfdFocus(graph: DfdGraph | null): DfdFocus {
   const [state, setState] = useState<FocusState>(INITIAL);
   const [touched, setTouched] = useState(false);
-  const { pinned, boost } = options;
 
-  const empty = useMemo<GraphView>(() => ({ nodes: [], edges: [], children: {} }), []);
-  const base = view ?? empty;
+  const base = useMemo(() => {
+    if (!graph) return EMPTY;
+    const shaped = state.includeAuxiliary ? graph : withoutAuxiliary(graph);
+    return project(shaped, { expanded: state.levels === "all" ? "all" : expandToDepth(shaped, state.levels) });
+  }, [graph, state.includeAuxiliary, state.levels]);
 
-  const result = useMemo(
-    () => applyFocus(base, { mode: state.mode, picked: state.picked, kinds: state.kinds, pinned: pinned ? [pinned] : [], boost }),
-    [base, state.mode, state.picked, state.kinds, pinned, boost],
-  );
+  const result = useMemo(() => applyFocus(base, { mode: state.mode, picked: state.picked, kinds: state.kinds }), [base, state.mode, state.picked, state.kinds]);
   const rows = useMemo(() => listNodes(base, { kinds: state.kinds, query: state.query, sort: state.sort }), [base, state.kinds, state.query, state.sort]);
 
   const update = useCallback((change: (current: FocusState) => FocusState) => {
@@ -53,9 +64,7 @@ export function useDfdFocus(view: GraphView | null, options: { pinned?: string; 
     setState(change);
   }, []);
 
-  const shownIds = result.view.nodes.map((n) => n.id);
-  const shownKey = shownIds.join("\u0000");
-
+  const shownKey = result.view.nodes.map((n) => n.id).join("\u0000");
   const setMode = useCallback(
     (mode: FocusMode) => {
       // Ao passar a escolher, parte-se do que já se via: é mais fácil tirar e pôr do que começar de zero.
@@ -64,13 +73,7 @@ export function useDfdFocus(view: GraphView | null, options: { pinned?: string; 
     [update, shownKey],
   );
   const togglePicked = useCallback(
-    (id: string) =>
-      update((current) => {
-        if (current.picked.includes(id)) return { ...current, picked: current.picked.filter((p) => p !== id) };
-        // O limite é imposto: passado o máximo, escolher mais não faz nada.
-        if (current.picked.length >= MAX_FOCUS_NODES) return current;
-        return { ...current, picked: [...current.picked, id] };
-      }),
+    (id: string) => update((current) => ({ ...current, picked: current.picked.includes(id) ? current.picked.filter((p) => p !== id) : [...current.picked, id] })),
     [update],
   );
   const toggleKind = useCallback(
@@ -85,7 +88,9 @@ export function useDfdFocus(view: GraphView | null, options: { pinned?: string; 
   );
   const setQuery = useCallback((query: string) => setState((current) => ({ ...current, query })), []);
   const setSort = useCallback((sort: FocusSort) => setState((current) => ({ ...current, sort })), []);
+  const setLevels = useCallback((levels: DetailLevel) => update((current) => ({ ...current, levels })), [update]);
+  const setIncludeAuxiliary = useCallback((includeAuxiliary: boolean) => update((current) => ({ ...current, includeAuxiliary })), [update]);
   const reset = useCallback(() => update(() => INITIAL), [update]);
 
-  return { state, result, rows, max: MAX_FOCUS_NODES, touched, setMode, togglePicked, toggleKind, setQuery, setSort, reset };
+  return { state, result, rows, touched, setMode, togglePicked, toggleKind, setQuery, setSort, setLevels, setIncludeAuxiliary, reset };
 }

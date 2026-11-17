@@ -188,6 +188,7 @@
 
 .tool-item > span:nth-child(2) {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 4px;
   min-width: 0;
@@ -195,13 +196,16 @@
 
 .tool-item strong {
   font-size: 13px;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .tool-item small {
   color: #7f8493;
-  font-size: 13px;
-  white-space: nowrap;
+  font-size: 12px;
+  line-height: 1.3;
+  /* a descrição quebra dentro do cartão em vez de passar por cima do "+" */
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .tool-icon,

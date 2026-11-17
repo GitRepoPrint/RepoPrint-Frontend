@@ -79,10 +79,12 @@ type DfdSceneProps = {
   risk: Record<string, NodeRiskSummary>;
   selected: string | null;
   onSelect: (id: string) => void;
+  /** O desenho encolhe para caber sempre inteiro na caixa (sem deslocar nem zoom). Usa-se na prévia dos repositórios reais. */
+  fit?: boolean;
 };
 
 /** Prévia interativa (zoom e seleção de nós) do DFD no dashboard. O canvas editável será outro componente. */
-export function DfdScene({ model, risk, selected, onSelect }: DfdSceneProps) {
+export function DfdScene({ model, risk, selected, onSelect, fit = false }: DfdSceneProps) {
   const [zoom, setZoom] = useState(100);
   const { boundary, viewBox } = model;
 
@@ -95,9 +97,9 @@ export function DfdScene({ model, risk, selected, onSelect }: DfdSceneProps) {
 
   return (
     <div className="dfd-preview">
-      <div className={`dfd-preview-viewport${viewBox ? " dfd-preview-viewport-fit" : ""}`}>
-        <div className={`dfd-preview-scene${viewBox ? " dfd-preview-scene-fit" : ""}`} style={{ transform: `scale(${zoom / 100})` }}>
-          <svg className="dfd-preview-svg" viewBox={`0 0 ${viewBox?.width ?? 1000} ${viewBox?.height ?? 320}`} role="img" aria-label="Interactive data flow diagram with external entities, backend processes, data stores and the findings on each component">
+      <div className={`dfd-preview-viewport${fit ? " dfd-preview-viewport-autofit" : viewBox ? " dfd-preview-viewport-fit" : ""}`}>
+        <div className={`dfd-preview-scene${fit ? " dfd-preview-scene-autofit" : viewBox ? " dfd-preview-scene-fit" : ""}`} style={fit ? undefined : { transform: `scale(${zoom / 100})` }}>
+          <svg className="dfd-preview-svg" viewBox={`0 0 ${viewBox?.width ?? 1000} ${viewBox?.height ?? 320}`} preserveAspectRatio={fit ? "xMidYMid meet" : undefined} role="img" aria-label="Interactive data flow diagram with external entities, backend processes, data stores and the findings on each component">
             <defs>
               <marker id="dfd-preview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#85859a" /></marker>
             </defs>
@@ -153,14 +155,14 @@ export function DfdScene({ model, risk, selected, onSelect }: DfdSceneProps) {
           <li><i className="risk-none" />No findings</li>
           <li>Number shows the findings on each component</li>
         </ul>
-        <div className="dfd-preview-toolbar" aria-label="Diagram preview controls">
+        {fit ? <span className="dfd-live-sync"><span />Fits the box</span> : <div className="dfd-preview-toolbar" aria-label="Diagram preview controls">
           <button type="button" title="Zoom out" aria-label="Zoom out" onClick={() => setZoom((v) => Math.max(70, v - 10))}><Icon name="minus" size={15} /></button>
           <span className="dfd-preview-zoom">{zoom}%</span>
           <button type="button" title="Zoom in" aria-label="Zoom in" onClick={() => setZoom((v) => Math.min(140, v + 10))}><Icon name="plus" size={15} /></button>
           <span className="dfd-toolbar-divider" />
           <button type="button" className="dfd-reset-button" onClick={() => setZoom(100)}>Reset View</button>
           <span className="dfd-live-sync"><span />Live Sync</span>
-        </div>
+        </div>}
       </div>
     </div>
   );
