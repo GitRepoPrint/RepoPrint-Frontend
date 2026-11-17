@@ -8,6 +8,7 @@
 //     dobradas no pai.
 //
 // Tudo isto são funções sobre o grafo ou a vista, como o resto de lib/dfd: nenhuma muda o que a análise encontrou.
+import { declutterEdges } from "./declutter";
 import type { GraphView } from "./project";
 import type { DfdGraph, GraphEdge, GraphNode, GraphNodeKind } from "./schema";
 
@@ -284,7 +285,7 @@ function restrict(view: GraphView, ids: ReadonlySet<string>): GraphView {
 /** A prévia do dashboard (no máximo `max` componentes). */
 export function applyOverview(view: GraphView, options: { max?: number; boost?: ReadonlySet<string> } = {}): FocusResult {
   const ids = new Set(overviewIds(view, options));
-  return { view: restrict(view, ids), total: view.nodes.length, shown: ids.size };
+  return { view: declutterEdges(restrict(view, ids)), total: view.nodes.length, shown: ids.size };
 }
 
 /** A vista completa (canvas): o fluxo principal, os componentes escolhidos ou tudo. Sem limite de componentes. */
@@ -297,7 +298,7 @@ export function applyFocus(view: GraphView, options: FocusOptions): FocusResult 
     const existing = new Set(view.nodes.map((n) => n.id));
     ids = new Set((options.picked ?? []).filter((id) => existing.has(id)));
   } else ids = new Set(flowIds(view, { kinds, pinned: options.pinned, boost: options.boost }));
-  return { view: restrict(view, ids), total, shown: ids.size };
+  return { view: declutterEdges(restrict(view, ids)), total, shown: ids.size };
 }
 
 /** A lista para escolher componentes: filtrada por tipo e por texto, e ordenada. */

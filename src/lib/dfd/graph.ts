@@ -3,6 +3,8 @@
 import { MarkerType } from "@xyflow/react";
 import type { Edge, Node } from "@xyflow/react";
 import type { DfdEdge, DfdModel, DfdNodeKind } from "@/lib/api/types";
+import { edgeKind } from "./declutter";
+import type { EdgeKind, EdgeState } from "./declutter";
 
 export const NODE_WIDTH = 170;
 export const NODE_HEIGHT = 104;
@@ -37,7 +39,8 @@ export interface Diagram {
 /** Dados guardados dentro de cada nó do React Flow. */
 export type DfdFlowNodeData = Omit<DiagramNode, "id" | "position"> & Record<string, unknown>;
 export type DfdFlowNode = Node<DfdFlowNodeData, "dfd">;
-export type DfdFlowEdge = Edge<{ label: string }, "flow">;
+/** `state` não se guarda: é o realce da seleção, calculado ao desenhar (declutter.ts, markEdges). */
+export type DfdFlowEdge = Edge<{ label: string; kind?: EdgeKind; bidirectional?: boolean; state?: EdgeState }, "flow">;
 
 export const KIND_LABEL: Record<DfdNodeKind, string> = {
   external: "External Entity",
@@ -114,8 +117,10 @@ export function toFlowEdge(edge: DfdEdge): DfdFlowEdge {
     sourceHandle: edge.sourceHandle,
     targetHandle: edge.targetHandle,
     type: "flow",
-    data: { label: edge.label },
+    // Um diagrama guardado antes de haver tipos de ligação não os tem: deduz-se da legenda
+    data: { label: edge.label, kind: edge.kind ?? edgeKind(edge.label), ...(edge.bidirectional ? { bidirectional: true } : {}) },
     markerEnd: { type: MarkerType.ArrowClosed, color: EDGE_COLOR, width: 16, height: 16 },
+    ...(edge.bidirectional ? { markerStart: { type: MarkerType.ArrowClosed, color: EDGE_COLOR, width: 16, height: 16 } } : {}),
   };
 }
 
@@ -152,6 +157,8 @@ export function toDiagram(nodes: DfdFlowNode[], edges: DfdFlowEdge[]): Diagram {
       sourceHandle: (e.sourceHandle === "b" ? "b" : "r") as DfdEdge["sourceHandle"],
       targetHandle: (e.targetHandle === "t" ? "t" : "l") as DfdEdge["targetHandle"],
       label: e.data?.label ?? "",
+      ...(e.data?.kind === "dependency" ? { kind: "dependency" as const } : {}),
+      ...(e.data?.bidirectional ? { bidirectional: true } : {}),
     })),
   };
 }

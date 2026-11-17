@@ -102,6 +102,9 @@ export function DfdScene({ model, risk, selected, onSelect, fit = false }: DfdSc
           <svg className="dfd-preview-svg" viewBox={`0 0 ${viewBox?.width ?? 1000} ${viewBox?.height ?? 320}`} preserveAspectRatio={fit ? "xMidYMid meet" : undefined} role="img" aria-label="Interactive data flow diagram with external entities, backend processes, data stores and the findings on each component">
             <defs>
               <marker id="dfd-preview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#85859a" /></marker>
+              {model.edges.some((e) => e.bidirectional) && (
+                <marker id="dfd-preview-arrow-start" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto-start-reverse"><path d="M0 0 8 4 0 8Z" fill="#85859a" /></marker>
+              )}
             </defs>
             {boundary && (
               <>
@@ -110,7 +113,18 @@ export function DfdScene({ model, risk, selected, onSelect, fit = false }: DfdSc
               </>
             )}
             {model.containment?.map((d, index) => <path key={`c${index}:${d}`} className="dfd-contain-link" d={d} />)}
-            {model.flows.map((d, index) => <path key={`${index}:${d}`} className="dfd-flow-link" d={d} markerEnd="url(#dfd-preview-arrow)" />)}
+            {model.flows.map((d, index) => {
+              const edge = model.edges[index];
+              return (
+                <path
+                  key={`${index}:${d}`}
+                  className={edge?.kind === "dependency" ? "dfd-flow-link dependency" : "dfd-flow-link"}
+                  d={d}
+                  markerEnd="url(#dfd-preview-arrow)"
+                  markerStart={edge?.bidirectional ? "url(#dfd-preview-arrow-start)" : undefined}
+                />
+              );
+            })}
             {model.nodes.map((node) => {
               const { severity, count } = risk[node.id] ?? { severity: null, count: 0 };
               const badge = badgePosition(node);

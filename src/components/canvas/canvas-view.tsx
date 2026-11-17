@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { loadDiagram, saveDiagram } from "@/lib/api/diagram";
 import { repoSlug } from "@/lib/api/repositories";
 import type { DfdNodeKind, RepositoryAnalysis } from "@/lib/api/types";
+import { markEdges } from "@/lib/dfd/declutter";
 import { buildDiagramSvg } from "@/lib/dfd/export-svg";
 import {
   GRID, MAX_ZOOM, MIN_ZOOM, NODE_HEIGHT, NODE_WIDTH, createNode, diagramFromModel, serializeDiagram, toDiagram, toFlowEdge, toFlowEdges, toFlowNodes,
@@ -79,6 +80,11 @@ function CanvasWorkspace({ analysis, branch, live, topSlot, fresh = false }: Can
   const diagram = useMemo(() => toDiagram(nodes, edges), [nodes, edges]);
   const dirty = serializeDiagram(diagram) !== savedSerial;
   const selectedNode = nodes.find((n) => n.selected);
+  // O que não toca no que está selecionado esmaece; sem seleção, tudo normal. É só o desenho: o que se guarda continua a ser `edges`.
+  const shownEdges = useMemo(
+    () => markEdges(edges, new Set(nodes.filter((n) => n.selected).map((n) => n.id)), new Set(edges.filter((e) => e.selected).map((e) => e.id))).map(({ state, ...edge }) => ({ ...edge, data: { ...edge.data!, state } })),
+    [edges, nodes],
+  );
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -165,7 +171,7 @@ function CanvasWorkspace({ analysis, branch, live, topSlot, fresh = false }: Can
             <ReactFlow
               className={THEME_VARS}
               nodes={nodes}
-              edges={edges}
+              edges={shownEdges}
               nodeTypes={nodeTypes}
               edgeTypes={edgeTypes}
               onNodesChange={onNodesChange}
@@ -197,7 +203,7 @@ function CanvasWorkspace({ analysis, branch, live, topSlot, fresh = false }: Can
             </ReactFlow>
           </div>
           <div className="canvas-watermark pointer-events-none z-5">{analysis.repository} <span>/</span> DFD v1.0</div>
-          <div className="canvas-bottom-left pointer-events-none z-5"><span className="sr-only">Grid:</span> Dot grid <span>·</span> Snap to grid on</div>
+          <div className="canvas-bottom-left pointer-events-none z-5"><span className="sr-only">Grid:</span> Dot grid <span>·</span> Snap to grid on <span>·</span> Dashed lines are code dependencies</div>
         </div>
         <Inspector node={selectedNode} findings={analysis.findings} />
       </div>
