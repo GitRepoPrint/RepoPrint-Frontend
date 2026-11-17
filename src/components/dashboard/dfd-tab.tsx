@@ -1,0 +1,256 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import { DfdScene, KIND_LABEL } from "@/components/dfd/dfd-scene";
+import { Icon } from "@/components/ui/icon";
+import { LoadingPanel } from "@/components/ui/loading-panel";
+import { ProgressRing } from "@/components/ui/progress-ring";
+import { useRepositoryDfd } from "@/hooks/use-repository-dfd";
+import type { DetailState } from "@/hooks/use-repository-dfd";
+import { codeReadSummary } from "@/lib/dfd/code-read";
+import type { CodeStats } from "@/lib/dfd/code-read";
+import { combineGraphs } from "@/lib/dfd/combine";
+import { applyOverview, withoutAuxiliary } from "@/lib/dfd/focus";
+import { project } from "@/lib/dfd/project";
+import { graphToDfdModel } from "@/lib/dfd/to-model";
+import { describeProgress } from "@/lib/progress";
+import { isDemoRepository } from "@/lib/api/repositories";
+import { risksByNode, SEVERITY_LABEL } from "@/lib/findings";
+import type { DfdEvidence, DfdModel, DfdNodeData, Finding } from "@/lib/api/types";
+
+type DfdTabProps = {
+  repository: string;
+  /** O diagrama de demonstração: é o que se mostra nos repositórios de demonstração. */
+  demoModel: DfdModel;
+  findings: Finding[];
+  nodeId: string;
+  onSelectNode: (id: string) => void;
+  onOpenThreats: (id: string) => void;
+  onEdit: () => void;
+};
+
+export function DfdTab({ repository, demoModel, findings, nodeId, onSelectNode, onOpenThreats, onEdit }: DfdTabProps) {
+  if (isDemoRepository(repository)) {
+    return <DfdPanel repository={repository} model={demoModel} findings={findings} nodeId={nodeId} onSelectNode={onSelectNode} onOpenThreats={onOpenThreats} onEdit={onEdit} />;
+  }
+  return <LiveDfdTab repository={repository} findings={findings} onOpenThreats={onOpenThreats} onEdit={onEdit} />;
+}
+
+function LiveDfdTab({ repository, findings, onOpenThreats, onEdit }: Pick<DfdTabProps, "repository" | "findings" | "onOpenThreats" | "onEdit">) {
+  const { dfd, retry, detail, loadDetail, detailAvailable } = useRepositoryDfd(repository);
+  const [selected, setSelected] = useState<string | null>(null);
+  // null = ainda não mexeu: aberto por defeito fica o "Application" (quando é só ele), para se ver o que tem dentro
+  const [chosen, setChosen] = useState<ReadonlySet<string> | null>(null);
+
+  // Com a análise do código junta-se ao overview; sem ela, o overview é o que há. O que está aberto decide o que se vê.
+  const overview = dfd.status === "ready" ? dfd.graph : null;
+  const initiallyOpen = useMemo<ReadonlySet<string>>(() => new Set(overview?.meta.fallback === "application" ? ["process:application"] : []), [overview]);
+  const expanded = chosen ?? initiallyOpen;
+  // A prévia é um resumo: sem testes, documentação nem exemplos (num repositório grande são a maior parte das pastas)
+  const graph = useMemo(() => (overview ? withoutAuxiliary(detail.status === "ready" ? combineGraphs(overview, detail.graph) : overview) : null), [overview, detail]);
+  const view = useMemo(() => (graph ? project(graph, { expanded }) : null), [graph, expanded]);
+  // A prévia mostra no máximo 10 componentes: o fluxo principal, ou menos se houver menos. As partes de um componente aberto têm
+  // prioridade, para abrir um componente mostrar o que tem dentro. Selecionar um componente não muda a prévia. Ver lib/dfd/focus.ts.
+  const boost = useMemo<ReadonlySet<string>>(() => new Set((graph?.nodes ?? []).filter((n) => n.parent && expanded.has(n.parent)).map((n) => n.id)), [graph, expanded]);
+  const focused = useMemo(() => (view ? applyOverview(view, { boost }) : null), [view, boost]);
+  const model = useMemo(() => (focused ? graphToDfdModel(focused.view) : null), [focused]);
+
+  if (dfd.status === "loading") return <LoadingPanel title="Inferring the architecture" detail="Reading the configuration…" />;
+
+  if (dfd.status === "error") {
+    return (
+      <div className="dfd-state dfd-state-error" role="alert">
+        <Icon name="warning" size={22} />
+        <div>
+          <strong>Could not infer the diagram</strong>
+          <span>{dfd.message}</span>
+        </div>
+        <button type="button" className="button button-outline" onClick={retry}>Try again</button>
+      </div>
+    );
+  }
+
+  if (!graph || !view || !model) return null;
+
+  // Sem compose nem Dockerfiles o overview é um só componente: enquanto se lê o código não há nada de útil para mostrar,
+  // por isso mostra-se o avanço (e não um desenho de um nó que depois muda)
+  if (detail.status === "loading" && dfd.graph.meta.fallback === "application") {
+    return <LoadingPanel title="Reading the source code" detail={detail.progress ? describeProgress(detail.progress) : "Starting…"} progress={detail.fraction} />;
+  }
+
+  const toggle = (id: string) =>
+    setChosen((current) => {
+      const next = new Set(current ?? initiallyOpen);
+      if (!next.delete(id)) next.add(id);
+      return next;
+    });
+  const stats = detail.status === "ready" ? (graph.meta.stats as CodeStats | undefined) : undefined;
+
+  // Ao abrir, o primeiro processo: é onde a arquitetura começa a fazer sentido (as entidades externas vêm antes na lista)
+  const first = model.nodes.find((n) => n.kind === "process") ?? model.nodes[0];
+  return (
+    <DfdPanel
+      repository={repository}
+      model={model}
+      findings={findings}
+      nodeId={selected ?? first?.id ?? ""}
+      onSelectNode={setSelected}
+      onOpenThreats={onOpenThreats}
+      onEdit={onEdit}
+      onToggleExpand={toggle}
+      caption={focused && focused.shown < focused.total ? `The overview shows the ${focused.shown} components the data flows through most, out of ${focused.total}. Open the full diagram to see the rest.` : undefined}
+      detail={{
+        available: detailAvailable,
+        state: detail,
+        onLoad: loadDetail,
+      }}
+      inferred={{
+        partial: dfd.partial,
+        files: (dfd.graph.meta.inputs as string[] | undefined)?.length ?? 0,
+        fallback: dfd.graph.meta.fallback as string | undefined,
+        codeRead: detail.status === "ready" ? codeReadSummary(stats) : undefined,
+      }}
+    />
+  );
+}
+
+type DetailControls = {
+  /** Há um backend de análise de código configurado. */
+  available: boolean;
+  state: DetailState;
+  onLoad: () => void;
+};
+
+type PanelProps = Omit<DfdTabProps, "demoModel"> & {
+  model: DfdModel;
+  inferred?: { partial: boolean; files: number; fallback?: string; codeRead?: string };
+  detail?: DetailControls;
+  onToggleExpand?: (id: string) => void;
+  /** Quanto do diagrama se está a ver, por baixo do aviso. */
+  caption?: string;
+};
+
+function DetailBar({ detail }: { detail: DetailControls }) {
+  const { state } = detail;
+  return (
+    <div className="dfd-detail-controls">
+      {state.status === "idle" && (
+        <button type="button" className="button button-outline" onClick={detail.onLoad}><Icon name="code" size={15} /> Add code-level detail</button>
+      )}
+      {state.status === "loading" && (
+        <span role="status" className="dfd-detail-progress">
+          <ProgressRing value={state.fraction} size={36} label="Reading the source code" />
+          {state.progress ? describeProgress(state.progress) : "Starting…"}
+        </span>
+      )}
+      {state.status === "error" && (
+        <>
+          <span className="dfd-detail-error" role="alert">{state.message}</span>
+          <button type="button" className="button button-outline" onClick={detail.onLoad}>Try again</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+const githubLink = (repository: string, evidence: DfdEvidence) =>
+  `https://github.com/${repository}/blob/HEAD/${evidence.file!.split("/").map(encodeURIComponent).join("/")}${evidence.line ? `#L${evidence.line}` : ""}`;
+
+function Evidence({ repository, node }: { repository: string; node: DfdNodeData }) {
+  return (
+    <ul className="dfd-evidence" aria-label={`Where ${node.title} comes from`}>
+      {node.evidence?.map((item, index) => (
+        <li key={index}>
+          {item.file ? (
+            <a href={githubLink(repository, item)} target="_blank" rel="noreferrer">
+              <code>{item.file}{item.line ? `:${item.line}` : ""}</code>
+            </a>
+          ) : null}
+          {item.note ? <span>{item.note}</span> : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function DfdPanel({ repository, model, findings, nodeId, onSelectNode, onOpenThreats, onEdit, inferred, detail, onToggleExpand, caption }: PanelProps) {
+  const risks = risksByNode(model, findings);
+  const current = risks.find((risk) => risk.node.id === nodeId) ?? risks[0];
+  const summary = Object.fromEntries(risks.map((risk) => [risk.node.id, { severity: risk.severity, count: risk.findings.length }]));
+  if (!current) return <p className="dfd-node-empty">There is nothing to show for this repository yet.</p>;
+  const { node, findings: nodeFindings } = current;
+
+  return (
+    <div className="dfd-tab">
+      <div className="dfd-tab-header">
+        {detail?.available && <DetailBar detail={detail} />}
+        <button type="button" className="button dfd-edit-button" onClick={onEdit}><Icon name="external" size={16} /> Edit DFD in Full Canvas</button>
+      </div>
+      {inferred && (
+        <p className="dfd-notice" role="note">
+          <Icon name="info" size={16} />
+          <span>
+            {inferred.fallback === "application"
+              ? `No compose files or Dockerfiles were found, so the configuration shows one application with what its dependencies reveal.${detail?.available ? "" : " Connect the code analysis service (NEXT_PUBLIC_BACKEND_URL) to see what the code does."}`
+              : `Inferred from ${inferred.files} configuration file${inferred.files === 1 ? "" : "s"} (compose, Dockerfiles, manifests).`}{" "}
+            {inferred.codeRead === undefined
+              ? "Source code is not read here."
+              : `Combined with the code analysis (${inferred.codeRead}): open a component to see its parts.`}
+            {inferred.partial && " Some files could not be read, so the diagram may be incomplete."}
+          </span>
+        </p>
+      )}
+      {caption && <p className="dfd-focus-caption" role="note">{caption}</p>}
+      <section className="dfd-preview-section" aria-label="Inferred Architecture and Data Flow Diagram">
+        <div className="dfd-layout">
+          <DfdScene model={model} risk={summary} selected={node.id} onSelect={onSelectNode} fit={Boolean(inferred)} />
+          <aside className="dfd-node-panel" aria-live="polite" aria-labelledby="dfd-node-title">
+            <div className="dfd-node-panel-head">
+              <span className="dfd-node-panel-kicker">Selected component</span>
+              <h3 id="dfd-node-title">{node.title}</h3>
+              <p className="dfd-node-panel-meta">{KIND_LABEL[node.kind]} · {node.classification} · <code>{node.code}</code></p>
+              {node.confidence && (
+                <p className="dfd-node-panel-meta">
+                  <span className={`dfd-confidence ${node.confidence}`}>{node.confidence} confidence</span>
+                  {node.technology ? <> · {node.technology}</> : null}
+                </p>
+              )}
+              {node.facts && node.facts.length > 0 && <p className="dfd-node-panel-meta">{node.facts.join(" · ")}</p>}
+              {node.expandable && onToggleExpand ? (
+                <button type="button" className="button button-outline dfd-node-open" onClick={() => onToggleExpand(node.id)} aria-expanded={node.expanded}>
+                  {node.expanded ? "Collapse parts" : `Show ${node.expandable} ${node.expandable === 1 ? "part" : "parts"}`}
+                </button>
+              ) : null}
+              {nodeFindings.length > 0 && (
+                <button type="button" className="button button-primary dfd-node-open" onClick={() => onOpenThreats(node.id)}>
+                  Open in Threat Modeling
+                </button>
+              )}
+            </div>
+            {node.evidence ? (
+              <div>
+                <span className="dfd-node-panel-kicker">Where this comes from</span>
+                <Evidence repository={repository} node={node} />
+              </div>
+            ) : nodeFindings.length ? (
+              <ul className="dfd-node-findings">
+                {nodeFindings.map((f) => (
+                  <li key={f.id}>
+                    <div className="dfd-node-finding-top">
+                      <span className={`threat-report-severity ${f.severity}`}>{SEVERITY_LABEL[f.severity]}</span>
+                      <strong>{f.title}</strong>
+                    </div>
+                    <span>{f.framework} · {f.category}</span>
+                    <code>{f.file}</code>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="dfd-node-empty">No findings on this component.</p>
+            )}
+          </aside>
+        </div>
+      </section>
+    </div>
+  );
+}
