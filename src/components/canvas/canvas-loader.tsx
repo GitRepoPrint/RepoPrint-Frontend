@@ -4,11 +4,13 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, type ComponentProps } from "react";
 import { FocusBar } from "@/components/dfd/focus-bar";
 import { Icon } from "@/components/ui/icon";
+import { LoadingPanel } from "@/components/ui/loading-panel";
 import { useDfdFocus } from "@/hooks/use-dfd-focus";
 import { useRepositoryDfd } from "@/hooks/use-repository-dfd";
 import { isDemoRepository } from "@/lib/api/repositories";
 import { combineGraphs } from "@/lib/dfd/combine";
 import { graphToDfdModel } from "@/lib/dfd/to-model";
+import { describeProgress, stepStates } from "@/lib/progress";
 import type { CanvasView as CanvasViewType } from "./canvas-view";
 
 // O canvas só é renderizado no browser (sem SSR):
@@ -54,20 +56,30 @@ function LiveCanvas({ analysis, branch }: CanvasLoaderProps) {
     return <CanvasView key={viewKey} analysis={{ ...analysis, dfd: model }} branch={branch} live fresh={focus.touched} topSlot={<FocusBar focus={focus} />} />;
   }
 
+  const reading = dfd.status === "ready";
   return (
     <div className="canvas-app h-[calc(100vh-72px)]!" aria-busy={dfd.status === "loading" || waitingForCode}>
-      <div className="dfd-state m-6" role={dfd.status === "error" ? "alert" : "status"}>
-        {dfd.status === "loading" || dfd.status === "ready" ? (
-          <>
-            <span className="analysis-spinner large" />
-            <div><strong>Inferring the architecture</strong><span>{dfd.status === "ready" ? `Reading the source code of ${analysis.repository}…` : `Reading the configuration of ${analysis.repository}…`}</span></div>
-          </>
-        ) : (
-          <>
+      <div className="m-6">
+        {dfd.status === "error" ? (
+          <div className="dfd-state" role="alert">
             <Icon name="warning" size={22} />
             <div><strong>Could not infer the diagram</strong><span>{dfd.message}</span></div>
             <button type="button" className="button button-outline" onClick={retry}>Try again</button>
-          </>
+          </div>
+        ) : reading ? (
+          <LoadingPanel
+            title="Reading the source code"
+            detail={detail.status === "loading" && detail.progress ? describeProgress(detail.progress) : "Starting the code analysis…"}
+            progress={detail.status === "loading" ? detail.fraction : undefined}
+            steps={stepStates(detail.status === "loading" ? detail.progress?.stage : undefined)}
+            note="Large repositories can take a minute or two. Only a sample of very large ones is read."
+          />
+        ) : (
+          <LoadingPanel
+            title="Inferring the architecture"
+            detail={dfd.status === "loading" && dfd.files ? `Reading the configuration · ${dfd.files.done} of ${dfd.files.total} files` : `Looking at the files of ${analysis.repository}…`}
+            progress={dfd.status === "loading" && dfd.files ? dfd.fraction : undefined}
+          />
         )}
       </div>
     </div>

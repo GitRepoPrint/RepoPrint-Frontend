@@ -142,6 +142,20 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 
 No backend, `CORS_ORIGINS` tem de incluir a origem do frontend (por defeito `http://localhost:3000`).
 
+### Progresso das esperas
+
+Nenhuma espera fica sem sinal. `ProgressRing` (`src/components/ui/progress-ring.tsx`) é a roda que se enche (como a da App Store); sem
+valor é uma roda a girar. `LoadingPanel` junta-lhe o título, o que se está a fazer e as fases. Onde há progresso a sério, a roda sobe:
+
+- **Análise do código** (tab DFD e canvas): usa `GET /dfd/stream` (`src/lib/dfd/detail.ts`). O backend avisa em que fase vai (listar,
+  descarregar, analisar, montar) e quantos ficheiros já foram; `src/lib/progress.ts` junta isso numa só percentagem que nunca diminui.
+  Se o backend ficar calado 90 s desiste-se.
+- **Configuração** (overview, lido no navegador): sobe com os ficheiros lidos (`onProgress` em `fetchOverviewFiles`).
+- **Páginas do servidor** (`loading.tsx` em `/repositories`, `/repositories/<repo>` e `.../dfd`) e a análise instantânea: uma roda a
+  girar com o tempo que já passou (não se sabe quanto falta); passados 8 s avisa que um repositório grande demora mais.
+
+Num repositório enorme o backend lê uma amostra; o aviso por cima do diagrama diz-o ("a sample of 2,500 of 75,317 source files…").
+
 ### O que se vê de um diagrama grande
 
 Um repositório grande tem centenas de pastas (o FastAPI tem 229 componentes). Há duas vistas, com regras diferentes:

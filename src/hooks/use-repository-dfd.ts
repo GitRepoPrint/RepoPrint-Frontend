@@ -7,16 +7,20 @@ import { getOverview } from "@/lib/dfd/overview/get-overview";
 import { overviewView } from "@/lib/dfd/project";
 import type { DfdGraph } from "@/lib/dfd/schema";
 import { graphToDfdModel } from "@/lib/dfd/to-model";
+import { overallFraction, rising } from "@/lib/progress";
+import type { LoadProgress } from "@/lib/progress";
 
 export type RepositoryDfd =
-  | { status: "loading" }
+  /** `fraction` (0 a 1) é quanto da configuração já se leu; `files` é a contagem, se já se sabe. */
+  | { status: "loading"; fraction: number; files?: { done: number; total: number } }
   | { status: "error"; message: string }
   | { status: "ready"; model: DfdModel; graph: DfdGraph; partial: boolean; cached: boolean; fetchedAt: string };
 
 /** O grafo ao nível do código, que só se pede quando o utilizador quer (lê o repositório inteiro, demora). */
 export type DetailState =
   | { status: "idle" }
-  | { status: "loading" }
+  /** `progress` é a fase em que o backend vai e `fraction` (0 a 1) o total já feito; nunca diminui. */
+  | { status: "loading"; fraction: number; progress?: LoadProgress }
   | { status: "error"; message: string }
   | { status: "ready"; graph: DfdGraph };
 
@@ -28,7 +32,7 @@ export type DetailState =
  * do código, para juntar ao anterior (ver combineGraphs).
  */
 export function useRepositoryDfd(repository: string) {
-  const [dfd, setDfd] = useState<RepositoryDfd>({ status: "loading" });
+  const [dfd, setDfd] = useState<RepositoryDfd>({ status: "loading", fraction: 0 });
   const [attempt, setAttempt] = useState(0);
   const [detail, setDetail] = useState<DetailState>(() => {
     const [owner, repo] = repository.split("/");
@@ -46,8 +50,10 @@ export function useRepositoryDfd(repository: string) {
 
   const startDetail = useCallback((owner: string, repo: string) => {
     if (!BACKEND_URL) return;
-    setDetail({ status: "loading" });
-    getDetail(owner, repo, { backendUrl: BACKEND_URL })
+    setDetail({ status: "loading", fraction: 0 });
+    const onProgress = (progress: LoadProgress) =>
+      alive.current && setDetail((current) => (current.status === "loading" ? { status: "loading", progress, fraction: rising(current.fraction, overallFraction(progress)) } : current));
+    getDetail(owner, repo, { backendUrl: BACKEND_URL, onProgress })
       .then((graph) => alive.current && setDetail({ status: "ready", graph }))
       .catch((error: unknown) => {
         console.error("Code analysis failed", error);
@@ -58,7 +64,13 @@ export function useRepositoryDfd(repository: string) {
   useEffect(() => {
     let cancelled = false;
     const [owner, repo] = repository.split("/");
-    getOverview(owner, repo)
+    // Ler a configuração é a primeira metade da espera: a roda sobe à medida que os ficheiros chegam (a lista conta 10%)
+    const onProgress = (done: number, total: number) => {
+      if (cancelled) return;
+      const fraction = total > 0 ? 0.1 + 0.9 * (done / total) : 0.1;
+      setDfd((current) => (current.status === "loading" ? { status: "loading", files: { done, total }, fraction: rising(current.fraction, fraction) } : current));
+    };
+    getOverview(owner, repo, { onProgress })
       .then((data) => {
         if (cancelled) return;
         setDfd({ status: "ready", model: graphToDfdModel(overviewView(data.graph)), graph: data.graph, partial: data.partial, cached: data.cached, fetchedAt: data.fetchedAt });
@@ -77,7 +89,7 @@ export function useRepositoryDfd(repository: string) {
   }, [repository, attempt, startDetail]);
 
   const retry = useCallback(() => {
-    setDfd({ status: "loading" });
+    setDfd({ status: "loading", fraction: 0 });
     setAttempt((n) => n + 1);
   }, []);
 

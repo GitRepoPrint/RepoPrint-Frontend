@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { AssociateModal } from "@/components/repositories/associate-modal";
 import { RepositoryHealth } from "@/components/repositories/repository-health";
 import { Icon } from "@/components/ui/icon";
+import { LoadingPanel } from "@/components/ui/loading-panel";
 import { useToast } from "@/components/ui/toast";
 import { useRepositories } from "@/hooks/use-repositories";
 import { errorMessage } from "@/lib/api/errors";
@@ -93,7 +94,7 @@ export function RepositoriesView({ githubStatus }: { githubStatus?: string }) {
 
         {state.status === "loading" && (
           <div className="repository-list">
-            <StatePanel title="Loading your repositories" message="This takes a moment." role="status" />
+            <LoadingPanel title="Loading your repositories" detail="This takes a moment." className="repository-loading" />
           </div>
         )}
 
