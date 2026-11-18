@@ -210,7 +210,12 @@
   color: #e4e4e7;
 }
 
-.dfd-preview-toolbar button:hover {
+.dfd-preview-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dfd-preview-toolbar button:hover:not(:disabled) {
   background: #29252f;
   border-color: #665287;
 }
@@ -925,15 +930,24 @@
 }
 
 /* A prévia do dashboard cabe sempre inteira na caixa: o desenho encolhe em vez de ter barra de deslocamento */
+/* Ajustado à caixa (100%). Com zoom maior do que isso a caixa desloca-se (rato, teclado: tem tabindex) e o desenho fica ao centro enquanto cabe. */
 .dfd-preview-viewport-autofit {
   height: clamp(340px, 56vh, 540px);
-  overflow: hidden;
+  display: flex;
+  overflow: auto;
+  scrollbar-width: thin; /* as barras claras do navegador destoam do fundo escuro */
+  scrollbar-color: rgba(128, 134, 160, 0.55) transparent;
+}
+
+.dfd-preview-viewport-autofit:focus-visible {
+  outline: 2px solid var(--c-accent, #7c5cff);
+  outline-offset: 2px;
 }
 
 .dfd-preview-scene-autofit {
+  flex: none;
+  margin: auto; /* ao centro enquanto cabe; maior do que a caixa, começa no canto e dá para chegar a tudo */
   min-width: 0;
-  width: 100%;
-  height: 100%;
   transform: none;
 }
 

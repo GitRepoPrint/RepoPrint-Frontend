@@ -233,7 +233,13 @@ function DfdTabSkeleton() {
                 <li><i className="risk-none" />No findings</li>
                 <li>Number shows the findings on each component</li>
               </ul>
-              <span className="dfd-live-sync"><span />Fits the box</span>
+              <div className="dfd-preview-toolbar">
+                <button type="button" aria-label="Zoom out" disabled tabIndex={-1}><Icon name="minus" size={15} /></button>
+                <span className="dfd-preview-zoom">100%</span>
+                <button type="button" aria-label="Zoom in" disabled tabIndex={-1}><Icon name="plus" size={15} /></button>
+                <span className="dfd-toolbar-divider" />
+                <button type="button" className="dfd-reset-button" disabled tabIndex={-1}>Reset View</button>
+              </div>
             </div>
           </div>
           <aside className="dfd-node-panel">

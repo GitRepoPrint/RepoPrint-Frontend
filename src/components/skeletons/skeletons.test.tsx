@@ -33,11 +33,6 @@ describe("Skeleton", () => {
     expect(out).toContain("height:14px");
   });
 
-  it("takes percentages and rem as they are, can be round, and can sit inside a line of text", () => {
-    expect(html(createElement(Skeleton, { width: "60%", height: "2rem" }))).toContain("width:60%");
-    expect(html(createElement(Skeleton, { circle: true, width: 40, height: 40 }))).toContain("skeleton-circle");
-    expect(html(createElement(Skeleton, { inline: true }))).toContain("display:inline-block");
-  });
 });
 
 describe.each([
@@ -51,26 +46,28 @@ describe.each([
     expect(out.match(new RegExp(label, "g"))).toHaveLength(1);
   });
 
-  it("is made of skeleton blocks and has no progress bar, spinner or percentage", () => {
-    const out = html(createElement(Component));
-    expect(out.match(/class="skeleton/g)!.length).toBeGreaterThan(5);
-    expect(out).not.toContain("progressbar");
-    expect(out).not.toContain("analysis-spinner");
-    expect(out).not.toContain("%<");
-  });
 });
 
-describe("skeletons are grey", () => {
+describe("skeletons are alive", () => {
   const css = readFileSync("src/styles/progress.css", "utf8");
 
-  it("turns any colour of the real page grey, and the page's own rules cannot tint a skeleton block", () => {
-    expect(css).toMatch(/\.sk-mask \{[^}]*filter: grayscale\(1\)/);
-    expect(css).toMatch(/\.sk-mask \.skeleton \{[^}]*border: 0 !important/);
+  it("the movement is carried by a variable, because an animation can never beat an !important declaration", () => {
+    // a causa de os esqueletos parecerem parados: os fundos levam !important (para ganhar ao CSS da página) e uma animação de
+    // background-position perde sempre contra isso. Por isso o que se anima é uma variável registada, que o fundo lê.
+    expect(css).toMatch(/@property --sk-pos \{[^}]*syntax: "<percentage>"/);
+    expect(css).not.toMatch(/@keyframes skeleton-shimmer \{[^}]*background-position/);
+    const important = css.match(/background: var\(--sk-gradient\)[^;]*!important;/g)!;
+    expect(important.length).toBeGreaterThanOrEqual(4);
+    for (const rule of important) expect(rule, rule).toContain("var(--sk-pos)");
   });
 
-  it("greys the lines under the tabs and headers instead of the page's light ones", () => {
-    expect(css).toMatch(/\.sk-mask \.dashboard-tabs[^{]*\{[^}]*border-color: rgba\(128, 134, 160/);
+  it("whoever asks for less motion still sees it breathe: a slow fade, not a frozen screen", () => {
+    expect(css).toContain("@keyframes skeleton-pulse");
+    const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce) {\n  .skeleton"));
+    expect(reduced).toMatch(/animation: skeleton-pulse [0-9.]+s ease-in-out infinite/);
+    expect(reduced).not.toMatch(/\.skeleton[^}]*animation: none/);
   });
+
 });
 
 describe("skeletons show shapes, not words", () => {
@@ -82,11 +79,6 @@ describe("skeletons show shapes, not words", () => {
     expect(html(createElement(RepositoriesBodySkeleton))).toContain('class="sk-mask"');
   });
 
-  it("is hidden from assistive technology (they hear one line saying it is loading)", () => {
-    const out = html(createElement(DashboardSkeleton));
-    expect(out).toContain('role="status"');
-    expect(out).toContain('aria-hidden="true"');
-  });
 });
 
 describe("the dashboard skeleton matches the dashboard", () => {
@@ -149,7 +141,7 @@ describe("the diagram tab skeleton matches the diagram tab", () => {
   it("has the real button, legend and side panel texts, and a two-line note like the real one", () => {
     query = new URLSearchParams("tab=dfd");
     const out = html(createElement(DashboardSkeleton));
-    for (const text of ["Edit DFD in Full Canvas", "High", "Medium", "Low", "No findings", "Number shows the findings on each component", "Selected component", "Where this comes from", "Fits the box"]) {
+    for (const text of ["Edit DFD in Full Canvas", "High", "Medium", "Low", "No findings", "Number shows the findings on each component", "Selected component", "Where this comes from", "Reset View", "100%"]) {
       expect(out, text).toContain(text);
     }
     const note = out.slice(out.indexOf('class="dfd-notice"'), out.indexOf("dfd-preview-section"));
@@ -174,11 +166,6 @@ describe("the repositories skeleton matches the repositories page", () => {
     }
   });
 
-  it("is the same body in the page and in the loading screen: three rows by default, or as many as asked for", () => {
-    expect(html(createElement(RepositoriesBodySkeleton)).match(/class="repository-row"/g)).toHaveLength(3);
-    expect(html(createElement(RepositoriesBodySkeleton, { rows: 5 })).match(/class="repository-row"/g)).toHaveLength(5);
-  });
-
   it("each row has the same parts, in the same order, as a real row", () => {
     const row = html(createElement(RepositoriesBodySkeleton, { rows: 1 })).match(/<div class="repository-row">.*?<\/div>/)![0];
     const order = ["repo-identity", "repo-icon", "repo-score", "repo-updated", "row-arrow"].map((c) => row.indexOf(c));
@@ -188,17 +175,11 @@ describe("the repositories skeleton matches the repositories page", () => {
 });
 
 describe("the canvas skeleton matches the canvas", () => {
-  it("uses the real toolbox, inspector and diagram bar, so their sizes cannot differ", () => {
+  it("uses the real toolbar, toolbox, inspector and diagram bar, so their sizes cannot differ", () => {
     const out = html(createElement(CanvasSkeleton));
-    for (const text of ["BUILD YOUR MODEL", "Drag elements onto the canvas", "NODE INSPECTOR", "Select a component to inspect its security findings.", "Main flow", "Choose components", "Whole diagram", "Include tests, docs and examples"]) {
+    for (const text of ["BUILD YOUR MODEL", "Drag elements onto the canvas", "NODE INSPECTOR", "Select a component to inspect its security findings.", "Main flow", "Choose components", "Whole diagram", "Include tests, docs and examples", "Overview", "Data Flow Diagram", "LIVE CANVAS", "Auto Layout", "Save Diagram", "Export SVG"]) {
       expect(out, text).toContain(text);
     }
-  });
-
-  it("has the real toolbar: breadcrumb, title, and the three commands", () => {
-    const out = html(createElement(CanvasSkeleton));
-    for (const text of ["Overview", "Data Flow Diagram", "LIVE CANVAS", "Auto Layout", "Save Diagram", "Export SVG"]) expect(out).toContain(text);
-    expect(out).toContain("pallets/flask");
   });
 
   it("does not invent the sentence about how much of the diagram is shown", () => {

@@ -82,8 +82,6 @@
   font-size: 14px;
 }
 
-.loading-panel-steps li.done .loading-panel-steps li.active
-
 @media (max-width: 560px) {
   .loading-panel {
     flex-direction: column;
@@ -92,13 +90,29 @@
 }
 
 /* Esqueletos: o desenho da página que vem aí, em blocos que cintilam, enquanto o servidor a prepara */
+/* A posição da luz. É uma variável registada (e não o background-position) porque uma animação nunca ganha a uma declaração com
+   !important, e os fundos dos esqueletos levam !important para ganharem ao CSS da página: animar o background-position não fazia nada. */
+@property --sk-pos {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 150%;
+}
+
+/* A luz: de um cinzento translúcido a outro bem mais claro (a diferença tem de se ver num fundo escuro) */
+:root {
+  --sk-base: rgba(128, 134, 160, 0.16);
+  --sk-glow: rgba(176, 182, 214, 0.42);
+  --sk-gradient: linear-gradient(100deg, var(--sk-base) 30%, var(--sk-glow) 50%, var(--sk-base) 70%);
+  --sk-size: 200% 100%;
+}
+
 .skeleton {
   display: block;
   border-radius: 8px;
-  /* Translúcido e cinzento: lê-se em qualquer fundo (a página, um cartão, um cartão mais claro) e nos dois temas */
-  background: linear-gradient(90deg, rgba(128, 134, 160, 0.17) 25%, rgba(128, 134, 160, 0.3) 37%, rgba(128, 134, 160, 0.17) 63%);
-  background-size: 400% 100%;
-  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  /* Translúcido e cinzento: lê-se em qualquer fundo (a página, um cartão, um cartão mais claro) e nos dois temas. Uma luz passa de um
+     lado ao outro de cada bloco: o que dá a ideia de que a página está a carregar e não parada. */
+  background: var(--sk-gradient) var(--sk-pos) 0 / var(--sk-size);
+  animation: skeleton-shimmer 1.5s linear infinite;
 }
 
 .skeleton-chip {
@@ -110,15 +124,24 @@
 }
 
 @keyframes skeleton-shimmer {
-  from { background-position: 100% 0; }
-  to { background-position: 0 0; }
+  from { --sk-pos: 150%; }
+  to { --sk-pos: -50%; }
 }
+
+/* Para quem pede menos movimento: nada se desloca, mas os blocos respiram devagar (uma luz que sobe e desce), para não parecer parado */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
 
 @media (prefers-reduced-motion: reduce) {
   .skeleton {
-    animation: none;
+    background: var(--sk-base);
+    animation: skeleton-pulse 2s ease-in-out infinite;
   }
 }
+
 
 .sk-stack {
   display: flex;
@@ -187,8 +210,7 @@
 .sk-mask {
   /* rede de segurança: se alguma cor da página verdadeira escapar às regras de baixo, sai a cinzento */
   filter: grayscale(1);
-  --sk-bar: rgba(128, 134, 160, 0.2);
-  --sk-gradient: linear-gradient(90deg, rgba(128, 134, 160, 0.17) 25%, rgba(128, 134, 160, 0.3) 37%, rgba(128, 134, 160, 0.17) 63%);
+  --sk-bar: var(--sk-base);
   user-select: none;
   pointer-events: none;
 }
@@ -203,7 +225,7 @@
 
 /* um bloco do esqueleto é sempre só um bloco: o CSS da página (por exemplo o "h2 span" das etiquetas roxas) não lhe mexe */
 .sk-mask .skeleton {
-  background: var(--sk-gradient) 100% 0 / 400% 100% !important;
+  background: var(--sk-gradient) var(--sk-pos) 0 / var(--sk-size) !important;
   border: 0 !important;
   padding: 0 !important;
 }
@@ -219,11 +241,11 @@
 .sk-mask :not(:empty):not(:has(*)):not(th):not(td):not(option):not(.skeleton) {
   width: fit-content;
   max-width: 100%;
-  background: var(--sk-gradient) 100% 0 / 400% 100% !important;
+  background: var(--sk-gradient) var(--sk-pos) 0 / var(--sk-size) !important;
   border-color: transparent !important;
   border-radius: 6px;
   box-shadow: none !important;
-  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  animation: skeleton-shimmer 1.5s linear infinite;
 }
 
 /* cabeçalhos de tabela: uma barra curta, não a célula toda */
@@ -246,18 +268,18 @@
 .sk-mask button,
 .sk-mask .button,
 .sk-mask [role="radio"] {
-  background: var(--sk-gradient) 100% 0 / 400% 100% !important;
+  background: var(--sk-gradient) var(--sk-pos) 0 / var(--sk-size) !important;
   border-color: transparent !important;
   box-shadow: none !important;
-  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  animation: skeleton-shimmer 1.5s linear infinite;
 }
 
 .sk-mask select,
 .sk-mask input {
   appearance: none;
-  background: var(--sk-gradient) 100% 0 / 400% 100% !important;
+  background: var(--sk-gradient) var(--sk-pos) 0 / var(--sk-size) !important;
   border-color: transparent !important;
-  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  animation: skeleton-shimmer 1.5s linear infinite;
 }
 
 .sk-mask ::placeholder {
@@ -298,8 +320,8 @@
 }
 
 .sk-mask .empty-findings {
-  background: var(--sk-gradient) 100% 0 / 400% 100% !important;
-  animation: skeleton-shimmer 1.6s ease-in-out infinite;
+  background: var(--sk-gradient) var(--sk-pos) 0 / var(--sk-size) !important;
+  animation: skeleton-shimmer 1.5s linear infinite;
   min-height: 78px;
   border-radius: 8px;
 }
@@ -315,11 +337,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .sk-mask :not(:empty):not(:has(*)),
+  .sk-mask :not(:empty):not(:has(*)):not(th):not(td):not(option),
   .sk-mask button,
   .sk-mask .button,
   .sk-mask select,
-  .sk-mask input {
-    animation: none !important;
+  .sk-mask input,
+  .sk-mask .empty-findings {
+    background: var(--sk-base) !important;
+    animation: skeleton-pulse 2s ease-in-out infinite !important;
   }
 }
+

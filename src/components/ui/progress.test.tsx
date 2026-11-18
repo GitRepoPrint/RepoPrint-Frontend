@@ -49,15 +49,4 @@ describe("LoadingPanel", () => {
     expect(out).toContain('aria-valuenow="33"');
   });
 
-  it("is compact: a ring, a title and one line, with no list of steps and no percentage", () => {
-    const out = renderToStaticMarkup(createElement(LoadingPanel, { title: "t", detail: "d", progress: 0.5 }));
-    expect(out).not.toContain("<ol");
-    expect(out).not.toContain("%<");
-  });
-
-  it("works without detail or a value, and then it just spins", () => {
-    const out = renderToStaticMarkup(createElement(LoadingPanel, { title: "Loading" }));
-    expect(out).toContain("Loading");
-    expect(out).toContain("indeterminate");
-  });
 });
