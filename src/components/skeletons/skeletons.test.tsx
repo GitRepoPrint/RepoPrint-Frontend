@@ -60,6 +60,52 @@ describe.each([
   });
 });
 
+describe("skeletons are alive", () => {
+  const css = readFileSync("src/styles/progress.css", "utf8");
+  const block = (selector: string) => css.slice(css.indexOf(selector), css.indexOf("}", css.indexOf(selector)) + 1);
+  const alpha = (name: string) => Number(new RegExp(`--sk-${name}: rgba\\([^)]*, ([0-9.]+)\\)`).exec(css)![1]);
+
+  it("a visible light sweeps across every block, not a faint sliver", () => {
+    const base = alpha("base");
+    const glow = alpha("glow");
+    expect(glow - base).toBeGreaterThanOrEqual(0.2);
+    // o brilho ocupa uma boa fatia do bloco (de 25% a 75% ou mais), e o fundo é só duas vezes o bloco (400% fazia-o parecer parado)
+    expect(css).toMatch(/--sk-gradient: linear-gradient\([^;]*var\(--sk-base\) 30%[^;]*var\(--sk-glow\) 50%[^;]*var\(--sk-base\) 70%/);
+    expect(css).toMatch(/--sk-size: 200% 100%/);
+    expect(css).not.toMatch(/\/ 400% 100%/);
+  });
+
+  it("the sweep moves the light from one side to the other and takes about a second and a half", () => {
+    const frames = css.slice(css.indexOf("@keyframes skeleton-shimmer"), css.indexOf("}\n}", css.indexOf("@keyframes skeleton-shimmer")) + 3);
+    expect(frames).toMatch(/from \{ --sk-pos: 150%; \}/);
+    expect(frames).toMatch(/to \{ --sk-pos: -50%; \}/);
+    expect(block(".skeleton {")).toMatch(/animation: skeleton-shimmer 1\.5s linear infinite/);
+  });
+
+  it("the movement is carried by a variable, because an animation can never beat an !important declaration", () => {
+    // a causa de os esqueletos parecerem parados: os fundos levam !important (para ganhar ao CSS da página) e uma animação de
+    // background-position perde sempre contra isso. Por isso o que se anima é uma variável registada, que o fundo lê.
+    expect(css).toMatch(/@property --sk-pos \{[^}]*syntax: "<percentage>"/);
+    expect(css).not.toMatch(/@keyframes skeleton-shimmer \{[^}]*background-position/);
+    const important = css.match(/background: var\(--sk-gradient\)[^;]*!important;/g)!;
+    expect(important.length).toBeGreaterThanOrEqual(4);
+    for (const rule of important) expect(rule, rule).toContain("var(--sk-pos)");
+  });
+
+  it("whoever asks for less motion still sees it breathe: a slow fade, not a frozen screen", () => {
+    expect(css).toContain("@keyframes skeleton-pulse");
+    const reduced = css.slice(css.indexOf("@media (prefers-reduced-motion: reduce) {\n  .skeleton"));
+    expect(reduced).toMatch(/animation: skeleton-pulse [0-9.]+s ease-in-out infinite/);
+    expect(reduced).not.toMatch(/\.skeleton[^}]*animation: none/);
+  });
+
+  it("every masked piece of text uses the same sweep, so the whole page moves together", () => {
+    const masked = css.slice(css.indexOf(".sk-mask {"));
+    expect(masked.match(/animation: skeleton-shimmer 1\.5s linear infinite/g)!.length).toBeGreaterThanOrEqual(4);
+    expect(masked).not.toMatch(/animation: skeleton-shimmer 1\.6s/);
+  });
+});
+
 describe("skeletons are grey", () => {
   const css = readFileSync("src/styles/progress.css", "utf8");
 
