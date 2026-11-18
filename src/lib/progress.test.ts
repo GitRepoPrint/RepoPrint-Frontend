@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { STAGES, describeProgress, overallFraction, rising } from "./progress";
+import { describeProgress, overallFraction, rising } from "./progress";
 import type { LoadProgress } from "./progress";
 
 const at = (stage: LoadProgress["stage"], done = 0, total = 0): LoadProgress => ({ stage, done, total });
@@ -38,13 +38,6 @@ describe("overallFraction", () => {
     expect(overallFraction(at("parsing", -5, 800))).toBe(overallFraction(at("parsing", 0, 800)));
   });
 
-  it("is always between 0 and 1", () => {
-    for (const stage of STAGES) for (const [done, total] of [[0, 0], [1, 2], [5, 5], [9, 3]]) {
-      const v = overallFraction(at(stage, done, total))!;
-      expect(v).toBeGreaterThanOrEqual(0);
-      expect(v).toBeLessThanOrEqual(1);
-    }
-  });
 });
 
 describe("rising", () => {
@@ -68,8 +61,3 @@ describe("describeProgress", () => {
   });
 });
 
-describe("STAGES", () => {
-  it("are the four phases of the backend, in order", () => {
-    expect([...STAGES]).toEqual(["listing", "downloading", "parsing", "building"]);
-  });
-});

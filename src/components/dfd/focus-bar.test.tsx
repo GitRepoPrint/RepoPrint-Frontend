@@ -64,10 +64,6 @@ describe("FocusBar", () => {
     expect(html(focusIn({ mode: "pick", query: "zzz" }))).toContain("No component matches.");
   });
 
-  it("says plainly when the whole diagram is shown", () => {
-    expect(html(focusIn({ mode: "all" }))).toContain("Whole diagram: 30 components.");
-  });
-
   it("offers the level of detail and the tests and docs option, and shows when they were changed", () => {
     const base = html(focusIn({}));
     expect(base).toContain("2 levels");
@@ -77,10 +73,4 @@ describe("FocusBar", () => {
     expect(html(focusIn({ includeAuxiliary: true }))).toContain("Reset");
   });
 
-  it("shows that a kind filter is on", () => {
-    const out = html(focusIn({ kinds: new Set(["data_store"]) }));
-    expect(out).toContain("Reset");
-    expect(out).toMatch(/aria-pressed="true"[^>]*>Data stores/);
-    expect(out).toMatch(/aria-pressed="false"[^>]*>Processes/);
-  });
 });

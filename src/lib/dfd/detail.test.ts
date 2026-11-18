@@ -129,9 +129,11 @@ describe("fetchDetailGraph with progress", () => {
 
   it("asks for the stream and reports every step, in order, before returning the graph", async () => {
     const seen: string[] = [];
+    const headers: unknown[] = [];
     const steps: { stage: string; done: number; total: number }[] = [];
-    const fetcher = async (url: string) => {
+    const fetcher = async (url: string, init?: RequestInit) => {
       seen.push(url);
+      headers.push(init?.headers);
       return streamOf([
         line({ type: "progress", stage: "listing", done: 0, total: 0 }),
         line({ type: "progress", stage: "downloading", done: 10, total: 40 }),
@@ -141,18 +143,13 @@ describe("fetchDetailGraph with progress", () => {
     };
     const graph = await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher, onProgress: (p) => steps.push(p) });
     expect(seen[0]).toBe(`${BASE}/dfd/stream?url=https%3A%2F%2Fgithub.com%2Fo%2Fr&group_by=directory`);
+    expect(headers[0]).toEqual({ Accept: "application/x-ndjson" }); // só o cabeçalho que não pede verificação prévia ao navegador
     expect(steps).toEqual([
       { stage: "listing", done: 0, total: 0 },
       { stage: "downloading", done: 10, total: 40 },
       { stage: "parsing", done: 40, total: 40 },
     ]);
     expect(graph.level).toBe("detail");
-  });
-
-  it("only asks for the header that needs no preflight request", async () => {
-    let init: RequestInit | undefined;
-    await fetchDetailGraph("o", "r", { backendUrl: BASE, onProgress: () => {}, fetcher: async (_u, i) => { init = i; return streamOf([resultLine]); } });
-    expect(init?.headers).toEqual({ Accept: "application/x-ndjson" });
   });
 
   it("copes with events that arrive cut in the middle", async () => {

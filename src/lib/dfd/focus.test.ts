@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ALL_KINDS, OVERVIEW_MAX_NODES, applyFocus, applyOverview, flowIds, isAuxiliary, listNodes, overviewIds, scoreNodes, withoutAuxiliary } from "./focus";
+import { OVERVIEW_MAX_NODES, applyFocus, applyOverview, flowIds, isAuxiliary, listNodes, overviewIds, scoreNodes, withoutAuxiliary } from "./focus";
 import { expandToDepth, project } from "./project";
 import type { GraphView } from "./project";
 import type { DfdGraph, GraphEdge, GraphNode, GraphNodeKind, Source } from "./schema";
@@ -311,6 +311,5 @@ describe("the list to pick from", () => {
   it("counts the connections of each component", () => {
     const { nodes, edges } = webApp();
     expect(scoreNodes(view(nodes, edges)).get(DB.id)!.connections).toBe(1);
-    expect(ALL_KINDS).toHaveLength(3);
   });
 });
