@@ -82,8 +82,6 @@
   font-size: 14px;
 }
 
-.loading-panel-steps li.done .loading-panel-steps li.active
-
 @media (max-width: 560px) {
   .loading-panel {
     flex-direction: column;
