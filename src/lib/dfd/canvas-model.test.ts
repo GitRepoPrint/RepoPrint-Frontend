@@ -68,3 +68,36 @@ describe("saving the diagram", () => {
     expect(loadDiagram("o/r", true)).toBeNull();
   });
 });
+
+describe("edge types on the canvas", () => {
+  const base = { id: "e", source: "a", target: "b", sourceHandle: "r" as const, targetHandle: "l" as const };
+
+  it("a dependency stays a dependency across the trip to React Flow and back, and a flow stays a flow", () => {
+    const [dep, flow] = toFlowEdges({ nodes: [], edges: [{ ...base, id: "d", label: "IMPORTS", kind: "dependency" }, { ...base, id: "f", label: "CALLS" }] });
+    expect(dep.data).toMatchObject({ kind: "dependency" });
+    expect(flow.data).toMatchObject({ kind: "flow" });
+    const back = toDiagram([], [dep, flow]).edges;
+    expect(back[0].kind).toBe("dependency");
+    expect(back[1].kind).toBeUndefined();
+  });
+
+  it("a diagram saved before edges had types gets them from the label", () => {
+    const [dep, flow] = toFlowEdges({ nodes: [], edges: [{ ...base, id: "d", label: "IMPORTS" }, { ...base, id: "f", label: "HTTP REQUESTS" }] });
+    expect(dep.data?.kind).toBe("dependency");
+    expect(flow.data?.kind).toBe("flow");
+  });
+
+  it("a two-way dependency has an arrow at each end, and it is kept when saved", () => {
+    const [edge] = toFlowEdges({ nodes: [], edges: [{ ...base, label: "IMPORTS", kind: "dependency", bidirectional: true }] });
+    expect(edge.markerStart).toBeTruthy();
+    expect(edge.markerEnd).toBeTruthy();
+    expect(toDiagram([], [edge]).edges[0].bidirectional).toBe(true);
+    expect(toFlowEdges({ nodes: [], edges: [{ ...base, label: "CALLS" }] })[0].markerStart).toBeUndefined();
+  });
+
+  it("the highlight is only for drawing: it is not saved", () => {
+    const [edge] = toFlowEdges({ nodes: [], edges: [{ ...base, label: "CALLS" }] });
+    const saved = toDiagram([], [{ ...edge, data: { ...edge.data!, state: "dim" as const } }]).edges[0];
+    expect(JSON.stringify(saved)).not.toContain("dim");
+  });
+});

@@ -254,3 +254,22 @@ describe("repeated folder names", () => {
     expect(new Set(titles).size).toBe(titles.length);
   });
 });
+
+describe("edge types in the model", () => {
+  const provenance = { source: "code" as const, confidence: "medium" as const, evidence: [{ note: "t" }] };
+  const n = (id: string): GraphNode => ({ id, kind: "process", name: id, path: id, provenance });
+  const view = (edges: { id: string; source: string; target: string; label: string; extra?: Record<string, unknown> }[]) =>
+    ({ nodes: [n("a"), n("b")], edges: edges.map((e) => ({ ...e, provenance })), children: {} });
+
+  it("marks a code dependency, and leaves a data flow unmarked", () => {
+    const m = graphToDfdModel(view([{ id: "e1", source: "a", target: "b", label: "imports" }, { id: "e2", source: "b", target: "a", label: "calls" }]));
+    expect(m.edges.find((e) => e.id === "e1")).toMatchObject({ kind: "dependency", label: "IMPORTS" });
+    expect(m.edges.find((e) => e.id === "e2")?.kind).toBeUndefined();
+  });
+
+  it("carries the two-way arrow through", () => {
+    const m = graphToDfdModel(view([{ id: "e1", source: "a", target: "b", label: "imports", extra: { bidirectional: true } }]));
+    expect(m.edges[0].bidirectional).toBe(true);
+    expect(graphToDfdModel(view([{ id: "e1", source: "a", target: "b", label: "imports" }])).edges[0].bidirectional).toBeUndefined();
+  });
+});

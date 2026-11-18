@@ -2,6 +2,7 @@
 // já sabem desenhar: posições dos nós (Dagre), ligações com os lados por onde saem e o traço SVG de cada uma.
 import dagre from "@dagrejs/dagre";
 import type { DfdEdge, DfdEvidence, DfdModel, DfdNodeData, DfdNodeKind } from "@/lib/api/types";
+import { edgeKind } from "./declutter";
 import type { GraphView } from "./project";
 import type { GraphNode, GraphNodeKind } from "./schema";
 
@@ -168,7 +169,11 @@ export function graphToDfdModel(view: GraphView): DfdModel {
     const target = byId.get(e.target);
     if (!source || !target) continue;
     const handles = handlesFor(source, target);
-    edges.push({ id: e.id, source: e.source, target: e.target, ...handles, label: e.label.toUpperCase() });
+    edges.push({
+      id: e.id, source: e.source, target: e.target, ...handles, label: e.label.toUpperCase(),
+      ...(edgeKind(e.label) === "dependency" ? { kind: "dependency" as const } : {}),
+      ...(e.extra?.bidirectional ? { bidirectional: true } : {}),
+    });
     flows.push(pathFor(source, target, handles));
   }
 

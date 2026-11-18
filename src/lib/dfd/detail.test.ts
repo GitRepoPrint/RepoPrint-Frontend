@@ -108,3 +108,122 @@ describe("getDetail", () => {
     expect(peekDetail("a", "b")).toBeNull();
   });
 });
+
+
+describe("fetchDetailGraph with progress", () => {
+  const encoder = new TextEncoder();
+  const line = (event: unknown) => JSON.stringify(event) + "\n";
+  const resultLine = line({ type: "result", graph: votingDetail });
+
+  /** Uma resposta que chega aos bocados, como o backend a envia. */
+  const streamOf = (chunks: string[], init: ResponseInit = {}) =>
+    new Response(
+      new ReadableStream({
+        start(controller) {
+          for (const chunk of chunks) controller.enqueue(encoder.encode(chunk));
+          controller.close();
+        },
+      }),
+      { status: 200, headers: { "Content-Type": "application/x-ndjson" }, ...init },
+    );
+
+  it("asks for the stream and reports every step, in order, before returning the graph", async () => {
+    const seen: string[] = [];
+    const headers: unknown[] = [];
+    const steps: { stage: string; done: number; total: number }[] = [];
+    const fetcher = async (url: string, init?: RequestInit) => {
+      seen.push(url);
+      headers.push(init?.headers);
+      return streamOf([
+        line({ type: "progress", stage: "listing", done: 0, total: 0 }),
+        line({ type: "progress", stage: "downloading", done: 10, total: 40 }),
+        line({ type: "progress", stage: "parsing", done: 40, total: 40 }),
+        resultLine,
+      ]);
+    };
+    const graph = await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher, onProgress: (p) => steps.push(p) });
+    expect(seen[0]).toBe(`${BASE}/dfd/stream?url=https%3A%2F%2Fgithub.com%2Fo%2Fr&group_by=directory`);
+    expect(headers[0]).toEqual({ Accept: "application/x-ndjson" }); // só o cabeçalho que não pede verificação prévia ao navegador
+    expect(steps).toEqual([
+      { stage: "listing", done: 0, total: 0 },
+      { stage: "downloading", done: 10, total: 40 },
+      { stage: "parsing", done: 40, total: 40 },
+    ]);
+    expect(graph.level).toBe("detail");
+  });
+
+  it("copes with events that arrive cut in the middle", async () => {
+    const whole = line({ type: "progress", stage: "parsing", done: 5, total: 9 }) + resultLine;
+    const chunks = [whole.slice(0, 7), whole.slice(7, 60), whole.slice(60, 61), whole.slice(61)];
+    const steps: unknown[] = [];
+    const graph = await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher: async () => streamOf(chunks), onProgress: (p) => steps.push(p) });
+    expect(steps).toEqual([{ stage: "parsing", done: 5, total: 9 }]);
+    expect(graph.nodes.length).toBeGreaterThan(5);
+  });
+
+  it("ignores blank lines, unknown events and progress it does not understand", async () => {
+    const steps: unknown[] = [];
+    const fetcher = async () => streamOf(["\n", line({ type: "hello" }), line({ type: "progress", stage: "teleporting", done: 1, total: 2 }), line({ type: "progress", stage: "parsing", done: "x", total: 2 }), line({ type: "progress", stage: "building", done: 0, total: 0 }), resultLine]);
+    await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher, onProgress: (p) => steps.push(p) });
+    expect(steps).toEqual([{ stage: "building", done: 0, total: 0 }]);
+  });
+
+  it.each([
+    [404, /could not find this repository/],
+    [429, /rate-limited/],
+    [503, /busy/],
+    [502, /failed/],
+  ])("turns an error event with status %i into a plain message", async (status, message) => {
+    const fetcher = async () => streamOf([line({ type: "progress", stage: "listing", done: 0, total: 0 }), line({ type: "error", status, detail: "texto em português" })]);
+    const error = await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher, onProgress: () => {} }).catch((e) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.message).toMatch(message);
+    expect(error.message).not.toContain("português");
+  });
+
+  it("turns a refusal before the stream starts into the same messages", async () => {
+    const error = await fetchDetailGraph("o", "r", { backendUrl: BASE, onProgress: () => {}, fetcher: respond(429, { detail: "x" }) }).catch((e) => e);
+    expect(error.message).toMatch(/rate-limited/);
+  });
+
+  it("says so when the stream stops without an answer", async () => {
+    const error = await fetchDetailGraph("o", "r", { backendUrl: BASE, onProgress: () => {}, fetcher: async () => streamOf([line({ type: "progress", stage: "parsing", done: 1, total: 2 })]) }).catch((e) => e);
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.message).toMatch(/interrupted/);
+  });
+
+  it("refuses a result that is not a code-level graph", async () => {
+    const error = await fetchDetailGraph("o", "r", { backendUrl: BASE, onProgress: () => {}, fetcher: async () => streamOf([line({ type: "result", graph: { nope: true } })]) }).catch((e) => e);
+    expect(error.message).toMatch(/unexpected/);
+  });
+
+  it("gives up when nothing arrives for too long, even though the connection stays open", async () => {
+    const silent = async (_url: string, init?: RequestInit) =>
+      new Response(new ReadableStream({ start(controller) { init?.signal?.addEventListener("abort", () => controller.error(new DOMException("aborted", "AbortError"))); } }), { status: 200 });
+    const error = await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher: silent, onProgress: () => {}, idleTimeoutMs: 30 }).catch((e) => e);
+    expect(error.message).toMatch(/took too long/);
+  });
+
+  it("a stream that keeps talking is not cut off by the idle limit", async () => {
+    const slow = async () =>
+      new Response(new ReadableStream({
+        async start(controller) {
+          for (let i = 1; i <= 4; i++) {
+            await new Promise((r) => setTimeout(r, 20));
+            controller.enqueue(encoder.encode(line({ type: "progress", stage: "parsing", done: i, total: 4 })));
+          }
+          controller.enqueue(encoder.encode(resultLine));
+          controller.close();
+        },
+      }), { status: 200 });
+    const graph = await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher: slow, onProgress: () => {}, idleTimeoutMs: 60 });
+    expect(graph.level).toBe("detail");
+  });
+
+  it("without a progress callback it keeps using the plain endpoint", async () => {
+    let url = "";
+    await fetchDetailGraph("o", "r", { backendUrl: BASE, fetcher: async (u) => { url = u; return Response.json(votingDetail); } });
+    expect(url).toContain("/dfd?");
+    expect(url).not.toContain("/stream");
+  });
+});

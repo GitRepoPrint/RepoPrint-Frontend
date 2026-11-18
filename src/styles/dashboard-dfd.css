@@ -85,6 +85,13 @@
   stroke-width: 1.6;
 }
 
+/* uma dependência (um código que usa outro, "imports"): fina e a tracejado; só o que é fluxo de dados é firme */
+.dfd-flow-link.dependency {
+  stroke-width: 1.2;
+  stroke-dasharray: 5 5;
+  opacity: 0.6;
+}
+
 /* "contém": de um componente aberto para as suas partes (pontilhado, sem seta) */
 .dfd-contain-link {
   fill: none;
@@ -203,7 +210,12 @@
   color: #e4e4e7;
 }
 
-.dfd-preview-toolbar button:hover {
+.dfd-preview-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.dfd-preview-toolbar button:hover:not(:disabled) {
   background: #29252f;
   border-color: #665287;
 }
@@ -721,4 +733,237 @@
 
 .dfd-confidence.low {
   color: #c0506a;
+}
+
+/* O que o diagrama mostra: fluxo principal, componentes escolhidos ou o diagrama inteiro (components/dfd/focus-bar.tsx) */
+.dfd-focus {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+  background: var(--c-surface-2);
+  color: var(--c-text-2);
+  font-size: 14px;
+}
+
+.dfd-focus-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.dfd-focus-modes,
+.dfd-focus-kinds {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dfd-focus-modes {
+  padding: 3px;
+  border: 1px solid var(--c-border);
+  border-radius: 10px;
+}
+
+.dfd-focus-mode,
+.dfd-focus-kind,
+.dfd-focus-reset {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--c-text-2);
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.dfd-focus-kind {
+  border-color: var(--c-border);
+  border-radius: 999px;
+  padding: 5px 11px;
+  opacity: 0.6;
+}
+
+.dfd-focus-mode.active,
+.dfd-focus-kind.active {
+  background: var(--c-accent-soft);
+  color: var(--c-accent);
+  opacity: 1;
+}
+
+.dfd-focus-kind.active {
+  border-color: var(--c-accent);
+}
+
+.dfd-focus-reset {
+  margin-left: auto;
+  color: var(--c-accent);
+  text-decoration: underline;
+}
+
+.dfd-focus-mode:focus-visible,
+.dfd-focus-kind:focus-visible,
+.dfd-focus-reset:focus-visible,
+.dfd-focus-search:focus-visible,
+.dfd-focus-list input:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.dfd-focus-summary {
+  margin: 10px 0 0;
+  line-height: 1.5;
+}
+
+.dfd-focus-picker {
+  margin-top: 12px;
+}
+
+.dfd-focus-picker-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.dfd-focus-search,
+.dfd-focus-sort select {
+  height: 36px;
+  border: 1px solid var(--c-border);
+  border-radius: 8px;
+  background: var(--c-lens);
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  padding: 0 10px;
+}
+
+.dfd-focus-search {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.dfd-focus-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.dfd-focus-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.dfd-focus-help {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.dfd-focus-help summary {
+  width: max-content;
+  color: var(--c-accent);
+  cursor: pointer;
+}
+
+.dfd-focus-help p {
+  max-width: 78ch;
+  margin: 6px 0 0;
+}
+
+.dfd-focus-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 2px 14px;
+  max-height: 240px;
+  margin: 10px 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.dfd-focus-list label {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  align-items: center;
+  padding: 5px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.dfd-focus-list label:hover {
+  background: var(--c-accent-soft);
+}
+
+.dfd-focus-name {
+  color: var(--c-text, inherit);
+  overflow-wrap: anywhere;
+}
+
+.dfd-focus-meta {
+  grid-column: 2;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.dfd-focus-none {
+  grid-column: 1 / -1;
+  padding: 8px 4px;
+}
+
+/* Na vista inteira do canvas a barra fica entre a barra de ferramentas e a área de desenho */
+.canvas-app .dfd-focus {
+  margin: 0;
+  border-width: 0 0 1px;
+  border-radius: 0;
+  flex: none;
+}
+
+.canvas-app .dfd-focus-list {
+  max-height: 150px;
+}
+
+/* A prévia do dashboard cabe sempre inteira na caixa: o desenho encolhe em vez de ter barra de deslocamento */
+/* Ajustado à caixa (100%). Com zoom maior do que isso a caixa desloca-se (rato, teclado: tem tabindex) e o desenho fica ao centro enquanto cabe. */
+.dfd-preview-viewport-autofit {
+  height: clamp(340px, 56vh, 540px);
+  display: flex;
+  overflow: auto;
+  scrollbar-width: thin; /* as barras claras do navegador destoam do fundo escuro */
+  scrollbar-color: rgba(128, 134, 160, 0.55) transparent;
+}
+
+.dfd-preview-viewport-autofit:focus-visible {
+  outline: 2px solid var(--c-accent, #7c5cff);
+  outline-offset: 2px;
+}
+
+.dfd-preview-scene-autofit {
+  flex: none;
+  margin: auto; /* ao centro enquanto cabe; maior do que a caixa, começa no canto e dá para chegar a tudo */
+  min-width: 0;
+  transform: none;
+}
+
+.dfd-preview-scene-autofit .dfd-preview-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.dfd-focus-caption {
+  margin: 0 0 12px;
+  color: var(--c-text-2);
+  font-size: 14px;
+}
+
+.dfd-detail-progress {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
 }

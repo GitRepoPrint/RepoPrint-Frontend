@@ -274,3 +274,50 @@
     min-height: calc(100vh - 116px);
   }
 }
+
+/* A altura da barra de cima é uma variável, para o ecrã inteiro do canvas ocupar exatamente o que sobra (em vez de supor 72px). */
+.app-shell {
+  --nav-h: 72px;
+}
+
+/*
+ * Canvas do DFD (ecrã inteiro). A barra de cima da aplicação foi pensada para páginas com o conteúdo ao centro (largura máxima de
+ * 1360px, 72px de altura); aqui o resto do ecrã vai de ponta a ponta, por isso ela ficava desalinhada (o logo a centenas de píxeis
+ * da margem, em cima de uma barra de ferramentas que começa a 24px) e a roubar altura. Neste ecrã, e só neste:
+ *   - ocupa a largura toda e alinha com a barra de ferramentas (24px);
+ *   - é mais baixa (a mesma altura da barra de ferramentas, 52px) e o logo mais pequeno;
+ *   - tem o mesmo fundo e a mesma linha da barra de ferramentas, para as duas se lerem como um só cabeçalho.
+ */
+.screen-canvas {
+  --nav-h: 52px;
+}
+
+.screen-canvas .topbar {
+  height: var(--nav-h);
+  background: #171a23;
+  border-bottom-color: #30323c;
+}
+
+.theme-light.screen-canvas .topbar {
+  background: #fff;
+  border-bottom-color: #e0e2eb;
+}
+
+.screen-canvas .nav-inner {
+  max-width: none;
+  padding: 0 24px;
+}
+
+.screen-canvas .brand img {
+  width: 128px;
+}
+
+.screen-canvas .app-navbar .nav-actions {
+  gap: 8px;
+}
+
+.screen-canvas .theme-toggle,
+.screen-canvas .profile-trigger {
+  width: 32px;
+  height: 32px;
+}

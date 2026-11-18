@@ -7,6 +7,8 @@ import { getOverview } from "@/lib/dfd/overview/get-overview";
 import { overviewView } from "@/lib/dfd/project";
 import type { DfdGraph } from "@/lib/dfd/schema";
 import { graphToDfdModel } from "@/lib/dfd/to-model";
+import { overallFraction, rising } from "@/lib/progress";
+import type { LoadProgress } from "@/lib/progress";
 
 export type RepositoryDfd =
   | { status: "loading" }
@@ -16,7 +18,8 @@ export type RepositoryDfd =
 /** O grafo ao nível do código, que só se pede quando o utilizador quer (lê o repositório inteiro, demora). */
 export type DetailState =
   | { status: "idle" }
-  | { status: "loading" }
+  /** `progress` é a fase em que o backend vai e `fraction` (0 a 1) o total já feito; nunca diminui. */
+  | { status: "loading"; fraction: number; progress?: LoadProgress }
   | { status: "error"; message: string }
   | { status: "ready"; graph: DfdGraph };
 
@@ -46,8 +49,10 @@ export function useRepositoryDfd(repository: string) {
 
   const startDetail = useCallback((owner: string, repo: string) => {
     if (!BACKEND_URL) return;
-    setDetail({ status: "loading" });
-    getDetail(owner, repo, { backendUrl: BACKEND_URL })
+    setDetail({ status: "loading", fraction: 0 });
+    const onProgress = (progress: LoadProgress) =>
+      alive.current && setDetail((current) => (current.status === "loading" ? { status: "loading", progress, fraction: rising(current.fraction, overallFraction(progress)) } : current));
+    getDetail(owner, repo, { backendUrl: BACKEND_URL, onProgress })
       .then((graph) => alive.current && setDetail({ status: "ready", graph }))
       .catch((error: unknown) => {
         console.error("Code analysis failed", error);

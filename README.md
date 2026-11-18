@@ -48,7 +48,7 @@ pnpm test        # Vitest: testes da análise do GitHub (sem rede, com respostas
 | `/login`, `/signup` | O login é simulado: **Continue with GitHub**, ou qualquer email válido com uma password de 8+ caracteres. A sessão é um cookie (`rp_session`) que dura 24 h. |
 | `/repositories` | Lista de repositórios de exemplo. **Associate repository** acrescenta um (fica guardado no `localStorage` do browser). |
 | `/repositories/<org>--<repo>` | Dashboard com 3 tabs (Threats, DFD, Team). **Export PDF Report** imprime o relatório formal. |
-| `/repositories/<org>--<repo>/dfd` | Editor do DFD: arrastar componentes, ligar nós, Auto Layout, **Save Diagram** (guarda no `localStorage`) e **Export SVG**. |
+| `/repositories/<org>--<repo>/dfd` | Editor do DFD: arrastar componentes, ligar nós, Auto Layout, **Save Diagram** (guarda no `localStorage`) e **Export SVG**. Por defeito mostra o fluxo principal, sem limite de componentes; ver "O diagrama (DFD)". |
 
 Para voltar ao estado inicial basta limpar os dados do site no browser (cookies + localStorage).
 
@@ -141,3 +141,44 @@ NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
 ```
 
 No backend, `CORS_ORIGINS` tem de incluir a origem do frontend (por defeito `http://localhost:3000`).
+
+### Esperas
+
+Cada espera tem o sinal que lhe serve, sem exagero:
+
+- **Análise do código** (tab DFD e canvas): a única com progresso a sério. `ProgressRing` é um anel que se enche (como o da App Store), sem
+  número, com uma linha por baixo ("Downloading the code · 1,200 of 2,500 files"). Vem de `GET /dfd/stream` (`src/lib/dfd/detail.ts`): o backend
+  diz em que fase vai e quantos ficheiros já foram, e `src/lib/progress.ts` junta isso num valor que nunca diminui. Se o backend ficar
+  calado 90 s desiste-se.
+- **Páginas que o servidor constrói** (`loading.tsx` em `/repositories`, `/repositories/<repo>` e `.../dfd`) e a lista de repositórios a
+  carregar: esqueletos (`components/skeletons/page-skeletons.tsx`). Usam o MESMO código e as MESMAS classes da página (o texto fixo é o verdadeiro; a Toolbox,
+  o Inspector e a barra do diagrama são os próprios componentes) e só o que depende de dados é um bloco que cintila, para nada saltar quando
+  a página chega. `skeletons.test.tsx` compara-os com as páginas a sério (textos fixos e classes): se mudares uma página, o teste diz-te que o
+  esqueleto ficou para trás. Só o tamanho de listas (contribuidores, repositórios) depende dos dados.
+- **Esperas curtas** (ler a configuração, a análise instantânea): só a roda a girar.
+
+Num repositório enorme o backend lê uma amostra; o aviso por cima do diagrama diz-o ("a sample of 2,500 of 75,317 source files…").
+
+### O que se vê de um diagrama grande
+
+Um repositório grande tem centenas de pastas (o FastAPI tem 229 componentes). Há duas vistas, com regras diferentes:
+
+- **A prévia do dashboard** mostra **no máximo 10 componentes** (limite imposto; menos se o fluxo principal for mais pequeno),
+  sem controlos, e o desenho encolhe sempre para caber na caixa. É o fluxo principal; se tiver mais de 10, ficam os 10 mais
+  importantes, ligados entre si. Os sítios de fora que só aparecem num endereço do código ficam limitados aos 3 mais ligados.
+- **A vista completa (canvas)** não tem limite. Por defeito mostra o **fluxo principal**. A barra por cima tem:
+  **Choose components** (lista com pesquisa e ordenação, sem limite), **Whole diagram**, filtros por tipo, **Detail**
+  (quantos níveis de pastas se veem: 1, 2 por defeito, 3 ou todos; as mais fundas dobram-se no pai) e
+  **Include tests, docs and examples** (desligado por defeito).
+
+**Como se escolhe o fluxo principal.** Pelo caminho que os dados fazem, não por um número. As *entradas* são o código que recebe
+pedidos do cliente; os *destinos* são as bases de dados e os sistemas de fora (e o código que lhes toca). O fluxo principal é tudo o que
+está num caminho de uma entrada até um destino, mais as entradas, os destinos e o cliente. Fica de fora o que não está em nenhum
+caminho (utilitários, configuração, modelos). Sem entradas (uma biblioteca) é o código que toca em dados; se nada toca em dados,
+mostram-se os 10 componentes mais ligados; um diagrama com 10 ou menos mostra-se inteiro.
+
+**Testes, documentação, exemplos e scripts** (pastas como `tests`, `docs_src`, `examples`, `scripts`, `benchmarks`) saem do grafo nas
+duas vistas, com o que só eles usavam (um CDN que só um modelo de documentação carrega). No FastAPI isto leva 229 componentes a 18.
+
+O código está em `src/lib/dfd/focus.ts` (testado em `focus.test.ts`), `expandToDepth` em `project.ts`, `src/hooks/use-dfd-focus.ts`
+e `src/components/dfd/focus-bar.tsx`. No canvas, mexer nos controlos desenha o diagrama de novo e ignora o guardado.

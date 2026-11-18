@@ -114,6 +114,10 @@ export interface DfdEdge {
   sourceHandle: "r" | "b";
   targetHandle: "l" | "t";
   label: string;
+  /** "dependency" (um código usa outro: "imports") desenha-se fino e a tracejado; sem isto é um fluxo de dados. */
+  kind?: "dependency";
+  /** Dependência nos dois sentidos: uma só linha, com seta nas duas pontas. */
+  bidirectional?: boolean;
 }
 
 export interface DfdModel {
