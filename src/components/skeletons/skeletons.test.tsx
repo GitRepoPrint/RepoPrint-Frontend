@@ -141,7 +141,7 @@ describe("the diagram tab skeleton matches the diagram tab", () => {
   it("has the real button, legend and side panel texts, and a two-line note like the real one", () => {
     query = new URLSearchParams("tab=dfd");
     const out = html(createElement(DashboardSkeleton));
-    for (const text of ["Edit DFD in Full Canvas", "High", "Medium", "Low", "No findings", "Number shows the findings on each component", "Selected component", "Where this comes from", "Fits the box"]) {
+    for (const text of ["Edit DFD in Full Canvas", "High", "Medium", "Low", "No findings", "Number shows the findings on each component", "Selected component", "Where this comes from", "Reset View", "100%"]) {
       expect(out, text).toContain(text);
     }
     const note = out.slice(out.indexOf('class="dfd-notice"'), out.indexOf("dfd-preview-section"));

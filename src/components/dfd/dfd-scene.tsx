@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { Icon } from "@/components/ui/icon";
 import { titleLines } from "@/lib/dfd/labels";
@@ -74,12 +74,21 @@ function badgePosition(node: DfdNodeData) {
   return { x: node.x + 66, y: node.y - 28 };
 }
 
+export type ZoomRange = { min: number; max: number; step: number };
+/** O diagrama de demonstração. */
+const DEMO_ZOOM: ZoomRange = { min: 70, max: 140, step: 10 };
+/** A prévia de um repositório real, que já vem ajustada à caixa: dá para afastar para ver tudo e aproximar bastante, para quem precisa de ver maior. */
+export const FIT_ZOOM: ZoomRange = { min: 50, max: 250, step: 25 };
+
+/** O zoom seguinte (um passo para cima ou para baixo), sem passar dos limites. */
+export const stepZoom = (value: number, direction: 1 | -1, range: ZoomRange): number => Math.min(range.max, Math.max(range.min, value + direction * range.step));
+
 type DfdSceneProps = {
   model: DfdModel;
   risk: Record<string, NodeRiskSummary>;
   selected: string | null;
   onSelect: (id: string) => void;
-  /** O desenho encolhe para caber sempre inteiro na caixa (sem deslocar nem zoom). Usa-se na prévia dos repositórios reais. */
+  /** O desenho encolhe para caber inteiro na caixa e começa assim (100%); os botões de zoom afastam e aproximam a partir daí, e a caixa desloca-se. Usa-se na prévia dos repositórios reais. */
   fit?: boolean;
 };
 
@@ -87,6 +96,16 @@ type DfdSceneProps = {
 export function DfdScene({ model, risk, selected, onSelect, fit = false }: DfdSceneProps) {
   const [zoom, setZoom] = useState(100);
   const { boundary, viewBox } = model;
+  const range = fit ? FIT_ZOOM : DEMO_ZOOM;
+  const viewport = useRef<HTMLDivElement>(null);
+
+  // Ao aproximar, fica à vista o meio do desenho (e não o canto de cima, que quase só tem margem); dali, desloca-se a gosto
+  useEffect(() => {
+    const box = viewport.current;
+    if (!fit || !box) return;
+    box.scrollLeft = Math.max(0, (box.scrollWidth - box.clientWidth) / 2);
+    box.scrollTop = Math.max(0, (box.scrollHeight - box.clientHeight) / 2);
+  }, [fit, zoom]);
 
   function onKey(event: KeyboardEvent, id: string) {
     if (event.key === "Enter" || event.key === " ") {
@@ -97,8 +116,15 @@ export function DfdScene({ model, risk, selected, onSelect, fit = false }: DfdSc
 
   return (
     <div className="dfd-preview">
-      <div className={`dfd-preview-viewport${fit ? " dfd-preview-viewport-autofit" : viewBox ? " dfd-preview-viewport-fit" : ""}`}>
-        <div className={`dfd-preview-scene${fit ? " dfd-preview-scene-autofit" : viewBox ? " dfd-preview-scene-fit" : ""}`} style={fit ? undefined : { transform: `scale(${zoom / 100})` }}>
+      <div
+        ref={viewport}
+        className={`dfd-preview-viewport${fit ? " dfd-preview-viewport-autofit" : viewBox ? " dfd-preview-viewport-fit" : ""}`}
+        {...(fit ? { tabIndex: 0, role: "region", "aria-label": "Data flow diagram. Scroll it when zoomed in." } : {})}
+      >
+        <div
+          className={`dfd-preview-scene${fit ? " dfd-preview-scene-autofit" : viewBox ? " dfd-preview-scene-fit" : ""}`}
+          style={fit ? { width: `${zoom}%`, height: `${zoom}%` } : { transform: `scale(${zoom / 100})` }}
+        >
           <svg className="dfd-preview-svg" viewBox={`0 0 ${viewBox?.width ?? 1000} ${viewBox?.height ?? 320}`} preserveAspectRatio={fit ? "xMidYMid meet" : undefined} role="img" aria-label="Interactive data flow diagram with external entities, backend processes, data stores and the findings on each component">
             <defs>
               <marker id="dfd-preview-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z" fill="#85859a" /></marker>
@@ -169,14 +195,14 @@ export function DfdScene({ model, risk, selected, onSelect, fit = false }: DfdSc
           <li><i className="risk-none" />No findings</li>
           <li>Number shows the findings on each component</li>
         </ul>
-        {fit ? <span className="dfd-live-sync"><span />Fits the box</span> : <div className="dfd-preview-toolbar" aria-label="Diagram preview controls">
-          <button type="button" title="Zoom out" aria-label="Zoom out" onClick={() => setZoom((v) => Math.max(70, v - 10))}><Icon name="minus" size={15} /></button>
-          <span className="dfd-preview-zoom">{zoom}%</span>
-          <button type="button" title="Zoom in" aria-label="Zoom in" onClick={() => setZoom((v) => Math.min(140, v + 10))}><Icon name="plus" size={15} /></button>
+        <div className="dfd-preview-toolbar" aria-label="Diagram preview controls">
+          <button type="button" title="Zoom out" aria-label="Zoom out" disabled={zoom <= range.min} onClick={() => setZoom((v) => stepZoom(v, -1, range))}><Icon name="minus" size={15} /></button>
+          <span className="dfd-preview-zoom" {...(fit ? { "aria-live": "polite" as const } : {})}>{zoom}%</span>
+          <button type="button" title="Zoom in" aria-label="Zoom in" disabled={zoom >= range.max} onClick={() => setZoom((v) => stepZoom(v, 1, range))}><Icon name="plus" size={15} /></button>
           <span className="dfd-toolbar-divider" />
           <button type="button" className="dfd-reset-button" onClick={() => setZoom(100)}>Reset View</button>
-          <span className="dfd-live-sync"><span />Live Sync</span>
-        </div>}
+          {!fit && <span className="dfd-live-sync"><span />Live Sync</span>}
+        </div>
       </div>
     </div>
   );
