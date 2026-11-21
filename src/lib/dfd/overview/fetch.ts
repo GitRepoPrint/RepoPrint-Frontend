@@ -12,9 +12,19 @@ const RAW = "https://raw.githubusercontent.com";
 export const MAX_FILE_BYTES = 200_000;
 const CONCURRENCY = 6;
 
+export interface TreeResponse {
+  tree?: { path: string; type: string; size?: number }[];
+  truncated?: boolean;
+}
+
+export interface OverviewBackend {
+  read(owner: string, repo: string): Promise<TreeResponse & { files: Record<string, string> }>;
+}
+
 export interface FetchOptions {
   fetcher?: Fetcher;
   maxFileBytes?: number;
+  backend?: OverviewBackend;
 }
 
 export interface FetchedRepo {
@@ -25,16 +35,23 @@ export interface FetchedRepo {
   skipped: string[];
 }
 
-interface TreeResponse {
-  tree?: { path: string; type: string; size?: number }[];
-  truncated?: boolean;
-}
-
 const encodePath = (path: string) => path.split("/").map(encodeURIComponent).join("/");
 
 export async function fetchOverviewFiles(owner: string, repo: string, options: FetchOptions = {}): Promise<FetchedRepo> {
   const fetcher: Fetcher = options.fetcher ?? ((input, init) => fetch(input, init));
   const maxBytes = options.maxFileBytes ?? MAX_FILE_BYTES;
+
+  const blobsOf = (listing: TreeResponse) => (listing.tree ?? []).filter((e) => e.type === "blob" && (e.size ?? 0) <= maxBytes).map((e) => e.path);
+
+  if (options.backend) {
+    const source = await options.backend.read(owner, repo);
+    const chosen = selectConfigFiles(blobsOf(source));
+    return {
+      files: chosen.filter((path) => path in source.files).map((path) => ({ path, text: source.files[path] })),
+      truncated: source.truncated === true,
+      skipped: chosen.filter((path) => !(path in source.files)),
+    };
+  }
 
   const response = await fetcher(`${API}/repos/${owner}/${repo}/git/trees/HEAD?recursive=1`, {
     headers: { Accept: "application/vnd.github+json" },
@@ -42,8 +59,7 @@ export async function fetchOverviewFiles(owner: string, repo: string, options: F
   if (!response.ok) throw errorFor(response);
   const body = (await response.json()) as TreeResponse;
 
-  const blobs = (body.tree ?? []).filter((e) => e.type === "blob" && (e.size ?? 0) <= maxBytes).map((e) => e.path);
-  const wanted = selectConfigFiles(blobs);
+  const wanted = selectConfigFiles(blobsOf(body));
 
   const files: RepoFile[] = [];
   const skipped: string[] = [];

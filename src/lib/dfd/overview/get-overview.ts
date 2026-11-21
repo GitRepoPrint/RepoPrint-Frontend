@@ -1,6 +1,7 @@
 import type { Fetcher } from "@/lib/github/activity";
 import type { KeyValueStorage } from "@/lib/github/activity-cache";
 import type { DfdGraph } from "../schema";
+import type { OverviewBackend } from "./fetch";
 import { OVERVIEW_TTL_MS, readOverviewCache, writeOverviewCache } from "./cache";
 import { analyzeOverview } from "./index";
 
@@ -13,7 +14,7 @@ export interface OverviewData {
   cached: boolean;
 }
 
-type Options = { fetcher?: Fetcher; storage?: KeyValueStorage | null; clock?: () => number };
+type Options = { fetcher?: Fetcher; storage?: KeyValueStorage | null; clock?: () => number; backend?: OverviewBackend };
 
 function browserStorage(): KeyValueStorage | null {
   try {
@@ -39,7 +40,7 @@ export async function getOverview(owner: string, repo: string, options: Options 
   const hit = storage ? readOverviewCache(storage, owner, repo, now) : null;
   if (hit) return result(hit.graph, false, hit.fetchedAt, true);
 
-  const { graph, partial } = await analyzeOverview(owner, repo, { fetcher: options.fetcher });
+  const { graph, partial } = await analyzeOverview(owner, repo, { fetcher: options.fetcher, backend: options.backend });
   // Um resultado incompleto não se guarda: voltar a pedir pode ir buscar o que faltou
   if (storage && !partial) writeOverviewCache(storage, owner, repo, graph, now);
   return result(graph, partial, now, false);
