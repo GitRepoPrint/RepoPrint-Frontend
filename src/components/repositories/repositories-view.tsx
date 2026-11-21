@@ -35,6 +35,15 @@ const GITHUB_MESSAGES: Record<string, string> = {
   error: "Could not connect GitHub. Please try again.",
 };
 
+const GITHUB_APP_MESSAGES: Record<string, string> = {
+  installed: "RepoPrint app installed. Code analysis can now read the private repositories it covers.",
+  denied: "The RepoPrint app was not installed.",
+  requested: "Installation requested. An owner of the organization has to approve it.",
+  forbidden: "That installation does not belong to your GitHub account.",
+  unavailable: "The RepoPrint app is not set up on this server yet.",
+  error: "Could not install the RepoPrint app. Please try again.",
+};
+
 function StatePanel({ title, message, role, children }: { title: string; message: string; role?: "status" | "alert"; children?: ReactNode }) {
   return (
     <div className="repo-empty" role={role}>
@@ -45,7 +54,7 @@ function StatePanel({ title, message, role, children }: { title: string; message
   );
 }
 
-export function RepositoriesView({ githubStatus }: { githubStatus?: string }) {
+export function RepositoriesView({ githubStatus, githubAppStatus }: { githubStatus?: string; githubAppStatus?: string }) {
   const router= useRouter();
   const { notify }= useToast();
   const { state, add, retry }= useRepositories();
@@ -54,11 +63,11 @@ export function RepositoriesView({ githubStatus }: { githubStatus?: string }) {
   const closeModal= useCallback(() => setModalOpen(false), []);
 
   useEffect(() => {
-    const message= githubStatus ? GITHUB_MESSAGES[githubStatus] : undefined;
+    const message= (githubStatus ? GITHUB_MESSAGES[githubStatus] : undefined) ?? (githubAppStatus ? GITHUB_APP_MESSAGES[githubAppStatus] : undefined);
     if (!message) return;
     notify(message);
     window.history.replaceState(null, "", "/repositories");
-  }, [githubStatus, notify]);
+  }, [githubStatus, githubAppStatus, notify]);
 
   const repositories= state.status === "ready" ? state.repositories : [];
   const query= search.toLowerCase();
