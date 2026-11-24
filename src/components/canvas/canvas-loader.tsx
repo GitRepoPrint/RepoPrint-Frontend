@@ -7,7 +7,9 @@ import { Icon } from "@/components/ui/icon";
 import { LoadingPanel } from "@/components/ui/loading-panel";
 import { useDfdFocus } from "@/hooks/use-dfd-focus";
 import { useRepositoryDfd } from "@/hooks/use-repository-dfd";
+import { useRepositoryStride } from "@/hooks/use-repository-stride";
 import { isDemoRepository } from "@/lib/api/repositories";
+import { enrichModelWithFindings } from "@/lib/api/stride";
 import { combineGraphs } from "@/lib/dfd/combine";
 import { graphToDfdModel } from "@/lib/dfd/to-model";
 import { describeProgress } from "@/lib/progress";
@@ -46,14 +48,17 @@ function LiveCanvas({ analysis, branch }: CanvasLoaderProps) {
     if (dfd.status !== "ready") return null;
     return detail.status === "ready" ? combineGraphs(dfd.graph, detail.graph) : dfd.graph;
   }, [dfd, detail]);
+  const stride = useRepositoryStride({ repository: analysis.repository, dfdGraph: graph });
+  const effectiveFindings = stride.status === "ready" ? stride.findings : analysis.findings;
   const focus = useDfdFocus(graph);
-  const model = useMemo(() => (graph ? graphToDfdModel(focus.result.view) : null), [graph, focus.result.view]);
+  const rawModel = useMemo(() => (graph ? graphToDfdModel(focus.result.view) : null), [graph, focus.result.view]);
+  const model = useMemo(() => (rawModel ? enrichModelWithFindings(rawModel, effectiveFindings) : null), [rawModel, effectiveFindings]);
   // O React Flow só lê o diagrama inicial uma vez: quando o que se vê muda, desenha-se de novo
   const viewKey = useMemo(() => `${focus.state.mode}:${focus.result.view.nodes.map((n) => n.id).join("|")}`, [focus.state.mode, focus.result.view]);
 
   const waitingForCode = dfd.status === "ready" && detailAvailable && (detail.status === "idle" || detail.status === "loading");
   if (dfd.status === "ready" && model && !waitingForCode) {
-    return <CanvasView key={viewKey} analysis={{ ...analysis, dfd: model }} branch={branch} live fresh={focus.touched} topSlot={<FocusBar focus={focus} />} />;
+    return <CanvasView key={viewKey} analysis={{ ...analysis, dfd: model, findings: effectiveFindings }} branch={branch} live fresh={focus.touched} topSlot={<FocusBar focus={focus} />} />;
   }
 
   const reading = dfd.status === "ready";

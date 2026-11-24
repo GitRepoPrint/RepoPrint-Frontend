@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
-/** true só depois da hidratação; evita hydration mismatch com valores que dependem do browser. */
+const emptySubscribe = () => () => {};
+
 export function useMounted() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  return mounted;
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 }

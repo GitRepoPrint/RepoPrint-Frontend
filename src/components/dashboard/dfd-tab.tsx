@@ -15,6 +15,7 @@ import { project } from "@/lib/dfd/project";
 import { graphToDfdModel } from "@/lib/dfd/to-model";
 import { describeProgress } from "@/lib/progress";
 import { isDemoRepository } from "@/lib/api/repositories";
+import { enrichModelWithFindings } from "@/lib/api/stride";
 import { risksByNode, SEVERITY_LABEL } from "@/lib/findings";
 import type { DfdEvidence, DfdModel, DfdNodeData, Finding } from "@/lib/api/types";
 
@@ -53,7 +54,8 @@ function LiveDfdTab({ repository, findings, onOpenThreats, onEdit }: Pick<DfdTab
   // prioridade, para abrir um componente mostrar o que tem dentro. Selecionar um componente não muda a prévia. Ver lib/dfd/focus.ts.
   const boost = useMemo<ReadonlySet<string>>(() => new Set((graph?.nodes ?? []).filter((n) => n.parent && expanded.has(n.parent)).map((n) => n.id)), [graph, expanded]);
   const focused = useMemo(() => (view ? applyOverview(view, { boost }) : null), [view, boost]);
-  const model = useMemo(() => (focused ? graphToDfdModel(focused.view) : null), [focused]);
+  const rawModel = useMemo(() => (focused ? graphToDfdModel(focused.view) : null), [focused]);
+  const model = useMemo(() => (rawModel ? enrichModelWithFindings(rawModel, findings) : null), [rawModel, findings]);
 
   if (dfd.status === "loading") return <LoadingPanel title="Inferring the architecture" detail="Reading the configuration…" />;
 
