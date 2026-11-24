@@ -53,16 +53,16 @@ export function LinddunTable({ findings }: { findings: Finding[] }) {
   return (
     <table className="formal-table">
       <thead>
-        <tr><th>Privacy risk</th><th>Affected component</th><th>Severity</th><th>Applicable GDPR articles</th></tr>
+        <tr><th>Privacy Threat (LINDDUN GO)</th><th>Affected component</th><th>Hotspot</th><th>Description</th></tr>
       </thead>
       <tbody>
         {rows.length === 0 && <tr><td colSpan={4}>No findings reported.</td></tr>}
         {rows.map((f) => (
           <tr key={f.id}>
-            <td>{f.category}</td>
+            <td><strong>{f.category}</strong>{f.ref ? ` [${f.ref}]` : ""}</td>
             <td>{f.component} · <code>{f.file}</code></td>
-            <td className={`formal-${f.severity}`}>{SEVERITY_LABEL[f.severity]}</td>
-            <td>{gdprArticles(f).join("; ")}</td>
+            <td>{f.topic || "Inbound User"}</td>
+            <td>{f.impactDetail || f.title}</td>
           </tr>
         ))}
       </tbody>

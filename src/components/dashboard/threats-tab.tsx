@@ -22,42 +22,17 @@ export function ThreatsTab({
 }: ThreatsTabProps) {
   const { findings } = analysis;
 
-  // Apenas a secção de LINDDUN é preenchida dinamicamente com dados reais do motor LINDDUN
+  // Secção LINDDUN preenchida com as cartas e dados oficiais do LINDDUN GO
   const linddunRows = useMemo(() => {
-    // 1. Dados reais vindos do endpoint GET /linddun do backend
-    if (linddunReport?.findings && linddunReport.findings.length > 0) {
-      return linddunReport.findings.map((f, idx) => {
+    // 1. Dados reais vindos do endpoint GET /linddun do backend ou motor LINDDUN GO
+    const threatList = linddunReport?.threats || linddunReport?.findings;
+    if (threatList && threatList.length > 0) {
+      return threatList.map((f, idx) => {
         const id = `linddun-${f.threat_id.toLowerCase()}-${f.component_id}-${idx}`;
         const compLabel = f.component_name || f.component_id || f.target_type || "Component";
         const fileLabel = f.file_path || (f.source && f.target ? `${f.source} -> ${f.target}` : undefined);
-        const sevLower = f.severity.toLowerCase();
-        const articles = (f.gdpr_articles || []).map((art) => {
-          const cleaned = art.replace(/^GDPR\s+/, "");
-          return cleaned.startsWith("Art.") ? cleaned : `Art. ${cleaned}`;
-        });
-
-        const rawFinding: Finding = {
-          id,
-          ref: f.threat_id,
-          framework: "LINDDUN",
-          category: f.category,
-          severity: sevLower === "critical" || sevLower === "high" ? "high" : sevLower === "medium" ? "medium" : "low",
-          component: compLabel,
-          file: fileLabel || "system",
-          location: f.source && f.target ? `${f.source} to ${f.target}` : compLabel,
-          title: f.title,
-          impact: f.title,
-          impactDetail: f.description,
-          exposure: {
-            impact: sevLower === "critical" || sevLower === "high" ? "high" : sevLower === "medium" ? "medium" : "low",
-            impactLabel: f.category.toLowerCase(),
-            probability: sevLower === "critical" || sevLower === "high" ? "high" : sevLower === "medium" ? "medium" : "low",
-          },
-          effort: { level: "low", estimate: "~4 hours" },
-          topic: f.category,
-          mitigation: f.mitigation,
-          regulatoryTags: articles,
-        };
+        const hotspot = f.hotspot || "System";
+        const threatSources = f.threat_sources && f.threat_sources.length > 0 ? f.threat_sources : ["Organizational"];
 
         return {
           id,
@@ -65,34 +40,36 @@ export function ThreatsTab({
           category: f.category,
           title: f.title,
           description: f.description,
+          hotspot,
+          threatSources,
+          elicitationQuestions: f.elicitation_questions || [],
+          consequences: f.consequences || [],
+          examples: f.examples || [],
+          additionalInfo: f.additional_info || "",
           file: fileLabel,
           component: compLabel,
-          severity: f.severity,
-          articles,
-          raw: rawFinding,
         };
       });
     }
 
-    // 2. Findings LINDDUN da análise (se existirem)
+    // 2. Findings LINDDUN da análise (fallback)
     const repoLinddun = findings.filter((f) => f.framework === "LINDDUN");
     if (repoLinddun.length > 0) {
-      return repoLinddun.map((f) => {
-        const articles = f.regulatoryTags.map((art) => {
-          const cleaned = art.replace(/^GDPR\s+/, "");
-          return cleaned.startsWith("Art.") ? cleaned : `Art. ${cleaned}`;
-        });
+      return repoLinddun.map((f, idx) => {
         return {
-          id: f.id,
-          threatId: f.ref,
+          id: f.id || `linddun-${idx}`,
+          threatId: f.ref || "",
           category: f.category,
           title: f.title,
-          description: f.impactDetail,
+          description: f.impactDetail || f.title,
+          hotspot: f.topic || "Inbound User With Personal Data",
+          threatSources: ["Organizational"],
+          elicitationQuestions: [],
+          consequences: [],
+          examples: [],
+          additionalInfo: "",
           file: f.file !== "system" ? f.file : undefined,
           component: f.component,
-          severity: f.severity.charAt(0).toUpperCase() + f.severity.slice(1),
-          articles,
-          raw: f,
         };
       });
     }
@@ -163,34 +140,27 @@ export function ThreatsTab({
         </div>
       </section>
 
-      {/* 03 Privacy Risk Assessment (LINDDUN) (preenchido com dados reais de privacidade LINDDUN) */}
+      {/* 03 Privacy Risk Assessment (LINDDUN GO) */}
       <section className="formal-report-section">
         <div className="formal-section-title">
           <span>03</span>
-          <h2>Privacy Risk Assessment (LINDDUN)</h2>
+          <h2>Privacy Threat Modeling (LINDDUN GO)</h2>
         </div>
         <div className="threat-report-table-wrap">
           <table className="formal-table">
             <thead>
               <tr>
-                <th>Privacy risk</th>
+                <th>Privacy Threat / Card</th>
                 <th>Affected component</th>
-                <th className="threat-report-severity-cell">Severity</th>
-                <th>Applicable GDPR articles</th>
+                <th>Hotspot</th>
+                <th>Threat source</th>
+                <th>Description &amp; Consequences</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {linddunRows.length > 0 ? (
                 linddunRows.map((finding) => {
-                  const sevLower = finding.severity.toLowerCase();
-                  const sevClass =
-                    sevLower === "critical" || sevLower === "high"
-                      ? "high"
-                      : sevLower === "medium"
-                        ? "medium"
-                        : "low";
-
                   return (
                     <tr key={finding.id}>
                       <td>
@@ -211,17 +181,27 @@ export function ThreatsTab({
                           </span>
                         )}
                       </td>
-                      <td className="threat-report-severity-cell">
-                        <span className={`threat-report-severity ${sevClass}`}>{finding.severity}</span>
+                      <td>
+                        <span className="threat-report-hotspot-badge">{finding.hotspot}</span>
                       </td>
                       <td>
                         <div className="threat-report-tags">
-                          {finding.articles.map((article) => (
-                            <span className="threat-report-tag" key={article}>
-                              {article}
+                          {finding.threatSources.map((source) => (
+                            <span className="threat-report-tag" key={source}>
+                              {source}
                             </span>
                           ))}
                         </div>
+                      </td>
+                      <td>
+                        <div className="threat-report-desc">
+                          {finding.description}
+                        </div>
+                        {finding.consequences.length > 0 && (
+                          <div className="threat-report-context" style={{ marginTop: "4px" }}>
+                            {finding.consequences[0]}
+                          </div>
+                        )}
                       </td>
                       <td className="threat-report-action-cell">
                         <button
@@ -238,8 +218,8 @@ export function ThreatsTab({
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} style={{ textAlign: "center", padding: "32px 16px", color: "var(--c-text-2, #71717a)" }}>
-                    No privacy risk findings available.
+                  <td colSpan={6} style={{ textAlign: "center", padding: "32px 16px", color: "var(--c-text-2, #71717a)" }}>
+                    No LINDDUN privacy threat modeling findings available.
                   </td>
                 </tr>
               )}
