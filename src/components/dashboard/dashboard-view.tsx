@@ -3,9 +3,13 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
 import { DashboardReportDocument } from "@/components/report/dashboard-report-document";
+import { Icon } from "@/components/ui/icon";
+import { LoadingPanel } from "@/components/ui/loading-panel";
 import { useToast } from "@/components/ui/toast";
 import { toFrontendFindings, useLinddun } from "@/linddun";
+import { useRepositoryStride } from "@/hooks/use-repository-stride";
 import { repoSlug } from "@/lib/api/repositories";
+import { attachFindingsToDfdModel, enrichModelWithFindings } from "@/lib/api/stride";
 import { risksByNode } from "@/lib/findings";
 import { findings as mockFindings } from "@/lib/api/mock/findings";
 import { fileBaseName } from "@/lib/download";
@@ -34,20 +38,31 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
   const { notify } = useToast();
 
   const rawTab = searchParams.get("tab");
-  const tab: Tab = isTab(rawTab) ? rawTab : analysis.source === "git" ? "team" : "threats";
+  const isDemo = analysis.source === "demo";
+  const tab: Tab = isTab(rawTab) ? rawTab : isDemo ? "threats" : "team";
 
-  const [branch, setBranch] = useState(analysis.defaultBranch);
-  const [scanId, setScanId] = useState(analysis.scans[0]?.id ?? "");
-  const [reasons, setReasons] = useState<Record<string, string>>({});
-  const [triaged, setTriaged] = useState<Finding | null>(null);
-  const closeTriage = useCallback(() => setTriaged(null), []);
-
+  const stride = useRepositoryStride({ repository: analysis.repository });
   const { report, status, error, refetch } = useLinddun(analysis.repository, analysis.dfd);
+
+  const strideFindings = useMemo(() => {
+    if (isDemo) return analysis.findings.filter((f) => f.framework === "STRIDE");
+    return stride.status === "ready" ? stride.findings : [];
+  }, [isDemo, analysis.findings, stride]);
+
+  const effectiveDfd = useMemo(() => {
+    if (isDemo) return analysis.dfd;
+    if (stride.status === "ready" && stride.report) {
+      return attachFindingsToDfdModel(analysis.dfd, stride.report, strideFindings);
+    }
+    return enrichModelWithFindings(analysis.dfd, strideFindings);
+  }, [isDemo, analysis.dfd, stride, strideFindings]);
 
   const effectiveFindings = useMemo(() => {
     const baselineStride = mockFindings.filter((f) => f.framework === "STRIDE");
     const existingStride = analysis.findings.filter((f) => f.framework === "STRIDE");
-    const strideList = existingStride.length > 0 ? existingStride : baselineStride;
+    const strideList = isDemo
+      ? (existingStride.length > 0 ? existingStride : baselineStride)
+      : (stride.status === "ready" ? stride.findings : (existingStride.length > 0 ? existingStride : baselineStride));
 
     if (!report?.findings?.length) {
       const existingLinddun = analysis.findings.filter((f) => f.framework === "LINDDUN");
@@ -57,21 +72,27 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
     }
     const backendLinddunFindings = toFrontendFindings(report);
     return [...strideList, ...backendLinddunFindings];
-  }, [analysis.findings, report]);
+  }, [analysis.findings, isDemo, report, stride]);
 
-  const risks = useMemo(() => risksByNode(analysis.dfd, effectiveFindings), [analysis.dfd, effectiveFindings]);
+  const risks = useMemo(() => risksByNode(effectiveDfd, effectiveFindings), [effectiveDfd, effectiveFindings]);
 
-  const effectiveAnalysis = useMemo(
+  const effectiveAnalysis = useMemo<RepositoryAnalysis>(
     () => ({
       ...analysis,
       findings: effectiveFindings,
       dfd: {
-        ...analysis.dfd,
-        nodes: analysis.dfd.nodes.length > 0 ? analysis.dfd.nodes : risks.map((r) => r.node),
+        ...effectiveDfd,
+        nodes: effectiveDfd.nodes.length > 0 ? effectiveDfd.nodes : risks.map((r) => r.node),
       },
     }),
-    [analysis, effectiveFindings, risks],
+    [analysis, effectiveFindings, effectiveDfd, risks],
   );
+
+  const [branch, setBranch] = useState(analysis.defaultBranch);
+  const [scanId, setScanId] = useState(analysis.scans[0]?.id ?? "");
+  const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [triaged, setTriaged] = useState<Finding | null>(null);
+  const closeTriage = useCallback(() => setTriaged(null), []);
 
   const [nodeId, setNodeId] = useState("");
   const activeNodeId = risks.some((r) => r.node.id === nodeId) ? nodeId : (risks[0]?.node.id ?? "");
@@ -118,10 +139,10 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
               key={id}
               id={`${id}-tab`}
               type="button"
-              className={`dashboard-tab ${tab === id ? "active" : ""}`}
               role="tab"
               aria-selected={tab === id}
               aria-controls={`${id}-panel`}
+              className={`dashboard-tab ${tab === id ? "active" : ""}`}
               onClick={() => selectTab(id)}
             >
               {label}
@@ -131,31 +152,59 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
 
         <div className="dashboard-tab-content">
           <div id={`${tab}-panel`} className="dashboard-tab-panel" role="tabpanel" aria-labelledby={`${tab}-tab`}>
-            {tab === "threats" && analysis.source === "git" && status === "loading" && !report && (
-              <div className="threat-report-view">
-                <section className="formal-report-section" aria-label="Threat Modeling and Architectural Posture">
-                  <div style={{ padding: "48px 24px", textAlign: "center" }}>
-                    <p style={{ fontWeight: 600, marginBottom: "8px" }}>Analyzing privacy and architectural threats…</p>
-                    <p style={{ fontSize: "14px", opacity: 0.7 }}>Running LINDDUN privacy analysis on {analysis.repository}…</p>
+            {tab === "threats" && !isDemo && (
+              stride.status === "loading" ? (
+                <LoadingPanel
+                  title="Analyzing threats with STRIDE"
+                  detail="Evaluating architectural attack surface and security threats…"
+                />
+              ) : stride.status === "error" ? (
+                <div className="dfd-state dfd-state-error m-6" role="alert">
+                  <Icon name="warning" size={22} />
+                  <div>
+                    <strong>Could not run STRIDE analysis</strong>
+                    <span>{stride.error}</span>
                   </div>
-                </section>
-              </div>
+                  <button type="button" className="button button-outline" onClick={stride.retry}>
+                    Try again
+                  </button>
+                </div>
+              ) : status === "loading" && !report ? (
+                <div className="threat-report-view">
+                  <section className="formal-report-section" aria-label="Threat Modeling and Architectural Posture">
+                    <div style={{ padding: "48px 24px", textAlign: "center" }}>
+                      <p style={{ fontWeight: 600, marginBottom: "8px" }}>Analyzing privacy and architectural threats…</p>
+                      <p style={{ fontSize: "14px", opacity: 0.7 }}>Running LINDDUN privacy analysis on {analysis.repository}…</p>
+                    </div>
+                  </section>
+                </div>
+              ) : status === "error" && !report ? (
+                <div className="threat-report-view">
+                  <section className="formal-report-section" aria-label="Threat Modeling and Architectural Posture">
+                    <div style={{ padding: "48px 24px", textAlign: "center" }}>
+                      <p style={{ fontWeight: 600, color: "#be123c", marginBottom: "8px" }}>
+                        {error instanceof Error ? error.message : "Failed to load threat analysis"}
+                      </p>
+                      <button type="button" className="threat-report-action" onClick={refetch}>
+                        Retry analysis
+                      </button>
+                    </div>
+                  </section>
+                </div>
+              ) : (
+                <ThreatsTab
+                  analysis={effectiveAnalysis}
+                  linddunReport={report}
+                  risks={risks}
+                  nodeId={activeNodeId}
+                  reasons={reasons}
+                  onTriage={setTriaged}
+                  onSelectNode={setNodeId}
+                  onShowInDiagram={(id) => openNode("dfd", id)}
+                />
+              )
             )}
-            {tab === "threats" && analysis.source === "git" && status === "error" && !report && (
-              <div className="threat-report-view">
-                <section className="formal-report-section" aria-label="Threat Modeling and Architectural Posture">
-                  <div style={{ padding: "48px 24px", textAlign: "center" }}>
-                    <p style={{ fontWeight: 600, color: "#be123c", marginBottom: "8px" }}>
-                      {error instanceof Error ? error.message : "Failed to load threat analysis"}
-                    </p>
-                    <button type="button" className="threat-report-action" onClick={refetch}>
-                      Retry analysis
-                    </button>
-                  </div>
-                </section>
-              </div>
-            )}
-            {tab === "threats" && (analysis.source === "demo" || (analysis.source === "git" && (report || (status !== "loading" && status !== "error")))) && (
+            {tab === "threats" && isDemo && (
               <ThreatsTab
                 analysis={effectiveAnalysis}
                 linddunReport={report}
@@ -170,7 +219,7 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
             {tab === "dfd" && (
               <DfdTab
                 repository={analysis.repository}
-                demoModel={analysis.dfd}
+                demoModel={effectiveAnalysis.dfd}
                 findings={effectiveFindings}
                 nodeId={activeNodeId}
                 onSelectNode={setNodeId}
@@ -178,7 +227,7 @@ export function DashboardView({ analysis }: { analysis: RepositoryAnalysis }) {
                 onEdit={() => router.push(canvasUrl)}
               />
             )}
-            {tab === "team" && <TeamTab analysis={analysis} />}
+            {tab === "team" && <TeamTab analysis={effectiveAnalysis} />}
           </div>
         </div>
       </main>
