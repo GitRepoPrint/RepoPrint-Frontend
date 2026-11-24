@@ -245,6 +245,54 @@
   font-size: 11px;
   font-weight: 500;
   line-height: 1.5;
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* LINDDUN Table layout adjustments */
+.threat-report-view .formal-table-linddun {
+  table-layout: auto;
+  width: 100%;
+}
+
+.threat-report-view .formal-table-linddun code {
+  white-space: normal;
+  word-break: break-all;
+  max-width: 100%;
+}
+
+.threat-report-view .formal-table-linddun th.col-threat,
+.threat-report-view .formal-table-linddun td:nth-child(1) {
+  min-width: 140px;
+}
+
+.threat-report-view .formal-table-linddun th.col-component,
+.threat-report-view .formal-table-linddun td:nth-child(2) {
+  min-width: 150px;
+  max-width: 260px;
+  word-break: break-word;
+}
+
+.threat-report-view .formal-table-linddun th.col-hotspot,
+.threat-report-view .formal-table-linddun td:nth-child(3) {
+  min-width: 130px;
+  white-space: normal;
+}
+
+.threat-report-view .formal-table-linddun th.col-source,
+.threat-report-view .formal-table-linddun td:nth-child(4) {
+  min-width: 110px;
+}
+
+.threat-report-view .formal-table-linddun th.col-desc,
+.threat-report-view .formal-table-linddun td:nth-child(5) {
+  min-width: 220px;
+}
+
+.threat-report-view .formal-table-linddun th.col-actions,
+.threat-report-view .formal-table-linddun td:nth-child(6) {
+  width: 160px;
+  min-width: 150px;
   white-space: nowrap;
 }
 

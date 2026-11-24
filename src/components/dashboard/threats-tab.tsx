@@ -147,15 +147,15 @@ export function ThreatsTab({
           <h2>Privacy Threat Modeling (LINDDUN GO)</h2>
         </div>
         <div className="threat-report-table-wrap">
-          <table className="formal-table">
+          <table className="formal-table formal-table-linddun">
             <thead>
               <tr>
-                <th>Privacy Threat / Card</th>
-                <th>Affected component</th>
-                <th>Hotspot</th>
-                <th>Threat source</th>
-                <th>Description &amp; Consequences</th>
-                <th>Actions</th>
+                <th className="col-threat">Privacy Threat / Card</th>
+                <th className="col-component">Affected component</th>
+                <th className="col-hotspot">Hotspot</th>
+                <th className="col-source">Threat source</th>
+                <th className="col-desc">Description &amp; Consequences</th>
+                <th className="col-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
