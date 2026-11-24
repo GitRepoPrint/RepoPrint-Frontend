@@ -1,5 +1,3 @@
-import type { Finding, Severity } from "../api/types";
-
 export type LinddunSeverity = "Critical" | "High" | "Medium" | "Low" | "Info";
 
 export type LinddunCategory =
@@ -25,27 +23,29 @@ export interface LinddunRule {
   mitigation?: string;
 }
 
+export type LinddunCatalogRule = LinddunRule;
+
 export interface LinddunCatalog {
   categories: Record<string, string>;
-  dfd_properties: Record<string, string>;
-  data_types: string[];
-  rules: LinddunRule[];
+  dfd_properties?: Record<string, string>;
+  data_types?: string[];
+  rules?: LinddunRule[];
 }
 
 export interface LinddunFinding {
-  threat_id: string;
-  category: string;
-  severity: string;
-  target_type: string;
+  threat_id: string;             // ex: "I5", "DD4", "L1"
+  category: LinddunCategory | string; // ex: "Identifiability"
+  severity: LinddunSeverity | string; // ex: "High"
+  target_type: string;           // "process", "data_store", "data_flow", etc.
   component_id: string;
-  component_name: string | null;
-  title: string;
-  description: string;
-  gdpr_articles: string[];
-  mitigation: string;
-  source: string | null;
-  target: string | null;
-  file_path: string | null;
+  component_name?: string | null;
+  title: string;                 // ex: "Identifiable dataset"
+  description: string;           // Explicação detalhada da ameaça
+  gdpr_articles: string[];       // ex: ["Art. 4(1)", "Art. 32"]
+  mitigation: string;            // Ação corretiva recomendada
+  source?: string | null;
+  target?: string | null;
+  file_path?: string | null;
   extra?: Record<string, unknown>;
 }
 
@@ -86,3 +86,21 @@ export interface CanonicalDfd {
   elements: CanonicalElement[];
   data_flows: CanonicalFlow[];
 }
+
+export const LINDDUN_CATEGORIES: readonly LinddunCategory[] = [
+  "Linkability",
+  "Identifiability",
+  "Non-repudiation",
+  "Detectability",
+  "Disclosure of information",
+  "Unawareness",
+  "Non-compliance",
+] as const;
+
+export const LINDDUN_SEVERITIES: readonly LinddunSeverity[] = [
+  "Critical",
+  "High",
+  "Medium",
+  "Low",
+  "Info",
+] as const;

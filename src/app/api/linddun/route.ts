@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { analyzeLinddun, toFrontendFindings } from "../../../lib/linddun";
+import { analyzeLinddun, toFrontendFindings } from "@/linddun/engine";
 
 /**
  * Serverless Route Handler para análise de ameaças LINDDUN.

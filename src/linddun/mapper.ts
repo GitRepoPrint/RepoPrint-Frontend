@@ -1,5 +1,4 @@
 import type { CanonicalDfd, CanonicalElement, CanonicalFlow } from "./types";
-import type { DfdModel, DfdNodeData, DfdEdge } from "../api/types";
 
 // Padrões para inferência de identificadores diretos, pseudónimos e credenciais
 export const DIRECT_IDENTIFIER_PATTERNS =

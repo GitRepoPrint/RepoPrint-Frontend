@@ -1,7 +1,6 @@
 import catalogData from "./catalog.json";
 import { mapDfdToLinddun } from "./mapper";
 import type {
-  CanonicalDfd,
   CanonicalElement,
   CanonicalFlow,
   LinddunCatalog,
@@ -10,7 +9,7 @@ import type {
   LinddunRule,
   LinddunSummary,
 } from "./types";
-import type { Finding, Severity } from "../api/types";
+import type { Finding, Severity } from "@/lib/api/types";
 
 export class LinddunEngine {
   private categories: Record<string, string>;
@@ -159,7 +158,7 @@ export function analyzeLinddun(dfd: unknown): LinddunReport {
   return defaultLinddunEngine.analyze(dfd);
 }
 
-export function normalizeCategory(category: string): string {
+function normalizeCategory(category: string): string {
   if (category.toLowerCase() === "disclosure of information") {
     return "Disclosure of Information";
   }
