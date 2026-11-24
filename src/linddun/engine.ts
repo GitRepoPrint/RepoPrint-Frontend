@@ -9,7 +9,7 @@ import type {
   LinddunRule,
   LinddunSummary,
 } from "./types";
-import type { Finding, Severity } from "@/lib/api/types";
+import type { Finding } from "@/lib/api/types";
 
 export class LinddunEngine {
   private categories: Record<string, string>;
@@ -26,8 +26,7 @@ export class LinddunEngine {
   }
 
   /**
-   * Executa a análise de privacidade LINDDUN de forma serverless sobre um DFD
-   * (canónico, Backend DfdGraph ou Frontend DfdModel).
+   * Executa a análise de privacidade LINDDUN GO de forma serverless sobre um DFD.
    */
   public analyze(dfd: unknown): LinddunReport {
     const normalizedDfd = mapDfdToLinddun(dfd);
@@ -44,7 +43,6 @@ export class LinddunEngine {
       for (const rule of this.rules) {
         const targetRuleType = rule.applies_to;
 
-        // Permitir correspondência flexível para actor / external_entity
         if (targetRuleType !== elemType) {
           const isActorTarget = targetRuleType === "actor" || targetRuleType === "external_entity";
           const isActorElem = elemType === "actor" || elemType === "external_entity";
@@ -74,25 +72,32 @@ export class LinddunEngine {
       }
     }
 
-    // 3. Sumário e contadores
+    // 3. Sumário puro LINDDUN GO
     const byCategory: Record<string, number> = {};
-    const bySeverity: Record<string, number> = {};
+    const byThreatSource: Record<string, number> = { Organizational: 0, External: 0 };
+    const byTargetType: Record<string, number> = { process: 0, data_store: 0, data_flow: 0, actor: 0 };
 
     for (const f of findings) {
       byCategory[f.category] = (byCategory[f.category] || 0) + 1;
-      bySeverity[f.severity] = (bySeverity[f.severity] || 0) + 1;
+      for (const s of f.threat_sources || []) {
+        byThreatSource[s] = (byThreatSource[s] || 0) + 1;
+      }
+      byTargetType[f.target_type] = (byTargetType[f.target_type] || 0) + 1;
     }
 
     const summary: LinddunSummary = {
       total_findings: findings.length,
+      total_threats: findings.length,
       by_category: byCategory,
-      by_severity: bySeverity,
+      by_threat_source: byThreatSource,
+      by_target_type: byTargetType,
     };
 
     return {
       repository: normalizedDfd.repository || "unknown",
       analyzed_at: new Date().toISOString(),
       summary,
+      threats: findings,
       findings,
     };
   }
@@ -135,14 +140,17 @@ export class LinddunEngine {
     return {
       threat_id: rule.id,
       category: rule.category,
-      severity: rule.severity,
       target_type: rule.applies_to,
       component_id: String(component.id ?? ""),
       component_name: component.name || null,
       title: rule.title,
+      hotspot: rule.hotspot || "",
+      threat_sources: rule.threat_sources || [],
       description: rule.description,
-      gdpr_articles: rule.gdpr_articles || [],
-      mitigation: rule.mitigation || "",
+      elicitation_questions: rule.elicitation_questions || [],
+      consequences: rule.consequences || [],
+      examples: rule.examples || [],
+      additional_info: rule.additional_info || "",
       source: flow?.source ? String(flow.source) : null,
       target: flow?.target ? String(flow.target) : null,
       file_path: elem?.file_path || null,
@@ -158,35 +166,14 @@ export function analyzeLinddun(dfd: unknown): LinddunReport {
   return defaultLinddunEngine.analyze(dfd);
 }
 
-function normalizeCategory(category: string): string {
-  if (category.toLowerCase() === "disclosure of information") {
-    return "Disclosure of Information";
-  }
-  return category;
-}
-
 /** Converte um LinddunFinding no tipo Finding do RepoPrint */
 export function toFrontendFinding(f: LinddunFinding, index: number = 0): Finding {
-  const sevLower = f.severity.toLowerCase();
-  const severity: Severity =
-    sevLower === "critical" || sevLower === "high"
-      ? "high"
-      : sevLower === "medium"
-        ? "medium"
-        : "low";
-
-  const category = normalizeCategory(f.category);
-
-  const regulatoryTags = (f.gdpr_articles || []).map((art) =>
-    art.startsWith("GDPR") ? art : `GDPR ${art}`
-  );
-
   return {
     id: `linddun-${f.threat_id.toLowerCase()}-${f.component_id}-${index}`,
     ref: f.threat_id,
     framework: "LINDDUN",
-    category,
-    severity,
+    category: f.category,
+    severity: "medium",
     component: f.component_name || f.component_id,
     file: f.file_path || (f.source && f.target ? `${f.source} -> ${f.target}` : "system"),
     location: f.source && f.target ? `${f.source} to ${f.target}` : f.component_name || f.target_type,
@@ -194,17 +181,17 @@ export function toFrontendFinding(f: LinddunFinding, index: number = 0): Finding
     impact: f.title,
     impactDetail: f.description,
     exposure: {
-      impact: severity,
+      impact: "medium",
       impactLabel: f.category.toLowerCase(),
-      probability: severity === "high" ? "high" : severity === "medium" ? "medium" : "low",
+      probability: "medium",
     },
     effort: {
-      level: severity === "high" ? "medium" : "low",
-      estimate: severity === "high" ? "2-3 days" : "~4 hours",
+      level: "medium",
+      estimate: "~4 hours",
     },
-    topic: f.category,
-    mitigation: f.mitigation,
-    regulatoryTags,
+    topic: f.hotspot || f.category,
+    mitigation: (f.consequences && f.consequences[0]) || f.description,
+    regulatoryTags: f.threat_sources || [],
   };
 }
 

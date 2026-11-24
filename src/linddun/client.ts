@@ -103,14 +103,20 @@ export function createEmptySummary(): LinddunSummary {
 
 const CATEGORY_MAP: Record<string, LinddunCategory> = {
   linkability: "Linkability",
+  linking: "Linkability",
   identifiability: "Identifiability",
+  identifying: "Identifiability",
   "non-repudiation": "Non-repudiation",
   non_repudiation: "Non-repudiation",
   "non repudiation": "Non-repudiation",
   detectability: "Detectability",
+  detecting: "Detectability",
   "disclosure of information": "Disclosure of information",
   disclosure_of_information: "Disclosure of information",
+  "data disclosure": "Disclosure of information",
+  data_disclosure: "Disclosure of information",
   unawareness: "Unawareness",
+  "unawareness and unintervenability": "Unawareness",
   "non-compliance": "Non-compliance",
   non_compliance: "Non-compliance",
   "non compliance": "Non-compliance",
@@ -144,12 +150,16 @@ export function normalizeReport(raw: unknown, repository: string): LinddunReport
   }
 
   const data = raw as Record<string, unknown>;
-  const rawFindings = Array.isArray(data.findings) ? data.findings : [];
+  const rawFindings = Array.isArray(data.findings)
+    ? data.findings
+    : Array.isArray(data.threats)
+      ? data.threats
+      : [];
 
   const findings: LinddunFinding[] = rawFindings.map((item, index) => {
     const f = item as Record<string, unknown>;
     const category = normalizeCategory(f.category);
-    const severity = normalizeSeverity(f.severity);
+    const severity = typeof f.severity === "string" ? normalizeSeverity(f.severity) : "Medium";
     const targetType = typeof f.target_type === "string" ? f.target_type : "process";
 
     return {
@@ -159,10 +169,16 @@ export function normalizeReport(raw: unknown, repository: string): LinddunReport
       target_type: targetType,
       component_id: String(f.component_id || ""),
       component_name: typeof f.component_name === "string" ? f.component_name : null,
-      title: String(f.title || "Privacy Finding"),
+      title: String(f.title || category),
+      hotspot: String(f.hotspot || "Hotspot"),
+      threat_sources: Array.isArray(f.threat_sources) ? f.threat_sources.map(String) : ["Organizational"],
       description: String(f.description || ""),
-      gdpr_articles: Array.isArray(f.gdpr_articles) ? (f.gdpr_articles as string[]) : [],
-      mitigation: String(f.mitigation || "Review architecture and implement privacy safeguards."),
+      elicitation_questions: Array.isArray(f.elicitation_questions) ? f.elicitation_questions.map(String) : [],
+      consequences: Array.isArray(f.consequences) ? f.consequences.map(String) : [],
+      examples: Array.isArray(f.examples) ? f.examples.map(String) : [],
+      additional_info: typeof f.additional_info === "string" ? f.additional_info : "",
+      gdpr_articles: Array.isArray(f.gdpr_articles) ? f.gdpr_articles.map(String) : [],
+      mitigation: typeof f.mitigation === "string" ? f.mitigation : "",
       source: typeof f.source === "string" ? f.source : null,
       target: typeof f.target === "string" ? f.target : null,
       file_path: typeof f.file_path === "string" ? f.file_path : null,
@@ -175,7 +191,9 @@ export function normalizeReport(raw: unknown, repository: string): LinddunReport
   if (rawSummary && typeof rawSummary === "object") {
     summary.total_findings = typeof rawSummary.total_findings === "number"
       ? rawSummary.total_findings
-      : findings.length;
+      : typeof rawSummary.total_threats === "number"
+        ? rawSummary.total_threats
+        : findings.length;
 
     if (rawSummary.by_category && typeof rawSummary.by_category === "object") {
       const byCat = rawSummary.by_category as Record<string, number>;
@@ -189,17 +207,20 @@ export function normalizeReport(raw: unknown, repository: string): LinddunReport
       const bySev = rawSummary.by_severity as Record<string, number>;
       for (const [key, value] of Object.entries(bySev)) {
         const sev = normalizeSeverity(key);
-        summary.by_severity[sev] = (summary.by_severity[sev] || 0) + Number(value || 0);
+        if (summary.by_severity) {
+          summary.by_severity[sev] = (summary.by_severity[sev] || 0) + Number(value || 0);
+        }
       }
     }
   } else {
     summary.total_findings = findings.length;
     for (const f of findings) {
-      if (summary.by_category[f.category] !== undefined) {
-        summary.by_category[f.category] += 1;
+      if (summary.by_category[f.category as LinddunCategory] !== undefined) {
+        summary.by_category[f.category as LinddunCategory] += 1;
       }
-      if (summary.by_severity[f.severity] !== undefined) {
-        summary.by_severity[f.severity] += 1;
+      if (summary.by_severity && f.severity) {
+        const sev = normalizeSeverity(f.severity);
+        summary.by_severity[sev] += 1;
       }
     }
   }
@@ -208,6 +229,7 @@ export function normalizeReport(raw: unknown, repository: string): LinddunReport
     repository: String(data.repository || repository),
     analyzed_at: String(data.analyzed_at || new Date().toISOString()),
     summary,
+    threats: findings,
     findings,
   };
 }
