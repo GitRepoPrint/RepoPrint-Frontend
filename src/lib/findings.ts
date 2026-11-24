@@ -26,11 +26,68 @@ export interface NodeRisk {
 
 /** Findings de cada nó do DFD; componentes com mais risco primeiro. */
 export function risksByNode(model: DfdModel, findings: Finding[]): NodeRisk[] {
-  const byId = new Map(findings.map((f) => [f.id, f]));
-  const risks = model.nodes.map((node) => {
-    const list = prioritize(node.findingIds.flatMap((id) => byId.get(id) ?? []));
+  const claimed = new Set<string>();
+
+  const risks: NodeRisk[] = model.nodes.map((node) => {
+    const matched: Finding[] = [];
+    const nodeIdLower = node.id.toLowerCase();
+    const nodeTitleLower = node.title.toLowerCase();
+
+    for (const f of findings) {
+      if (node.findingIds.includes(f.id)) {
+        matched.push(f);
+        claimed.add(f.id);
+        continue;
+      }
+      const compLower = (f.component || "").toLowerCase();
+      if (compLower && (compLower === nodeIdLower || compLower === nodeTitleLower)) {
+        matched.push(f);
+        claimed.add(f.id);
+        continue;
+      }
+      const locLower = (f.location || "").toLowerCase();
+      if (locLower && (locLower === nodeIdLower || locLower === nodeTitleLower)) {
+        matched.push(f);
+        claimed.add(f.id);
+        continue;
+      }
+    }
+
+    const list = prioritize(matched);
     return { node, findings: list, severity: list[0]?.severity ?? null };
   });
+
+  const unclaimed = findings.filter((f) => !claimed.has(f.id));
+  if (unclaimed.length > 0) {
+    const groups = new Map<string, Finding[]>();
+    for (const f of unclaimed) {
+      const key = f.component || f.file || "General";
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(f);
+    }
+
+    for (const [key, group] of groups.entries()) {
+      const list = prioritize(group);
+      const isStore =
+        key.toLowerCase().includes("db") ||
+        key.toLowerCase().includes("data") ||
+        key.toLowerCase().includes("store") ||
+        key.toLowerCase().includes("log");
+      const syntheticNode: DfdNodeData = {
+        id: `synth-${key.toLowerCase().replace(/[^a-z0-9_-]/g, "-")}`,
+        title: key,
+        subtitle: isStore ? "DATA STORE" : "PROCESS",
+        kind: isStore ? "store" : "process",
+        x: 0,
+        y: 0,
+        code: "C-" + key.slice(0, 6).toUpperCase(),
+        classification: "Analyzed component",
+        findingIds: list.map((f) => f.id),
+      };
+      risks.push({ node: syntheticNode, findings: list, severity: list[0]?.severity ?? null });
+    }
+  }
+
   const rank = (risk: NodeRisk) => (risk.severity ? SEVERITY_ORDER[risk.severity] : 3);
   return risks.sort((a, b) => rank(a) - rank(b) || b.findings.length - a.findings.length);
 }
