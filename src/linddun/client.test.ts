@@ -106,9 +106,9 @@ describe("LINDDUN API client", () => {
       expect(report.summary.by_category["Disclosure of information"]).toBe(1);
       expect(report.summary.by_category["Identifiability"]).toBe(0);
       expect(report.summary.by_category["Non-compliance"]).toBe(0);
-      expect(report.summary.by_severity["Critical"]).toBe(1);
-      expect(report.summary.by_severity["Medium"]).toBe(1);
-      expect(report.summary.by_severity["High"]).toBe(0);
+      expect(report.summary.by_severity?.["Critical"]).toBe(1);
+      expect(report.summary.by_severity?.["Medium"]).toBe(1);
+      expect(report.summary.by_severity?.["High"]).toBe(0);
       expect(report.findings).toHaveLength(2);
 
       const f1 = report.findings[0];
@@ -144,7 +144,7 @@ describe("LINDDUN API client", () => {
       const report = normalizeReport(raw, "org/repo");
       expect(report.summary.total_findings).toBe(1);
       expect(report.summary.by_category["Identifiability"]).toBe(1);
-      expect(report.summary.by_severity["High"]).toBe(1);
+      expect(report.summary.by_severity?.["High"]).toBe(1);
     });
 
     it("throws an error when raw data is not an object", () => {

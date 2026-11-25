@@ -13,8 +13,6 @@ import type { DfdModel } from "@/lib/api/types";
 import type {
   LinddunCatalog,
   LinddunReport,
-  LinddunSeverity,
-  LinddunCategory,
 } from "./types";
 
 export interface UseLinddunResult {
@@ -73,6 +71,12 @@ export function useLinddun(
     const controller = new AbortController();
 
     async function load() {
+      if (!repository || !repository.trim()) {
+        setStatus("idle");
+        setReport(null);
+        return;
+      }
+
       setStatus("loading");
       setError(null);
       setErrorMessage(null);
@@ -124,45 +128,8 @@ export function useLinddun(
           try {
             const fallbackReport = analyzeLinddun(dfdModel);
             const formattedReport: LinddunReport = {
+              ...fallbackReport,
               repository,
-              analyzed_at: fallbackReport.analyzed_at || new Date().toISOString(),
-              summary: {
-                total_findings: fallbackReport.summary.total_findings,
-                by_category: {
-                  Linkability: fallbackReport.summary.by_category["Linkability"] ?? 0,
-                  Identifiability: fallbackReport.summary.by_category["Identifiability"] ?? 0,
-                  "Non-repudiation": fallbackReport.summary.by_category["Non-repudiation"] ?? 0,
-                  Detectability: fallbackReport.summary.by_category["Detectability"] ?? 0,
-                  "Disclosure of information":
-                    (fallbackReport.summary.by_category["Disclosure of information"] ??
-                      fallbackReport.summary.by_category["disclosure_of_information"] ??
-                      0),
-                  Unawareness: fallbackReport.summary.by_category["Unawareness"] ?? 0,
-                  "Non-compliance": fallbackReport.summary.by_category["Non-compliance"] ?? 0,
-                },
-                by_severity: {
-                  Critical: fallbackReport.summary.by_severity["Critical"] ?? 0,
-                  High: fallbackReport.summary.by_severity["High"] ?? 0,
-                  Medium: fallbackReport.summary.by_severity["Medium"] ?? 0,
-                  Low: fallbackReport.summary.by_severity["Low"] ?? 0,
-                  Info: fallbackReport.summary.by_severity["Info"] ?? 0,
-                },
-              },
-              findings: fallbackReport.findings.map((f) => ({
-                threat_id: f.threat_id,
-                category: f.category as LinddunCategory,
-                severity: f.severity as LinddunSeverity,
-                target_type: f.target_type,
-                component_id: f.component_id,
-                component_name: f.component_name ?? null,
-                title: f.title,
-                description: f.description,
-                gdpr_articles: f.gdpr_articles || [],
-                mitigation: f.mitigation || "",
-                source: f.source ?? null,
-                target: f.target ?? null,
-                file_path: f.file_path ?? null,
-              })),
             };
 
             setReport(formattedReport);

@@ -9,6 +9,7 @@ import { errorMessage } from "@/lib/api/errors";
 import { analyzeInstant } from "@/lib/api/instant";
 import { parseGithubRepository } from "@/lib/api/repositories";
 import type { InstantReport as Report } from "@/lib/api/types";
+import { useLinddun } from "@/linddun";
 import { InstantForm } from "./instant-form";
 import { InstantReport } from "./instant-report";
 
@@ -21,6 +22,7 @@ type State =
 export function InstantAnalyzer({ children }: { children: ReactNode }) {
   const [state, setState] = useState<State>({ status: "idle" });
   const { notify } = useToast();
+  const linddun = useLinddun(state.status === "done" ? state.report.repository : "");
 
   async function run(input: string) {
     const trimmed = input.trim();
@@ -64,11 +66,11 @@ export function InstantAnalyzer({ children }: { children: ReactNode }) {
           </div>
         )}
 
-        {state.status === "done" && <InstantReport report={state.report} />}
+        {state.status === "done" && <InstantReport report={state.report} linddunResult={linddun} />}
       </main>
 
       {/* Escondido no ecrã e mostrado só na impressão (classes Tailwind dentro do próprio componente) */}
-      {state.status === "done" && <InstantReportDocument report={state.report} />}
+      {state.status === "done" && <InstantReportDocument report={state.report} linddunReport={linddun.report} />}
     </>
   );
 }
