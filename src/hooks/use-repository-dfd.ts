@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { errorMessage } from "@/lib/api/errors";
+import { ApiError, errorMessage } from "@/lib/api/errors";
 import type { DfdModel } from "@/lib/api/types";
+import { useOptionalAuth } from "@/lib/auth/auth-provider";
 import { BACKEND_URL } from "@/lib/config";
 import { getDetail, peekDetail } from "@/lib/dfd/detail-cache";
+import { backendSource } from "@/lib/dfd/overview/backend-source";
 import { getOverview } from "@/lib/dfd/overview/get-overview";
 import { overviewView } from "@/lib/dfd/project";
 import type { DfdGraph } from "@/lib/dfd/schema";
@@ -23,6 +25,13 @@ export type DetailState =
   | { status: "error"; message: string }
   | { status: "ready"; graph: DfdGraph };
 
+const overviewFor= (owner: string, repo: string, signedIn: boolean) =>
+  getOverview(owner, repo).catch((error: unknown) =>
+    signedIn && error instanceof ApiError && error.status === 404
+      ? getOverview(owner, repo, { backend: backendSource("/api/backend"), storage: null })
+      : Promise.reject(error),
+  );
+
 /**
  * O DFD de um repositório, inferido no navegador a partir da configuração que ele tem no GitHub (compose, Dockerfiles,
  * manifestos). Sem servidor nosso: os pedidos vão direitos ao GitHub e o resultado fica 10 minutos no localStorage.
@@ -31,11 +40,15 @@ export type DetailState =
  * do código, para juntar ao anterior (ver combineGraphs).
  */
 export function useRepositoryDfd(repository: string) {
+  const auth= useOptionalAuth();
+  const ready= auth?.ready ?? true;
+  const signedIn= auth?.authenticated ?? false;
+  const detailBase= auth?.authenticated ? "/api/backend" : BACKEND_URL;
   const [dfd, setDfd] = useState<RepositoryDfd>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
   const [detail, setDetail] = useState<DetailState>(() => {
     const [owner, repo] = repository.split("/");
-    const cached = BACKEND_URL ? peekDetail(owner, repo) : null;
+    const cached = peekDetail(owner, repo);
     return cached ? { status: "ready", graph: cached } : { status: "idle" };
   });
   const alive = useRef(true);
@@ -48,22 +61,23 @@ export function useRepositoryDfd(repository: string) {
   }, []);
 
   const startDetail = useCallback((owner: string, repo: string) => {
-    if (!BACKEND_URL) return;
+    if (!detailBase) return;
     setDetail({ status: "loading", fraction: 0 });
     const onProgress = (progress: LoadProgress) =>
       alive.current && setDetail((current) => (current.status === "loading" ? { status: "loading", progress, fraction: rising(current.fraction, overallFraction(progress)) } : current));
-    getDetail(owner, repo, { backendUrl: BACKEND_URL, onProgress })
+    getDetail(owner, repo, { backendUrl: detailBase, onProgress })
       .then((graph) => alive.current && setDetail({ status: "ready", graph }))
       .catch((error: unknown) => {
         console.error("Code analysis failed", error);
         if (alive.current) setDetail({ status: "error", message: errorMessage(error, "The code analysis failed. Please try again.") });
       });
-  }, []);
+  }, [detailBase]);
 
   useEffect(() => {
+    if (!ready) return;
     let cancelled = false;
     const [owner, repo] = repository.split("/");
-    getOverview(owner, repo)
+    overviewFor(owner, repo, signedIn)
       .then((data) => {
         if (cancelled) return;
         setDfd({ status: "ready", model: graphToDfdModel(overviewView(data.graph)), graph: data.graph, partial: data.partial, cached: data.cached, fetchedAt: data.fetchedAt });
@@ -79,7 +93,7 @@ export function useRepositoryDfd(repository: string) {
     return () => {
       cancelled = true;
     };
-  }, [repository, attempt, startDetail]);
+  }, [repository, attempt, startDetail, ready, signedIn]);
 
   const retry = useCallback(() => {
     setDfd({ status: "loading" });
@@ -91,5 +105,5 @@ export function useRepositoryDfd(repository: string) {
     startDetail(owner, repo);
   }, [repository, startDetail]);
 
-  return { dfd, retry, detail, loadDetail, detailAvailable: BACKEND_URL !== null };
+  return { dfd, retry, detail, loadDetail, detailAvailable: detailBase !== null };
 }

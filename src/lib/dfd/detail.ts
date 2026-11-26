@@ -36,6 +36,20 @@ const BY_STATUS: Record<number, string> = {
 const errorForStatus = (status: number) =>
   new ApiError(BY_STATUS[status] ?? "The code analysis failed. Please try again.", status >= 500 && status !== 503 ? 502 : status);
 
+export const APP_NOT_INSTALLED="Install the RepoPrint app to read this private repository.";
+
+async function failureOf(response: Response): Promise<ApiError> {
+  if (response.status === 404) {
+    try {
+      const body= (await response.json()) as { detail?: { code?: unknown } } | null;
+      if (body?.detail?.code === "app_not_installed") return new ApiError(APP_NOT_INSTALLED, 404);
+    } catch {
+      /* cai na mensagem por estado */
+    }
+  }
+  return errorForStatus(response.status);
+}
+
 const UNEXPECTED = "The code analysis returned something unexpected.";
 const UNREACHABLE = "The code analysis service could not be reached.";
 const TOO_LONG = "The code analysis took too long. The repository may be very large.";
@@ -84,7 +98,7 @@ async function fetchDetailStream(owner: string, repo: string, options: DetailOpt
     } catch (error) {
       throw new ApiError(isTimeout(error) ? TOO_LONG : UNREACHABLE, 503);
     }
-    if (!response.ok) throw errorForStatus(response.status);
+    if (!response.ok) throw await failureOf(response);
     if (!response.body) throw new ApiError(UNEXPECTED, 502);
 
     const reader = response.body.getReader();
@@ -146,7 +160,7 @@ export async function fetchDetailGraph(owner: string, repo: string, options: Det
       503,
     );
   }
-  if (!response.ok) throw errorForStatus(response.status);
+  if (!response.ok) throw await failureOf(response);
 
   let body: unknown;
   try {
