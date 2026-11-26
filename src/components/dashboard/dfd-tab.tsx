@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { DfdScene, KIND_LABEL } from "@/components/dfd/dfd-scene";
+import { InstallAppButton } from "@/components/dfd/install-app-button";
 import { Icon } from "@/components/ui/icon";
 import { LoadingPanel } from "@/components/ui/loading-panel";
 import { ProgressRing } from "@/components/ui/progress-ring";
@@ -65,6 +66,7 @@ function LiveDfdTab({ repository, findings, onOpenThreats, onEdit }: Pick<DfdTab
           <strong>Could not infer the diagram</strong>
           <span>{dfd.message}</span>
         </div>
+        <InstallAppButton message={dfd.message} />
         <button type="button" className="button button-outline" onClick={retry}>Try again</button>
       </div>
     );
@@ -146,6 +148,7 @@ function DetailBar({ detail }: { detail: DetailControls }) {
       {state.status === "error" && (
         <>
           <span className="dfd-detail-error" role="alert">{state.message}</span>
+          <InstallAppButton message={state.message} />
           <button type="button" className="button button-outline" onClick={detail.onLoad}>Try again</button>
         </>
       )}

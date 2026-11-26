@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, type ComponentProps } from "react";
 import { FocusBar } from "@/components/dfd/focus-bar";
+import { InstallAppButton } from "@/components/dfd/install-app-button";
 import { Icon } from "@/components/ui/icon";
 import { LoadingPanel } from "@/components/ui/loading-panel";
 import { useDfdFocus } from "@/hooks/use-dfd-focus";
@@ -64,6 +65,7 @@ function LiveCanvas({ analysis, branch }: CanvasLoaderProps) {
           <div className="dfd-state" role="alert">
             <Icon name="warning" size={22} />
             <div><strong>Could not infer the diagram</strong><span>{dfd.message}</span></div>
+            <InstallAppButton message={dfd.message} />
             <button type="button" className="button button-outline" onClick={retry}>Try again</button>
           </div>
         ) : reading ? (

@@ -36,7 +36,7 @@ const BY_STATUS: Record<number, string> = {
 const errorForStatus = (status: number) =>
   new ApiError(BY_STATUS[status] ?? "The code analysis failed. Please try again.", status >= 500 && status !== 503 ? 502 : status);
 
-export const APP_NOT_INSTALLED="Install the RepoPrint app from the profile menu to read this private repository.";
+export const APP_NOT_INSTALLED="Install the RepoPrint app to read this private repository.";
 
 async function failureOf(response: Response): Promise<ApiError> {
   if (response.status === 404) {

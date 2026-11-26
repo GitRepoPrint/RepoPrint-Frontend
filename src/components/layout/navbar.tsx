@@ -66,7 +66,6 @@ export default function Navbar() {
             {githubLogin
               ? <button type="button" role="menuitem" onClick={disconnectGithub}>Disconnect GitHub ({githubLogin})</button>
               : <button type="button" role="menuitem" onClick={() => window.location.assign("/api/github/connect")}>Connect GitHub</button>}
-            {githubLogin && <button type="button" role="menuitem" onClick={() => window.location.assign("/api/github/app/install")}>Install RepoPrint app</button>}
             <button type="button" role="menuitem" onClick={() => window.location.assign("/api/backend/me/export")}>Download my data</button>
             <button type="button" role="menuitem" onClick={openDeleteModal}>Delete account</button>
             <form method="post" action="/api/auth/logout" role="none">
